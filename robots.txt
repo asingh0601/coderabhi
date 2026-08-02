@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://coderabhi.in/sitemap.xml

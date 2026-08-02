@@ -1,0 +1,1457 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Abhishek Singh — Software Engineer</title>
+  <meta name="description"
+    content="Abhishek Singh (coderabhi) — software engineer with 11+ years building high-throughput APIs, distributed systems and AI-powered products. Creator of AITranslate.in.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Abhishek Singh — Software Engineer">
+  <meta property="og:description"
+    content="11+ years building backend systems that scale, and AI products that ship.">
+  <meta property="og:url" content="https://coderabhi.in">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="canonical" href="https://coderabhi.in">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230b0e14'/><text x='50' y='67' font-size='46' font-family='monospace' font-weight='700' fill='%237aa2f7' text-anchor='middle'>&lt;/&gt;</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    // set before first paint so reveal-hidden elements never flash
+    document.documentElement.className += ' js';
+  </script>
+
+  <style>
+    /* Plain-English site with a few engineering accents:
+       monospace only for small labels, one code-styled profile card. */
+    :root {
+      --bg: #0b0e14;
+      --bg-2: #0f131c;
+      --panel: #121722;
+      --panel-2: #171d2b;
+      --line: #1f2736;
+      --line-2: #2c3547;
+
+      --text: #e6ebf7;
+      --muted: #97a1bb;
+      --dim: #6b7690;
+
+      --blue: #6c9bff;
+      --blue-soft: #9dbaff;
+      --green: #57cf9a;
+      --amber: #e0af68;
+
+      --radius: 12px;
+      --maxw: 1060px;
+      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 90px;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(760px circle at 12% -8%, rgba(108, 155, 255, .13), transparent 60%),
+        radial-gradient(620px circle at 92% 4%, rgba(87, 207, 154, .07), transparent 60%);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding-left: 22px;
+      padding-right: 22px;
+    }
+
+    /* ---------- HEADER ---------- */
+    header.site {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: rgba(11, 14, 20, .86);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid transparent;
+      transition: border-color .25s;
+    }
+
+    header.site.stuck {
+      border-bottom-color: var(--line);
+    }
+
+    .head-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      height: 62px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -.01em;
+    }
+
+    .brand .mark {
+      width: 27px;
+      height: 27px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      background: rgba(108, 155, 255, .14);
+      border: 1px solid rgba(108, 155, 255, .3);
+      color: var(--blue);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .head-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    nav.menu {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    nav.menu a {
+      padding: 8px 13px;
+      border-radius: 8px;
+      font-size: 14.5px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: color .18s, background .18s;
+    }
+
+    nav.menu a:hover {
+      color: var(--text);
+      background: var(--panel-2);
+    }
+
+    nav.menu a.active {
+      color: var(--text);
+    }
+
+    nav.menu a.ghost {
+      margin-left: 8px;
+      border: 1px solid var(--line-2);
+      color: var(--text);
+    }
+
+    nav.menu a.ghost:hover {
+      border-color: var(--blue);
+    }
+
+    .menu-toggle {
+      display: none;
+      background: var(--panel);
+      border: 1px solid var(--line-2);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 11px;
+      font-size: 16px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    /* ---------- BUTTONS ---------- */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 11px 18px;
+      border-radius: 9px;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--text);
+      border: 1px solid var(--line-2);
+      background: var(--panel);
+      transition: border-color .18s, background .18s, transform .18s;
+    }
+
+    .btn:hover {
+      border-color: var(--blue);
+      background: var(--panel-2);
+      transform: translateY(-2px);
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+      flex: none;
+    }
+
+    .btn.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #08101f;
+    }
+
+    .btn.primary:hover {
+      background: var(--blue-soft);
+      border-color: var(--blue-soft);
+    }
+
+    .btn.coffee {
+      border-color: rgba(224, 175, 104, .42);
+      color: var(--amber);
+      background: rgba(224, 175, 104, .08);
+    }
+
+    .btn.coffee:hover {
+      border-color: var(--amber);
+    }
+
+    /* ---------- SECTIONS ---------- */
+    section {
+      padding-top: 70px;
+      padding-bottom: 70px;
+    }
+
+    .sec-head {
+      margin-bottom: 34px;
+    }
+
+    .kicker {
+      display: block;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 10px;
+    }
+
+    .sec-head h2 {
+      margin: 0;
+      font-size: clamp(27px, 4vw, 35px);
+      font-weight: 700;
+      letter-spacing: -.025em;
+    }
+
+    .sec-head p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      max-width: 640px;
+      font-size: 16px;
+    }
+
+    /* ---------- HERO ---------- */
+    .hero {
+      padding-top: 74px;
+      padding-bottom: 64px;
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 44px;
+      align-items: center;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 13px;
+      border: 1px solid var(--line-2);
+      background: var(--panel);
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 22px;
+    }
+
+    .pill i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 9px var(--green);
+      display: block;
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      font-size: clamp(34px, 5.4vw, 52px);
+      line-height: 1.1;
+      letter-spacing: -.033em;
+      font-weight: 800;
+    }
+
+    h1 .hl {
+      color: var(--blue);
+    }
+
+    .lede {
+      color: var(--muted);
+      margin: 0 0 18px;
+      font-size: 17px;
+      max-width: 560px;
+    }
+
+    .lede strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .typed {
+      font-family: var(--mono);
+      font-size: 13.4px;
+      color: var(--dim);
+      min-height: 22px;
+      margin-bottom: 30px;
+    }
+
+    .caret {
+      display: inline-block;
+      width: 7px;
+      height: 14px;
+      background: var(--blue);
+      vertical-align: -2px;
+      animation: blink 1.05s steps(1) infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      50% {
+        opacity: 1;
+      }
+
+      51%,
+      100% {
+        opacity: 0;
+      }
+    }
+
+    /* profile card — the one deliberately "code-ish" element */
+    .profile {
+      border: 1px solid var(--line-2);
+      border-radius: var(--radius);
+      background: var(--panel);
+      overflow: hidden;
+      box-shadow: 0 22px 50px -32px #000;
+    }
+
+    .profile .bar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 14px;
+      background: var(--bg-2);
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 11.8px;
+      color: var(--dim);
+    }
+
+    .profile .bar i {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: block;
+    }
+
+    .profile .rows {
+      padding: 8px 4px;
+    }
+
+    .prow {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 14px;
+      padding: 9px 16px;
+      align-items: baseline;
+    }
+
+    .prow dt {
+      font-family: var(--mono);
+      font-size: 12.2px;
+      color: var(--dim);
+      margin: 0;
+    }
+
+    .prow dd {
+      margin: 0;
+      font-size: 14.6px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .prow dd .sub {
+      display: block;
+      color: var(--muted);
+      font-weight: 400;
+      font-size: 13.6px;
+    }
+
+    .prow dd em {
+      font-style: normal;
+      color: var(--green);
+    }
+
+    .profile .foot {
+      border-top: 1px solid var(--line);
+      padding: 12px 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--dim);
+      background: var(--bg-2);
+    }
+
+    /* ---------- ABOUT ---------- */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 18px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 26px;
+      transition: border-color .22s;
+    }
+
+    .panel:hover {
+      border-color: var(--line-2);
+    }
+
+    .panel p {
+      color: var(--muted);
+      font-size: 15.6px;
+    }
+
+    .panel p:first-child {
+      margin-top: 0;
+    }
+
+    .panel p:last-child {
+      margin-bottom: 0;
+    }
+
+    .panel strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .drives {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 18px;
+    }
+
+    .drives li {
+      display: flex;
+      gap: 13px;
+    }
+
+    .drives .ico {
+      flex: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      background: rgba(108, 155, 255, .12);
+      border: 1px solid rgba(108, 155, 255, .22);
+    }
+
+    .drives h3 {
+      margin: 0 0 2px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .drives p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--dim);
+      line-height: 1.55;
+    }
+
+    /* ---------- SKILLS ---------- */
+    .skill-groups {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+
+    .sk {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 20px;
+      transition: border-color .22s;
+    }
+
+    .sk:hover {
+      border-color: var(--line-2);
+    }
+
+    .sk h3 {
+      margin: 0 0 14px;
+      font-size: 14.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .sk h3::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      background: var(--blue);
+      flex: none;
+    }
+
+    .sk.ai h3::before {
+      background: #b18cf0;
+    }
+
+    .sk.cloud h3::before {
+      background: var(--green);
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      font-size: 13px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--line-2);
+      background: var(--bg-2);
+      color: var(--muted);
+      transition: color .18s, border-color .18s, transform .18s;
+      cursor: default;
+    }
+
+    .chip:hover {
+      color: var(--text);
+      border-color: var(--blue);
+      transform: translateY(-2px);
+    }
+
+    /* ---------- EXPERIENCE ---------- */
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: 10px;
+      bottom: 10px;
+      width: 1.5px;
+      background: linear-gradient(var(--blue), rgba(108, 155, 255, .25), transparent);
+    }
+
+    .job {
+      position: relative;
+      padding-bottom: 28px;
+    }
+
+    .job:last-child {
+      padding-bottom: 0;
+    }
+
+    .job::before {
+      content: "";
+      position: absolute;
+      left: -27px;
+      top: 8px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--line-2);
+    }
+
+    .job.now::before {
+      border-color: var(--green);
+      box-shadow: 0 0 0 4px rgba(87, 207, 154, .13);
+    }
+
+    .j-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 12px;
+      margin-bottom: 6px;
+    }
+
+    .job h3 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .job .when {
+      font-family: var(--mono);
+      font-size: 12.2px;
+      color: var(--dim);
+    }
+
+    .job .tag {
+      font-size: 11.4px;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 999px;
+      color: var(--green);
+      border: 1px solid rgba(87, 207, 154, .35);
+      background: rgba(87, 207, 154, .09);
+    }
+
+    .job p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15.2px;
+      max-width: 720px;
+    }
+
+    /* ---------- PROJECTS ---------- */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
+      gap: 17px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 24px;
+      transition: border-color .22s, transform .22s, box-shadow .22s;
+    }
+
+    .card:hover {
+      border-color: var(--blue);
+      transform: translateY(-3px);
+      box-shadow: 0 18px 38px -28px #000;
+    }
+
+    .card.featured {
+      border-color: rgba(108, 155, 255, .34);
+      background: linear-gradient(160deg, rgba(108, 155, 255, .08), var(--panel) 58%);
+    }
+
+    .c-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 17.5px;
+      font-weight: 700;
+      letter-spacing: -.015em;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      word-break: break-word;
+    }
+
+    .card h3 svg {
+      width: 13px;
+      height: 13px;
+      flex: none;
+      opacity: .5;
+      transition: opacity .2s, transform .2s;
+    }
+
+    .card:hover h3 svg {
+      opacity: 1;
+      transform: translate(2px, -2px);
+    }
+
+    .badge {
+      font-size: 11.2px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line-2);
+      color: var(--dim);
+      white-space: nowrap;
+    }
+
+    .badge.live {
+      border-color: rgba(87, 207, 154, .38);
+      color: var(--green);
+    }
+
+    .card .desc {
+      color: var(--muted);
+      font-size: 15px;
+      margin: 0 0 14px;
+    }
+
+    .card ul {
+      margin: 0 0 18px;
+      padding-left: 18px;
+      color: var(--dim);
+      font-size: 14.2px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .card ul li::marker {
+      color: var(--line-2);
+    }
+
+    .c-foot {
+      margin-top: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .c-foot span {
+      font-family: var(--mono);
+      font-size: 11.4px;
+      color: var(--dim);
+      border: 1px solid var(--line);
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    /* ---------- CONTACT ---------- */
+    .contact {
+      border: 1px solid var(--line-2);
+      border-radius: 18px;
+      padding: 46px 32px;
+      text-align: center;
+      background:
+        radial-gradient(640px circle at 50% -30%, rgba(108, 155, 255, .16), transparent 62%),
+        var(--panel);
+    }
+
+    .contact h2 {
+      margin: 0 0 12px;
+      font-size: clamp(25px, 3.8vw, 33px);
+      letter-spacing: -.025em;
+    }
+
+    .contact p {
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 28px;
+      font-size: 16px;
+    }
+
+    .contact .btn-row {
+      justify-content: center;
+    }
+
+    /* ---------- FOOTER ---------- */
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 26px 0 34px;
+      margin-top: 40px;
+    }
+
+    .foot-inner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 20px;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13.5px;
+      color: var(--dim);
+    }
+
+    .foot-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+
+    .foot-links a:hover {
+      color: var(--text);
+    }
+
+    /* ---------- REVEAL ---------- */
+    .js .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity .55s ease, transform .55s ease;
+    }
+
+    .js .reveal.in {
+      opacity: 1;
+      transform: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      .js .reveal {
+        opacity: 1;
+        transform: none;
+      }
+
+      html {
+        scroll-behavior: auto;
+      }
+    }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 34px;
+      }
+
+      .about-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        padding-left: 17px;
+        padding-right: 17px;
+      }
+
+      .menu-toggle {
+        display: block;
+      }
+
+      .brand {
+        font-size: 15px;
+      }
+
+      nav.menu {
+        position: absolute;
+        top: 62px;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 2px;
+        padding: 12px 17px 18px;
+        background: rgba(13, 17, 26, .98);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--line-2);
+        display: none;
+      }
+
+      nav.menu.open {
+        display: flex;
+      }
+
+      nav.menu a {
+        padding: 11px 13px;
+      }
+
+      nav.menu a.ghost {
+        margin-left: 0;
+        margin-top: 6px;
+        text-align: center;
+      }
+
+      section {
+        padding-top: 54px;
+        padding-bottom: 54px;
+      }
+
+      .hero {
+        padding-top: 48px;
+        padding-bottom: 44px;
+      }
+
+      .panel {
+        padding: 22px;
+      }
+
+      .contact {
+        padding: 36px 20px;
+      }
+
+      .prow {
+        grid-template-columns: 84px 1fr;
+        gap: 10px;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="#top" class="brand"><span class="mark">&lt;/&gt;</span> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="#about">About</a>
+          <a href="#skills">Skills</a>
+          <a href="#experience">Experience</a>
+          <a href="#projects">Projects</a>
+          <a class="ghost" href="#contact">Get in touch</a>
+        </nav>
+
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <div class="container hero" id="top">
+      <div>
+        <span class="pill reveal"><i></i> Open to interesting problems</span>
+
+        <h1 class="reveal">I build the systems that keep <span class="hl">software running</span>.</h1>
+
+        <p class="lede reveal">
+          I'm a software engineer with <strong>11+ years</strong> building the behind-the-scenes machinery of web
+          products — the part that has to stay fast and stay up when thousands of people use it at once. Lately I also
+          build <strong>AI-powered products</strong>, including one of my own.
+        </p>
+
+        <div class="typed reveal"><span id="typed"></span><span class="caret" aria-hidden="true"></span></div>
+
+        <div class="btn-row reveal">
+          <a class="btn primary" href="https://aitranslate.in" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            See AITranslate
+          </a>
+          <a class="btn" href="https://github.com/asingh0601" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.2 18.3 5.5 18.3 5.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z" />
+            </svg>
+            GitHub
+          </a>
+          <a class="btn" href="https://www.npmjs.com/~onlyabhishek" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M0 8h24v8H12v-6H8v6H0V8zm2 2v4h2v-4H2zm12 0v4h2v-4h-2zm4 0v4h4v-4h-4z" />
+            </svg>
+            npm
+          </a>
+          <a class="btn" href="https://marketplace.visualstudio.com/publishers/er-abhishek" target="_blank"
+            rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M17.6 1.6 9.9 9.1 5.4 5.7l-1.6.8 3.9 4.4-3.9 4.4 1.6.8 4.5-3.4 7.7 7.5 4-1.9V3.5l-4-1.9zm.4 5-4.6 4.4 4.6 4.4V6.6z" />
+            </svg>
+            Marketplace
+          </a>
+          <a class="btn coffee" href="https://buymeacoffee.com/er.abhishek" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+              <path d="M6 1v3M10 1v3M14 1v3" />
+            </svg>
+            Buy me a coffee
+          </a>
+        </div>
+      </div>
+
+      <div class="profile reveal">
+        <div class="bar"><i style="background:#f7768e"></i><i style="background:#e0af68"></i><i
+            style="background:#57cf9a"></i><span style="margin-left:6px">at a glance</span></div>
+        <dl class="rows">
+          <div class="prow">
+            <dt>role</dt>
+            <dd>Sr. Technical Lead</dd>
+          </div>
+          <div class="prow">
+            <dt>experience</dt>
+            <dd>11+ years</dd>
+          </div>
+          <div class="prow">
+            <dt>building</dt>
+            <dd>A delivery platform, from scratch<span class="sub">Running on Microsoft Azure</span></dd>
+          </div>
+          <div class="prow">
+            <dt>focus</dt>
+            <dd>Backend systems, scale &amp; reliability<span class="sub">Plus AI features that reach real
+                users</span></dd>
+          </div>
+          <div class="prow">
+            <dt>side project</dt>
+            <dd>AITranslate<span class="sub"><em>Live, with paying customers</em></span></dd>
+          </div>
+        </dl>
+        <div class="foot">// ships on Fridays, sleeps eventually</div>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <section id="about">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">About</span>
+          <h2>What I actually do</h2>
+          <p>Every app you use has a visible half and an invisible one. I work on the invisible half — and I like the
+            problems nobody else wants to open.</p>
+        </div>
+
+        <div class="about-grid">
+          <div class="panel reveal">
+            <p>Most of my career has been spent on the <strong>backend</strong>: the servers, databases and pipelines
+              that sit behind an app and do the real work. Making them fast, making them reliable, and making sure
+              they don't fall over on the busiest day of the year.</p>
+            <p>I've built for <strong>industries where mistakes are expensive</strong> — banking and compliance
+              systems, security platforms, logistics. That kind of work teaches you to plan for what happens when
+              things break, not just for when they work.</p>
+            <p>What I enjoy most is <strong>ownership</strong>. Hand me a blank page and a vague problem, and I'll come
+              back with something running in production. Right now that's a <strong>delivery platform built from
+                scratch on Microsoft Azure</strong> — and, after hours, finding out where AI genuinely helps and where
+              it's just a demo.</p>
+          </div>
+
+          <div class="panel reveal">
+            <ul class="drives">
+              <li>
+                <span class="ico">⚡</span>
+                <div>
+                  <h3>Speed</h3>
+                  <p>Making software respond instantly instead of "in a moment" is worth more than most new features.</p>
+                </div>
+              </li>
+              <li>
+                <span class="ico">🧩</span>
+                <div>
+                  <h3>Reliability</h3>
+                  <p>Designing for the day something fails — because eventually, something always does.</p>
+                </div>
+              </li>
+              <li>
+                <span class="ico">🤖</span>
+                <div>
+                  <h3>AI that's useful</h3>
+                  <p>Not demos. Real products with real users, real costs and real edge cases.</p>
+                </div>
+              </li>
+              <li>
+                <span class="ico">📦</span>
+                <div>
+                  <h3>Shipping</h3>
+                  <p>Free tools published for other developers. If it isn't shipped, it isn't finished.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Skills</span>
+          <h2>What I work with</h2>
+          <p>Deep in the .NET and cloud world, comfortable most places else.</p>
+        </div>
+
+        <div class="skill-groups">
+          <div class="sk reveal">
+            <h3>Backend &amp; architecture</h3>
+            <div class="chips">
+              <span class="chip">.NET Core</span><span class="chip">C#</span><span class="chip">REST APIs</span>
+              <span class="chip">Microservices</span><span class="chip">System design</span>
+              <span class="chip">Distributed systems</span><span class="chip">Reliability</span>
+            </div>
+          </div>
+
+          <div class="sk reveal">
+            <h3>Data &amp; messaging</h3>
+            <div class="chips">
+              <span class="chip">SQL Server</span><span class="chip">Redis</span><span class="chip">RabbitMQ</span>
+              <span class="chip">Elasticsearch</span><span class="chip">Performance tuning</span>
+            </div>
+          </div>
+
+          <div class="sk cloud reveal">
+            <h3>Cloud &amp; delivery</h3>
+            <div class="chips">
+              <span class="chip">Azure</span><span class="chip">AWS</span><span class="chip">Docker</span>
+              <span class="chip">Kubernetes</span><span class="chip">CI/CD</span><span class="chip">Monitoring</span>
+            </div>
+          </div>
+
+          <div class="sk ai reveal">
+            <h3>AI &amp; automation</h3>
+            <div class="chips">
+              <span class="chip">LLM integration</span><span class="chip">Prompt engineering</span>
+              <span class="chip">AI agents</span><span class="chip">Document AI &amp; OCR</span>
+            </div>
+          </div>
+
+          <div class="sk reveal">
+            <h3>Frontend</h3>
+            <div class="chips">
+              <span class="chip">Angular</span><span class="chip">TypeScript</span>
+              <span class="chip">Component libraries</span>
+            </div>
+          </div>
+
+          <div class="sk reveal">
+            <h3>How I work</h3>
+            <div class="chips">
+              <span class="chip">Agile</span><span class="chip">Code review</span><span class="chip">Testing</span>
+              <span class="chip">Mentoring</span><span class="chip">Technical ownership</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section id="experience">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Experience</span>
+          <h2>Eleven years, six teams</h2>
+          <p>Logistics, legal services, banking, security, field operations and publishing — the industries change,
+            the craft doesn't.</p>
+        </div>
+
+        <div class="timeline">
+          <article class="job now reveal">
+            <div class="j-top">
+              <h3>Sr. Technical Lead — last-mile delivery platform</h3>
+              <span class="tag">Current</span>
+              <span class="when">2026 — now</span>
+            </div>
+            <p>Leading a brand-new platform built from the ground up on Microsoft Azure — designing how the whole
+              system fits together and taking it all the way to launch.</p>
+          </article>
+
+          <article class="job reveal">
+            <div class="j-top">
+              <h3>Full-stack engineer — legal services platform</h3>
+              <span class="when">2023 — 2026</span>
+            </div>
+            <p>The only engineer on a platform law firms use to run cases, documents and payments. Rebuilt the engine
+              underneath it so the app responded around 45% faster, and moved the slow jobs into the background so
+              nothing kept people waiting.</p>
+          </article>
+
+          <article class="job reveal">
+            <div class="j-top">
+              <h3>Senior engineer — banking &amp; trading platform</h3>
+              <span class="when">2021 — 2023</span>
+            </div>
+            <p>Built the systems behind customer verification and compliance checks for a financial platform, and
+              owned the pipelines that process trades end to end. Cut production incidents by more than 20%, reviewed
+              code and mentored other engineers.</p>
+          </article>
+
+          <article class="job reveal">
+            <div class="j-top">
+              <h3>Lead engineer — enterprise security platform</h3>
+              <span class="when">2020 — 2021</span>
+            </div>
+            <p>Led the engineering behind a product that spots security weaknesses in real time, managed a small team,
+              and halved the time it took to get new releases out the door.</p>
+          </article>
+
+          <article class="job reveal">
+            <div class="j-top">
+              <h3>Backend engineer — field operations software</h3>
+              <span class="when">2020</span>
+            </div>
+            <p>Handled data at scale: importing millions of records at a time and making the system's queries roughly
+              twice as fast.</p>
+          </article>
+
+          <article class="job reveal">
+            <div class="j-top">
+              <h3>Senior developer &amp; team lead — content platforms</h3>
+              <span class="when">2015 — 2020</span>
+            </div>
+            <p>Built publishing and analytics tools, led a team of 10–12 engineers, and owned how the apps were put
+              together from the interface down to the data.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Projects</span>
+          <h2>Things I've built on my own time</h2>
+          <p>One product with real customers, and free tools used by other developers.</p>
+        </div>
+
+        <div class="cards">
+          <a class="card featured reveal" href="https://aitranslate.in" target="_blank" rel="noopener">
+            <div class="c-top">
+              <h3>AITranslate
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M7 17 17 7M8 7h9v9" />
+                </svg>
+              </h3>
+              <span class="badge live">● Live</span>
+            </div>
+            <p class="desc">Translates documents and images while keeping the original design intact.</p>
+            <ul>
+              <li>Built and launched entirely on my own — with paying customers.</li>
+              <li>Reads text out of scans and photos, then translates it.</li>
+              <li>Puts the new text back in place so the page still looks like the original.</li>
+            </ul>
+            <div class="c-foot"><span>aitranslate.in</span><span>AI product</span></div>
+          </a>
+
+          <a class="card reveal" href="https://www.npmjs.com/~onlyabhishek" target="_blank" rel="noopener">
+            <div class="c-top">
+              <h3>Open-source tools
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M7 17 17 7M8 7h9v9" />
+                </svg>
+              </h3>
+              <span class="badge">npm</span>
+            </div>
+            <p class="desc">Free building blocks other developers can drop into their own apps.</p>
+            <ul>
+              <li>A chart component for showing data in circular form.</li>
+              <li>A calendar and scheduling component.</li>
+              <li>Both designed to be simple to use and light to load.</li>
+            </ul>
+            <div class="c-foot"><span>Angular</span><span>TypeScript</span></div>
+          </a>
+
+          <a class="card reveal" href="https://marketplace.visualstudio.com/publishers/er-abhishek" target="_blank"
+            rel="noopener">
+            <div class="c-top">
+              <h3>Editor extensions
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M7 17 17 7M8 7h9v9" />
+                </svg>
+              </h3>
+              <span class="badge">Marketplace</span>
+            </div>
+            <p class="desc">Add-ons for VS Code, the editor most developers write code in.</p>
+            <ul>
+              <li>Built first to smooth out my own daily workflow.</li>
+              <li>Published publicly for anyone who hits the same friction.</li>
+            </ul>
+            <div class="c-foot"><span>VS Code</span><span>Developer tools</span></div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="container">
+        <div class="contact reveal">
+          <h2>Let's build something solid</h2>
+          <p>Interesting engineering problems, AI products, or just a good conversation about either — GitHub is the
+            fastest way to reach me.</p>
+          <div class="btn-row">
+            <a class="btn primary" href="https://github.com/asingh0601" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.2 18.3 5.5 18.3 5.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z" />
+              </svg>
+              GitHub
+            </a>
+            <a class="btn" href="https://www.npmjs.com/~onlyabhishek" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M0 8h24v8H12v-6H8v6H0V8zm2 2v4h2v-4H2zm12 0v4h2v-4h-2zm4 0v4h4v-4h-4z" />
+              </svg>
+              npm
+            </a>
+            <a class="btn" href="https://marketplace.visualstudio.com/publishers/er-abhishek" target="_blank"
+              rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M17.6 1.6 9.9 9.1 5.4 5.7l-1.6.8 3.9 4.4-3.9 4.4 1.6.8 4.5-3.4 7.7 7.5 4-1.9V3.5l-4-1.9zm.4 5-4.6 4.4 4.6 4.4V6.6z" />
+              </svg>
+              Marketplace
+            </a>
+            <a class="btn coffee" href="https://buymeacoffee.com/er.abhishek" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                <path d="M6 1v3M10 1v3M14 1v3" />
+              </svg>
+              Buy me a coffee
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.npmjs.com/~onlyabhishek" target="_blank" rel="noopener">npm</a>
+        <a href="https://marketplace.visualstudio.com/publishers/er-abhishek" target="_blank"
+          rel="noopener">Marketplace</a>
+        <a href="https://aitranslate.in" target="_blank" rel="noopener">AITranslate</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // sticky header border
+    const siteHeader = document.getElementById('siteHeader');
+    addEventListener('scroll', () => siteHeader.classList.toggle('stuck', scrollY > 8), { passive: true });
+
+    // mobile menu
+    const menu = document.getElementById('menu');
+    const menuToggle = document.getElementById('menuToggle');
+    menuToggle.addEventListener('click', () => {
+      const open = menu.classList.toggle('open');
+      menuToggle.setAttribute('aria-expanded', String(open));
+      menuToggle.textContent = open ? '✕' : '☰';
+    });
+    menu.addEventListener('click', e => {
+      if (e.target.tagName === 'A') {
+        menu.classList.remove('open');
+        menuToggle.setAttribute('aria-expanded', 'false');
+        menuToggle.textContent = '☰';
+      }
+    });
+
+    // reveal on scroll — degrades to "just show it" if the observer never runs
+    const revealEls = document.querySelectorAll('.reveal');
+    const showAll = () => revealEls.forEach(el => el.classList.add('in'));
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+        });
+      }, { threshold: .1, rootMargin: '0px 0px -30px' });
+
+      revealEls.forEach((el, i) => {
+        el.style.transitionDelay = Math.min(i % 5, 4) * 55 + 'ms';
+        io.observe(el);
+      });
+      setTimeout(showAll, 3000);
+    } else {
+      showAll();
+    }
+
+    // active section in the menu
+    if ('IntersectionObserver' in window) {
+      const links = [...menu.querySelectorAll('a[href^="#"]')];
+      const sio = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (!en.isIntersecting) return;
+          links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
+        });
+      }, { rootMargin: '-45% 0px -50% 0px' });
+      ['about', 'skills', 'experience', 'projects', 'contact']
+        .map(id => document.getElementById(id)).forEach(s => sio.observe(s));
+    }
+
+    // typewriter
+    const phrases = [
+      'making software fast enough that nobody notices it',
+      'keeping systems up when everyone shows up at once',
+      'turning AI into products people actually pay for',
+      'shipping side projects at 2am'
+    ];
+    const target = document.getElementById('typed');
+    let p = 0, c = 0, deleting = false;
+
+    (function type() {
+      const full = phrases[p];
+      c += deleting ? -1 : 1;
+      target.textContent = full.slice(0, c);
+      let delay = deleting ? 26 : 50;
+      if (!deleting && c === full.length) { delay = 2100; deleting = true; }
+      else if (deleting && c === 0) { deleting = false; p = (p + 1) % phrases.length; delay = 300; }
+      setTimeout(type, delay);
+    })();
+  </script>
+</body>
+
+</html>
