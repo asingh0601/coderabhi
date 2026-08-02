@@ -20,15 +20,42 @@ npx serve .
 
 Or just open `index.html` in a browser.
 
-## Deploy
+## Deploy — GitHub Pages
 
-Drop the folder on any static host — Cloudflare Pages, Netlify, Vercel, GitHub Pages, or IIS.
+Repo: https://github.com/asingh0601/coderabhi (branch `main`, site served from the root).
 
-**Cloudflare Pages / Netlify:** build command empty, output directory `.`
+`CNAME` (contains `coderabhi.in`) and `.nojekyll` are already committed, so Pages will pick up the
+custom domain and serve the files as-is without running Jekyll.
 
-**GitHub Pages:** push to a repo, enable Pages on the branch root.
+**One-time setup in the repo settings:**
 
-Then point the `coderabhi.in` DNS record at the host.
+1. **Settings → General → Danger Zone → Change visibility → Public.**
+   GitHub Pages only serves private repos on paid plans, so a private repo on a free account
+   will never publish.
+2. **Settings → Pages → Source:** *Deploy from a branch* → branch `main`, folder `/ (root)` → Save.
+3. **Settings → Pages → Custom domain:** should auto-fill to `coderabhi.in` from the `CNAME` file.
+   Tick **Enforce HTTPS** once the certificate finishes provisioning (can take up to ~24h).
+
+**DNS at the registrar for the apex domain `coderabhi.in`:**
+
+| Type | Name | Value |
+|---|---|---|
+| A | `@` | `185.199.108.153` |
+| A | `@` | `185.199.109.153` |
+| A | `@` | `185.199.110.153` |
+| A | `@` | `185.199.111.153` |
+| AAAA | `@` | `2606:50c0:8000::153` |
+| AAAA | `@` | `2606:50c0:8001::153` |
+| AAAA | `@` | `2606:50c0:8002::153` |
+| AAAA | `@` | `2606:50c0:8003::153` |
+| CNAME | `www` | `asingh0601.github.io` |
+
+**Publishing an update:** commit and `git push` — Pages redeploys automatically.
+
+### Other hosts
+
+Cloudflare Pages / Netlify / Vercel also work with no build step: build command empty, output
+directory `.`.
 
 ## Privacy note
 
