@@ -54,6 +54,23 @@ work when opened straight off disk rather than through a server.
 from the library repo itself. It passes automatically, so no visible checkbox is drawn — the
 form's "Token received" line is the proof it worked. The page says so explicitly.
 
+**The reCAPTCHA site key** is applied after the build, not committed into angx-libs — a site
+key is per-domain and belongs to this site. After copying a fresh build over `demo/`, run:
+
+```bash
+node tools/apply-recaptcha-key.mjs
+```
+
+> **It renames the bundle, and that matters.** Angular names bundles by a hash of their
+> contents. Patching one in place leaves the old name on new content, so browsers and the CDN
+> keep serving the *unpatched* copy from cache and the demo fails with
+> `Invalid site key or not loaded in api.js: YOUR_RECAPTCHA_SITE_KEY`. The tool renames the
+> file to a hash of its patched contents and rewrites every `index.html` that references it.
+> Never hand-edit a built bundle without renaming it.
+
+The site key is public — it ships in the HTML of every page using reCAPTCHA. The **secret**
+key is not in this repo and isn't needed; the demo doesn't verify server-side.
+
 ## Local preview
 
 Any static server works:
