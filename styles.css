@@ -833,12 +833,73 @@ h1 .hl {
 }
 
 .code-block .cb-bar {
-  padding: 8px 14px;
+  padding: 6px 8px 6px 14px;
   border-bottom: 1px solid var(--line);
   font-family: var(--mono);
   font-size: 11.8px;
   color: var(--dim);
   background: var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 32px;
+}
+
+/* copy-to-clipboard button, injected by page.js */
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  background: var(--bg-2);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11.4px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color .18s, border-color .18s, background .18s;
+}
+
+.copy-btn:hover {
+  color: var(--text);
+  border-color: var(--blue);
+}
+
+.copy-btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.copy-btn svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+
+.copy-btn .tick {
+  display: none;
+}
+
+.copy-btn.ok {
+  color: var(--green);
+  border-color: rgba(87, 207, 154, .45);
+}
+
+.copy-btn.ok .clip {
+  display: none;
+}
+
+.copy-btn.ok .tick {
+  display: block;
+}
+
+.copy-btn.failed {
+  color: var(--amber);
+  border-color: rgba(224, 175, 104, .45);
 }
 
 .code-block pre {
