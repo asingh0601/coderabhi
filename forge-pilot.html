@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forge Pilot — AI coding assistant for Visual Studio · Abhishek Singh</title>
+  <meta name="description"
+    content="Forge Pilot is a free, open-source Visual Studio extension that puts an AI coding assistant beside your code — reviewable diffs, permission prompts and full project context. Built by Abhishek Singh.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Forge Pilot — AI coding assistant for Visual Studio">
+  <meta property="og:description"
+    content="Chat with Claude inside Visual Studio. Free, open source, MIT licensed.">
+  <meta property="og:url" content="https://coderabhi.in/forge-pilot.html">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="canonical" href="https://coderabhi.in/forge-pilot.html">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230b0e14'/><text x='50' y='67' font-size='46' font-family='monospace' font-weight='700' fill='%237aa2f7' text-anchor='middle'>&lt;/&gt;</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    /* page-specific: product hero, feature grid, requirements, credit box */
+    .fp-hero {
+      padding-top: 66px;
+      padding-bottom: 52px;
+      text-align: center;
+    }
+
+    .fp-mark {
+      width: 62px;
+      height: 62px;
+      margin: 0 auto 22px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      background: linear-gradient(150deg, rgba(108, 155, 255, .22), rgba(108, 155, 255, .07));
+      border: 1px solid rgba(108, 155, 255, .34);
+    }
+
+    .fp-hero h1 {
+      margin-bottom: 16px;
+      font-size: clamp(32px, 5.2vw, 48px);
+    }
+
+    .fp-sub {
+      color: var(--muted);
+      font-size: 17.5px;
+      max-width: 620px;
+      margin: 0 auto 24px;
+    }
+
+    .fp-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .fp-badges span {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--line-2);
+      color: var(--dim);
+    }
+
+    .fp-badges span.ok {
+      border-color: rgba(87, 207, 154, .38);
+      color: var(--green);
+    }
+
+    .fp-hero .btn-row {
+      justify-content: center;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 16px;
+    }
+
+    .feature {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 22px;
+      transition: border-color .22s;
+    }
+
+    .feature:hover {
+      border-color: var(--line-2);
+    }
+
+    .feature .fi {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      margin-bottom: 13px;
+      background: rgba(108, 155, 255, .12);
+      border: 1px solid rgba(108, 155, 255, .22);
+    }
+
+    .feature h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .feature p {
+      margin: 0;
+      font-size: 14.4px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .req-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .req-list li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: 15.2px;
+      color: var(--muted);
+    }
+
+    .req-list .chk {
+      color: var(--green);
+      font-family: var(--mono);
+      flex: none;
+      padding-top: 1px;
+    }
+
+    .req-list strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .credit {
+      border: 1px solid var(--line-2);
+      border-left: 3px solid var(--amber);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 24px 26px;
+    }
+
+    .credit h3 {
+      margin: 0 0 10px;
+      font-size: 16.5px;
+      font-weight: 600;
+    }
+
+    .credit p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .credit p:last-child {
+      margin-bottom: 0;
+    }
+
+    .credit a {
+      color: var(--blue);
+      border-bottom: 1px solid transparent;
+      transition: border-color .18s;
+    }
+
+    .credit a:hover {
+      border-bottom-color: var(--blue);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 14.5px;
+      color: var(--muted);
+      transition: color .18s;
+    }
+
+    .back-link:hover {
+      color: var(--text);
+    }
+
+    .install-box {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--bg-2);
+      overflow: hidden;
+    }
+
+    .install-box .ib-bar {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 11.8px;
+      color: var(--dim);
+      background: var(--panel);
+    }
+
+    .install-box pre {
+      margin: 0;
+      padding: 15px 16px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .install-box .c {
+      color: var(--dim);
+    }
+
+    .install-box .g {
+      color: var(--green);
+    }
+
+    @media (max-width: 700px) {
+      .fp-hero {
+        padding-top: 44px;
+        padding-bottom: 40px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="index.html" class="brand"><span class="mark">&lt;/&gt;</span> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="index.html#about">About</a>
+          <a href="index.html#skills">Skills</a>
+          <a href="index.html#experience">Experience</a>
+          <a href="index.html#opensource">Open source</a>
+          <a class="ghost" href="index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <div class="container fp-hero" id="top">
+      <div class="fp-mark reveal">⚡</div>
+
+      <h1 class="reveal">Forge&nbsp;Pilot</h1>
+
+      <p class="fp-sub reveal">An AI coding assistant that lives inside <strong style="color:var(--text)">Visual
+          Studio</strong> — it reads your project, answers questions about it, and makes changes you review before
+        they land.</p>
+
+      <div class="fp-badges reveal">
+        <span class="ok">● Published</span>
+        <span>Visual Studio 2026</span>
+        <span>v1.0.1</span>
+        <span>MIT licensed</span>
+        <span>Free</span>
+      </div>
+
+      <div class="btn-row reveal">
+        <a class="btn primary" href="https://marketplace.visualstudio.com/items?itemName=er-abhishek.forge-pilot-1"
+          target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M17.6 1.6 9.9 9.1 5.4 5.7l-1.6.8 3.9 4.4-3.9 4.4 1.6.8 4.5-3.4 7.7 7.5 4-1.9V3.5l-4-1.9zm.4 5-4.6 4.4 4.6 4.4V6.6z" />
+          </svg>
+          Get it on the Marketplace
+        </a>
+        <a class="btn" href="https://github.com/asingh0601/forge-pilot" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.2 18.3 5.5 18.3 5.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z" />
+          </svg>
+          Source on GitHub
+        </a>
+      </div>
+    </div>
+
+    <!-- WHAT IT IS -->
+    <section id="what">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">What it is</span>
+          <h2>A pair programmer docked next to your code</h2>
+        </div>
+
+        <div class="about-grid">
+          <div class="panel reveal">
+            <p>Visual Studio is where a lot of professional software gets written. Forge Pilot adds a panel to it that
+              you can talk to in plain English — <strong>"why is this page slow?"</strong>, <strong>"add validation to
+                this form"</strong>, <strong>"explain what this class does"</strong>.</p>
+            <p>Unlike a chat window in a browser, it can actually <strong>see the project you have open</strong>. It
+              reads the relevant files itself, so you don't have to copy and paste code back and forth to give it
+              context.</p>
+            <p>And it doesn't change anything behind your back. Every edit is shown as a
+              <strong>before-and-after diff</strong> you approve or reject, and it asks permission before running
+              anything on your machine.</p>
+          </div>
+
+          <div class="panel reveal">
+            <ul class="req-list">
+              <li><span class="chk">✓</span>
+                <div><strong>It's free.</strong> No licence fee, no per-seat cost.</div>
+              </li>
+              <li><span class="chk">✓</span>
+                <div><strong>It's open source.</strong> MIT licensed — read it, fork it, ship it.</div>
+              </li>
+              <li><span class="chk">✓</span>
+                <div><strong>Your code stays yours.</strong> It runs against your own AI subscription rather than a
+                  service I operate.</div>
+              </li>
+              <li><span class="chk">✓</span>
+                <div><strong>Nothing to configure.</strong> Install it and it opens itself, docked beside Solution
+                  Explorer.</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Features</span>
+          <h2>What it does</h2>
+          <p>The design goal was simple: keep everything you'd normally lose by switching to a browser tab.</p>
+        </div>
+
+        <div class="feature-grid">
+          <div class="feature reveal">
+            <div class="fi">💬</div>
+            <h3>Conversation, not commands</h3>
+            <p>Ask questions about the code in the same window you're writing it in — no tab switching, no pasting
+              snippets to give it context.</p>
+          </div>
+
+          <div class="feature reveal">
+            <div class="fi">📝</div>
+            <h3>Reviewable diffs</h3>
+            <p>Every proposed edit appears as a colour-coded before-and-after with line numbers. Nothing is written
+              until you've read it.</p>
+          </div>
+
+          <div class="feature reveal">
+            <div class="fi">🔐</div>
+            <h3>Permission prompts</h3>
+            <p>It asks before touching files or running commands. Five modes, from approve-everything-individually to
+              fully autonomous — you pick how much rope it gets.</p>
+          </div>
+
+          <div class="feature reveal">
+            <div class="fi">✅</div>
+            <h3>Visible task lists</h3>
+            <p>On a multi-step job it keeps a running checklist, so you can see what it has finished and what it's
+              still working through.</p>
+          </div>
+
+          <div class="feature reveal">
+            <div class="fi">🎛️</div>
+            <h3>Controls where you need them</h3>
+            <p>Model, thinking effort and permission mode sit as chips under the text box — not buried in a settings
+              dialog four menus deep.</p>
+          </div>
+
+          <div class="feature reveal">
+            <div class="fi">📊</div>
+            <h3>Usage you can see</h3>
+            <p>Your remaining quota renders as meters that turn amber then red as you approach the limit, alongside
+              the conversation's current size.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GETTING STARTED -->
+    <section id="install">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Getting started</span>
+          <h2>What you'll need</h2>
+        </div>
+
+        <div class="about-grid">
+          <div class="panel reveal">
+            <ul class="req-list">
+              <li><span class="chk">1</span>
+                <div><strong>Visual Studio 2026</strong> (17.14 or newer) on Windows — Community, Professional or
+                  Enterprise.</div>
+              </li>
+              <li><span class="chk">2</span>
+                <div><strong>Node.js</strong> version 18 or later, used to install the assistant's command-line
+                  engine.</div>
+              </li>
+              <li><span class="chk">3</span>
+                <div><strong>A Claude Pro or Max subscription.</strong> Forge Pilot itself is free, but the AI behind
+                  it runs on your own subscription.</div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="reveal">
+            <div class="install-box">
+              <div class="ib-bar">terminal</div>
+              <pre><span class="c"># install the engine Forge Pilot drives</span>
+<span class="g">npm</span> install -g @anthropic-ai/claude-code
+
+<span class="c"># sign in with your Claude subscription</span>
+<span class="g">claude</span> login</pre>
+            </div>
+            <p style="color:var(--dim);font-size:14px;margin:14px 0 0">Then install the extension from the
+              Marketplace and open it from <strong style="color:var(--muted)">View → Other Windows → Forge
+                Pilot</strong>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CREDIT -->
+    <section id="credit">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Credit where it's due</span>
+          <h2>Standing on someone else's work</h2>
+        </div>
+
+        <div class="credit reveal">
+          <h3>Forge Pilot is a fork of VsAgentic</h3>
+          <p>The foundation — the command-line integration, session persistence, and the permission system that
+            brokers what the assistant is allowed to do — is the work of
+            <a href="https://github.com/adospace" target="_blank" rel="noopener">Adolfo Marinucci</a>, in
+            <a href="https://github.com/adospace/vs-agentic" target="_blank" rel="noopener">VsAgentic</a>, used under
+            the MIT licence.</p>
+          <p>My fork rebuilds the interface, adds the session controls and the slash-command picker, and gives the
+            extension its own identity so it installs alongside the original rather than replacing it. If you'd
+            rather have the upstream version, install
+            <a href="https://marketplace.visualstudio.com/items?itemName=adospace.VsAgentic" target="_blank"
+              rel="noopener">VsAgentic</a> instead.</p>
+          <p style="font-size:14px;color:var(--dim)">Forge Pilot is an independent project and is not affiliated with
+            or endorsed by Anthropic or Microsoft.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="get">
+      <div class="container">
+        <div class="contact reveal">
+          <h2>Try it out</h2>
+          <p>Free, open source, and it installs beside whatever you already use.</p>
+          <div class="btn-row">
+            <a class="btn primary" href="https://marketplace.visualstudio.com/items?itemName=er-abhishek.forge-pilot-1"
+              target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M17.6 1.6 9.9 9.1 5.4 5.7l-1.6.8 3.9 4.4-3.9 4.4 1.6.8 4.5-3.4 7.7 7.5 4-1.9V3.5l-4-1.9zm.4 5-4.6 4.4 4.6 4.4V6.6z" />
+              </svg>
+              Install from Marketplace
+            </a>
+            <a class="btn" href="https://github.com/asingh0601/forge-pilot" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.2 18.3 5.5 18.3 5.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z" />
+              </svg>
+              Read the source
+            </a>
+          </div>
+          <p style="margin:26px 0 0"><a class="back-link" href="index.html#opensource">← Back to my open source
+              work</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="index.html">Home</a>
+        <a href="https://github.com/asingh0601/forge-pilot" target="_blank" rel="noopener">Repository</a>
+        <a href="https://marketplace.visualstudio.com/items?itemName=er-abhishek.forge-pilot-1" target="_blank"
+          rel="noopener">Marketplace</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const siteHeader = document.getElementById('siteHeader');
+    addEventListener('scroll', () => siteHeader.classList.toggle('stuck', scrollY > 8), { passive: true });
+
+    const menu = document.getElementById('menu');
+    const menuToggle = document.getElementById('menuToggle');
+    menuToggle.addEventListener('click', () => {
+      const open = menu.classList.toggle('open');
+      menuToggle.setAttribute('aria-expanded', String(open));
+      menuToggle.textContent = open ? '✕' : '☰';
+    });
+    menu.addEventListener('click', e => {
+      if (e.target.tagName === 'A') {
+        menu.classList.remove('open');
+        menuToggle.setAttribute('aria-expanded', 'false');
+        menuToggle.textContent = '☰';
+      }
+    });
+
+    const revealEls = document.querySelectorAll('.reveal');
+    const showAll = () => revealEls.forEach(el => el.classList.add('in'));
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+        });
+      }, { threshold: .1, rootMargin: '0px 0px -30px' });
+
+      revealEls.forEach((el, i) => {
+        el.style.transitionDelay = Math.min(i % 5, 4) * 55 + 'ms';
+        io.observe(el);
+      });
+      setTimeout(showAll, 3000);
+    } else {
+      showAll();
+    }
+  </script>
+</body>
+
+</html>

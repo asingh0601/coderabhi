@@ -32,922 +32,7 @@
     document.documentElement.className += ' js';
   </script>
 
-  <style>
-    /* Plain-English site with a few engineering accents:
-       monospace only for small labels, one code-styled profile card. */
-    :root {
-      --bg: #0b0e14;
-      --bg-2: #0f131c;
-      --panel: #121722;
-      --panel-2: #171d2b;
-      --line: #1f2736;
-      --line-2: #2c3547;
-
-      --text: #e6ebf7;
-      --muted: #97a1bb;
-      --dim: #6b7690;
-
-      --blue: #6c9bff;
-      --blue-soft: #9dbaff;
-      --green: #57cf9a;
-      --amber: #e0af68;
-
-      --radius: 12px;
-      --maxw: 1060px;
-      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-      scroll-padding-top: 90px;
-    }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      font-size: 16px;
-      line-height: 1.65;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-      background:
-        radial-gradient(760px circle at 12% -8%, rgba(108, 155, 255, .13), transparent 60%),
-        radial-gradient(620px circle at 92% 4%, rgba(87, 207, 154, .07), transparent 60%);
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .container {
-      width: 100%;
-      max-width: var(--maxw);
-      margin: 0 auto;
-      padding-left: 22px;
-      padding-right: 22px;
-    }
-
-    /* ---------- HEADER ---------- */
-    header.site {
-      position: sticky;
-      top: 0;
-      z-index: 60;
-      background: rgba(11, 14, 20, .86);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid transparent;
-      transition: border-color .25s;
-    }
-
-    header.site.stuck {
-      border-bottom-color: var(--line);
-    }
-
-    .head-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      height: 62px;
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      font-weight: 700;
-      font-size: 16px;
-      letter-spacing: -.01em;
-    }
-
-    .brand .mark {
-      width: 27px;
-      height: 27px;
-      border-radius: 7px;
-      display: grid;
-      place-items: center;
-      background: rgba(108, 155, 255, .14);
-      border: 1px solid rgba(108, 155, 255, .3);
-      color: var(--blue);
-      font-family: var(--mono);
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .head-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    nav.menu {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-    }
-
-    nav.menu a {
-      padding: 8px 13px;
-      border-radius: 8px;
-      font-size: 14.5px;
-      font-weight: 500;
-      color: var(--muted);
-      transition: color .18s, background .18s;
-    }
-
-    nav.menu a:hover {
-      color: var(--text);
-      background: var(--panel-2);
-    }
-
-    nav.menu a.active {
-      color: var(--text);
-    }
-
-    nav.menu a.ghost {
-      margin-left: 8px;
-      border: 1px solid var(--line-2);
-      color: var(--text);
-    }
-
-    nav.menu a.ghost:hover {
-      border-color: var(--blue);
-    }
-
-    .menu-toggle {
-      display: none;
-      background: var(--panel);
-      border: 1px solid var(--line-2);
-      color: var(--text);
-      border-radius: 8px;
-      padding: 6px 11px;
-      font-size: 16px;
-      cursor: pointer;
-      line-height: 1;
-    }
-
-    /* ---------- BUTTONS ---------- */
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      padding: 11px 18px;
-      border-radius: 9px;
-      font-size: 14.5px;
-      font-weight: 600;
-      color: var(--text);
-      border: 1px solid var(--line-2);
-      background: var(--panel);
-      transition: border-color .18s, background .18s, transform .18s;
-    }
-
-    .btn:hover {
-      border-color: var(--blue);
-      background: var(--panel-2);
-      transform: translateY(-2px);
-    }
-
-    .btn svg {
-      width: 16px;
-      height: 16px;
-      flex: none;
-    }
-
-    .btn.primary {
-      background: var(--blue);
-      border-color: var(--blue);
-      color: #08101f;
-    }
-
-    .btn.primary:hover {
-      background: var(--blue-soft);
-      border-color: var(--blue-soft);
-    }
-
-    .btn.coffee {
-      border-color: rgba(224, 175, 104, .42);
-      color: var(--amber);
-      background: rgba(224, 175, 104, .08);
-    }
-
-    .btn.coffee:hover {
-      border-color: var(--amber);
-    }
-
-    /* ---------- SECTIONS ---------- */
-    section {
-      padding-top: 70px;
-      padding-bottom: 70px;
-    }
-
-    .sec-head {
-      margin-bottom: 34px;
-    }
-
-    .kicker {
-      display: block;
-      font-family: var(--mono);
-      font-size: 12.5px;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--blue);
-      margin-bottom: 10px;
-    }
-
-    .sec-head h2 {
-      margin: 0;
-      font-size: clamp(27px, 4vw, 35px);
-      font-weight: 700;
-      letter-spacing: -.025em;
-    }
-
-    .sec-head p {
-      margin: 12px 0 0;
-      color: var(--muted);
-      max-width: 640px;
-      font-size: 16px;
-    }
-
-    /* ---------- HERO ---------- */
-    .hero {
-      padding-top: 74px;
-      padding-bottom: 64px;
-      display: grid;
-      grid-template-columns: 1.08fr .92fr;
-      gap: 44px;
-      align-items: center;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      padding: 6px 13px;
-      border: 1px solid var(--line-2);
-      background: var(--panel);
-      border-radius: 999px;
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 22px;
-    }
-
-    .pill i {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 9px var(--green);
-      display: block;
-    }
-
-    h1 {
-      margin: 0 0 20px;
-      font-size: clamp(34px, 5.4vw, 52px);
-      line-height: 1.1;
-      letter-spacing: -.033em;
-      font-weight: 800;
-    }
-
-    h1 .hl {
-      color: var(--blue);
-    }
-
-    .lede {
-      color: var(--muted);
-      margin: 0 0 18px;
-      font-size: 17px;
-      max-width: 560px;
-    }
-
-    .lede strong {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    .typed {
-      font-family: var(--mono);
-      font-size: 13.4px;
-      color: var(--dim);
-      min-height: 22px;
-      margin-bottom: 30px;
-    }
-
-    .caret {
-      display: inline-block;
-      width: 7px;
-      height: 14px;
-      background: var(--blue);
-      vertical-align: -2px;
-      animation: blink 1.05s steps(1) infinite;
-    }
-
-    @keyframes blink {
-
-      0%,
-      50% {
-        opacity: 1;
-      }
-
-      51%,
-      100% {
-        opacity: 0;
-      }
-    }
-
-    /* profile card — the one deliberately "code-ish" element */
-    .profile {
-      border: 1px solid var(--line-2);
-      border-radius: var(--radius);
-      background: var(--panel);
-      overflow: hidden;
-      box-shadow: 0 22px 50px -32px #000;
-    }
-
-    .profile .bar {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 10px 14px;
-      background: var(--bg-2);
-      border-bottom: 1px solid var(--line);
-      font-family: var(--mono);
-      font-size: 11.8px;
-      color: var(--dim);
-    }
-
-    .profile .bar i {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      display: block;
-    }
-
-    .profile .rows {
-      padding: 8px 4px;
-    }
-
-    .prow {
-      display: grid;
-      grid-template-columns: 96px 1fr;
-      gap: 14px;
-      padding: 9px 16px;
-      align-items: baseline;
-    }
-
-    .prow dt {
-      font-family: var(--mono);
-      font-size: 12.2px;
-      color: var(--dim);
-      margin: 0;
-    }
-
-    .prow dd {
-      margin: 0;
-      font-size: 14.6px;
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    .prow dd .sub {
-      display: block;
-      color: var(--muted);
-      font-weight: 400;
-      font-size: 13.6px;
-    }
-
-    .prow dd em {
-      font-style: normal;
-      color: var(--green);
-    }
-
-    .profile .foot {
-      border-top: 1px solid var(--line);
-      padding: 12px 16px;
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--dim);
-      background: var(--bg-2);
-    }
-
-    /* ---------- ABOUT ---------- */
-    .about-grid {
-      display: grid;
-      grid-template-columns: 1.3fr 1fr;
-      gap: 18px;
-    }
-
-    .panel {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--panel);
-      padding: 26px;
-      transition: border-color .22s;
-    }
-
-    .panel:hover {
-      border-color: var(--line-2);
-    }
-
-    .panel p {
-      color: var(--muted);
-      font-size: 15.6px;
-    }
-
-    .panel p:first-child {
-      margin-top: 0;
-    }
-
-    .panel p:last-child {
-      margin-bottom: 0;
-    }
-
-    .panel strong {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    .drives {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      gap: 18px;
-    }
-
-    .drives li {
-      display: flex;
-      gap: 13px;
-    }
-
-    .drives .ico {
-      flex: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 9px;
-      display: grid;
-      place-items: center;
-      font-size: 15px;
-      background: rgba(108, 155, 255, .12);
-      border: 1px solid rgba(108, 155, 255, .22);
-    }
-
-    .drives h3 {
-      margin: 0 0 2px;
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .drives p {
-      margin: 0;
-      font-size: 14px;
-      color: var(--dim);
-      line-height: 1.55;
-    }
-
-    /* ---------- SKILLS ---------- */
-    .skill-groups {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
-    }
-
-    .sk {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--panel);
-      padding: 20px;
-      transition: border-color .22s;
-    }
-
-    .sk:hover {
-      border-color: var(--line-2);
-    }
-
-    .sk h3 {
-      margin: 0 0 14px;
-      font-size: 14.5px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 9px;
-    }
-
-    .sk h3::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-radius: 2px;
-      background: var(--blue);
-      flex: none;
-    }
-
-    .sk.ai h3::before {
-      background: #b18cf0;
-    }
-
-    .sk.cloud h3::before {
-      background: var(--green);
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .chip {
-      font-size: 13px;
-      padding: 5px 11px;
-      border-radius: 999px;
-      border: 1px solid var(--line-2);
-      background: var(--bg-2);
-      color: var(--muted);
-      transition: color .18s, border-color .18s, transform .18s;
-      cursor: default;
-    }
-
-    .chip:hover {
-      color: var(--text);
-      border-color: var(--blue);
-      transform: translateY(-2px);
-    }
-
-    /* ---------- EXPERIENCE ---------- */
-    .timeline {
-      position: relative;
-      padding-left: 28px;
-    }
-
-    .timeline::before {
-      content: "";
-      position: absolute;
-      left: 5px;
-      top: 10px;
-      bottom: 10px;
-      width: 1.5px;
-      background: linear-gradient(var(--blue), rgba(108, 155, 255, .25), transparent);
-    }
-
-    .job {
-      position: relative;
-      padding-bottom: 28px;
-    }
-
-    .job:last-child {
-      padding-bottom: 0;
-    }
-
-    .job::before {
-      content: "";
-      position: absolute;
-      left: -27px;
-      top: 8px;
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-      background: var(--bg);
-      border: 2px solid var(--line-2);
-    }
-
-    .job.now::before {
-      border-color: var(--green);
-      box-shadow: 0 0 0 4px rgba(87, 207, 154, .13);
-    }
-
-    .j-top {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: baseline;
-      gap: 8px 12px;
-      margin-bottom: 6px;
-    }
-
-    .job h3 {
-      margin: 0;
-      font-size: 17px;
-      font-weight: 600;
-    }
-
-    .job .when {
-      font-family: var(--mono);
-      font-size: 12.2px;
-      color: var(--dim);
-    }
-
-    .job .tag {
-      font-size: 11.4px;
-      font-weight: 600;
-      padding: 2px 9px;
-      border-radius: 999px;
-      color: var(--green);
-      border: 1px solid rgba(87, 207, 154, .35);
-      background: rgba(87, 207, 154, .09);
-    }
-
-    .job p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 15.2px;
-      max-width: 720px;
-    }
-
-    /* ---------- PROJECTS ---------- */
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
-      gap: 17px;
-    }
-
-    .card {
-      display: flex;
-      flex-direction: column;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--panel);
-      padding: 24px;
-      transition: border-color .22s, transform .22s, box-shadow .22s;
-    }
-
-    .card:hover {
-      border-color: var(--blue);
-      transform: translateY(-3px);
-      box-shadow: 0 18px 38px -28px #000;
-    }
-
-    .card.featured {
-      border-color: rgba(108, 155, 255, .34);
-      background: linear-gradient(160deg, rgba(108, 155, 255, .08), var(--panel) 58%);
-    }
-
-    .c-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .card h3 {
-      margin: 0;
-      font-size: 17.5px;
-      font-weight: 700;
-      letter-spacing: -.015em;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      word-break: break-word;
-    }
-
-    .card h3 svg {
-      width: 13px;
-      height: 13px;
-      flex: none;
-      opacity: .5;
-      transition: opacity .2s, transform .2s;
-    }
-
-    .card:hover h3 svg {
-      opacity: 1;
-      transform: translate(2px, -2px);
-    }
-
-    .badge {
-      font-size: 11.2px;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 999px;
-      border: 1px solid var(--line-2);
-      color: var(--dim);
-      white-space: nowrap;
-    }
-
-    .badge.live {
-      border-color: rgba(87, 207, 154, .38);
-      color: var(--green);
-    }
-
-    .card .desc {
-      color: var(--muted);
-      font-size: 15px;
-      margin: 0 0 14px;
-    }
-
-    .card ul {
-      margin: 0 0 18px;
-      padding-left: 18px;
-      color: var(--dim);
-      font-size: 14.2px;
-      display: grid;
-      gap: 6px;
-    }
-
-    .card ul li::marker {
-      color: var(--line-2);
-    }
-
-    .c-foot {
-      margin-top: auto;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-    }
-
-    .c-foot span {
-      font-family: var(--mono);
-      font-size: 11.4px;
-      color: var(--dim);
-      border: 1px solid var(--line);
-      padding: 3px 8px;
-      border-radius: 6px;
-    }
-
-    /* ---------- CONTACT ---------- */
-    .contact {
-      border: 1px solid var(--line-2);
-      border-radius: 18px;
-      padding: 46px 32px;
-      text-align: center;
-      background:
-        radial-gradient(640px circle at 50% -30%, rgba(108, 155, 255, .16), transparent 62%),
-        var(--panel);
-    }
-
-    .contact h2 {
-      margin: 0 0 12px;
-      font-size: clamp(25px, 3.8vw, 33px);
-      letter-spacing: -.025em;
-    }
-
-    .contact p {
-      color: var(--muted);
-      max-width: 520px;
-      margin: 0 auto 28px;
-      font-size: 16px;
-    }
-
-    .contact .btn-row {
-      justify-content: center;
-    }
-
-    /* ---------- FOOTER ---------- */
-    footer {
-      border-top: 1px solid var(--line);
-      padding: 26px 0 34px;
-      margin-top: 40px;
-    }
-
-    .foot-inner {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px 20px;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 13.5px;
-      color: var(--dim);
-    }
-
-    .foot-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 18px;
-    }
-
-    .foot-links a:hover {
-      color: var(--text);
-    }
-
-    /* ---------- REVEAL ---------- */
-    .js .reveal {
-      opacity: 0;
-      transform: translateY(16px);
-      transition: opacity .55s ease, transform .55s ease;
-    }
-
-    .js .reveal.in {
-      opacity: 1;
-      transform: none;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-
-      *,
-      *::before,
-      *::after {
-        animation: none !important;
-        transition: none !important;
-      }
-
-      .js .reveal {
-        opacity: 1;
-        transform: none;
-      }
-
-      html {
-        scroll-behavior: auto;
-      }
-    }
-
-    /* ---------- RESPONSIVE ---------- */
-    @media (max-width: 900px) {
-      .hero {
-        grid-template-columns: 1fr;
-        gap: 34px;
-      }
-
-      .about-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 700px) {
-      .container {
-        padding-left: 17px;
-        padding-right: 17px;
-      }
-
-      .menu-toggle {
-        display: block;
-      }
-
-      .brand {
-        font-size: 15px;
-      }
-
-      nav.menu {
-        position: absolute;
-        top: 62px;
-        left: 0;
-        right: 0;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 2px;
-        padding: 12px 17px 18px;
-        background: rgba(13, 17, 26, .98);
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid var(--line-2);
-        display: none;
-      }
-
-      nav.menu.open {
-        display: flex;
-      }
-
-      nav.menu a {
-        padding: 11px 13px;
-      }
-
-      nav.menu a.ghost {
-        margin-left: 0;
-        margin-top: 6px;
-        text-align: center;
-      }
-
-      section {
-        padding-top: 54px;
-        padding-bottom: 54px;
-      }
-
-      .hero {
-        padding-top: 48px;
-        padding-bottom: 44px;
-      }
-
-      .panel {
-        padding: 22px;
-      }
-
-      .contact {
-        padding: 36px 20px;
-      }
-
-      .prow {
-        grid-template-columns: 84px 1fr;
-        gap: 10px;
-      }
-    }
-
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -960,6 +45,7 @@
           <a href="#skills">Skills</a>
           <a href="#experience">Experience</a>
           <a href="#projects">Projects</a>
+          <a href="#opensource">Open source</a>
           <a class="ghost" href="#contact">Get in touch</a>
         </nav>
 
@@ -1255,7 +341,7 @@
         <div class="sec-head reveal">
           <span class="kicker">Projects</span>
           <h2>Things I've built on my own time</h2>
-          <p>One product with real customers, and free tools used by other developers.</p>
+          <p>A product of my own, with real customers paying for it.</p>
         </div>
 
         <div class="cards">
@@ -1278,9 +364,43 @@
             <div class="c-foot"><span>aitranslate.in</span><span>AI product</span></div>
           </a>
 
-          <a class="card reveal" href="https://www.npmjs.com/~onlyabhishek" target="_blank" rel="noopener">
+        </div>
+      </div>
+    </section>
+
+    <!-- OPEN SOURCE -->
+    <section id="opensource">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Open source</span>
+          <h2>My open source work</h2>
+          <p>Tools I built for myself first, then published free for anyone who hits the same friction.</p>
+        </div>
+
+        <div class="cards">
+          <a class="card featured reveal" href="forge-pilot.html">
             <div class="c-top">
-              <h3>Open-source tools
+              <h3>Forge Pilot
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </h3>
+              <span class="badge live">● Published</span>
+            </div>
+            <p class="desc">An AI coding assistant that lives inside Visual Studio.</p>
+            <ul>
+              <li>Chat with Claude in a panel next to your code — it can read and edit the project for you.</li>
+              <li>Shows every change as a reviewable diff, and asks permission before touching anything.</li>
+              <li>Free and open source, on the Visual Studio Marketplace.</li>
+            </ul>
+            <div class="c-foot"><span>C# · WPF</span><span>Visual Studio</span><span>MIT</span></div>
+          </a>
+
+          <a class="card reveal" href="https://www.npmjs.com/package/@angx/ngx-circle-chart" target="_blank"
+            rel="noopener">
+            <div class="c-top">
+              <h3>ngx-circle-chart
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                   stroke-linejoin="round">
                   <path d="M7 17 17 7M8 7h9v9" />
@@ -1288,34 +408,59 @@
               </h3>
               <span class="badge">npm</span>
             </div>
-            <p class="desc">Free building blocks other developers can drop into their own apps.</p>
+            <p class="desc">A ready-made component for showing data as a circular chart.</p>
             <ul>
-              <li>A chart component for showing data in circular form.</li>
-              <li>A calendar and scheduling component.</li>
-              <li>Both designed to be simple to use and light to load.</li>
+              <li>Drop it into an app and pass it numbers — no setup beyond that.</li>
+              <li>Light to load, with no heavy dependencies behind it.</li>
             </ul>
             <div class="c-foot"><span>Angular</span><span>TypeScript</span></div>
           </a>
 
-          <a class="card reveal" href="https://marketplace.visualstudio.com/publishers/er-abhishek" target="_blank"
+          <a class="card reveal" href="https://www.npmjs.com/package/@angx/ngx-modern-calendar" target="_blank"
             rel="noopener">
             <div class="c-top">
-              <h3>Editor extensions
+              <h3>ngx-modern-calendar
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                   stroke-linejoin="round">
                   <path d="M7 17 17 7M8 7h9v9" />
                 </svg>
               </h3>
-              <span class="badge">Marketplace</span>
+              <span class="badge">npm</span>
             </div>
-            <p class="desc">Add-ons for VS Code, the editor most developers write code in.</p>
+            <p class="desc">A calendar and scheduling component for web apps.</p>
             <ul>
-              <li>Built first to smooth out my own daily workflow.</li>
-              <li>Published publicly for anyone who hits the same friction.</li>
+              <li>Handles events, layout and interaction out of the box.</li>
+              <li>Built to stay fast even with a busy calendar.</li>
             </ul>
-            <div class="c-foot"><span>VS Code</span><span>Developer tools</span></div>
+            <div class="c-foot"><span>Angular</span><span>TypeScript</span></div>
+          </a>
+
+          <a class="card reveal" href="https://www.npmjs.com/package/@angx/ngx-easy-captcha" target="_blank"
+            rel="noopener">
+            <div class="c-top">
+              <h3>ngx-easy-captcha
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M7 17 17 7M8 7h9v9" />
+                </svg>
+              </h3>
+              <span class="badge">npm</span>
+            </div>
+            <p class="desc">The "prove you're not a robot" check, made simple to add.</p>
+            <ul>
+              <li>Supports both Google reCAPTCHA v3 and Cloudflare Turnstile.</li>
+              <li>Switch between the two in seconds, without rewriting anything.</li>
+              <li>Cleans up after itself instead of leaving scripts on the page.</li>
+            </ul>
+            <div class="c-foot"><span>Angular</span><span>TypeScript</span></div>
           </a>
         </div>
+
+        <p class="sec-note reveal">All three Angular packages live under the
+          <a href="https://github.com/orgs/angx-libs/repositories" target="_blank" rel="noopener">angx-libs</a>
+          organisation on GitHub, and are published on
+          <a href="https://www.npmjs.com/~onlyabhishek" target="_blank" rel="noopener">npm</a>.
+        </p>
       </div>
     </section>
 
@@ -1428,7 +573,7 @@
           links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
         });
       }, { rootMargin: '-45% 0px -50% 0px' });
-      ['about', 'skills', 'experience', 'projects', 'contact']
+      ['about', 'skills', 'experience', 'projects', 'opensource', 'contact']
         .map(id => document.getElementById(id)).forEach(s => sio.observe(s));
     }
 

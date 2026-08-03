@@ -6,9 +6,16 @@ Personal site — single static page, no build step, no dependencies.
 
 | File | Purpose |
 |---|---|
-| `index.html` | The entire site (inline CSS + JS) |
+| `index.html` | Home page |
+| `forge-pilot.html` | Dedicated page for the Forge Pilot extension |
+| `styles.css` | Shared stylesheet for both pages |
 | `robots.txt` | Crawler rules |
 | `sitemap.xml` | Sitemap for `coderabhi.in` |
+| `CNAME` · `.nojekyll` | GitHub Pages custom domain + skip Jekyll |
+
+CSS lives in `styles.css` so the two pages can't drift apart. Page-specific rules
+(the Forge Pilot hero, feature grid and credit box) stay in a small `<style>` block on
+that page. Scripts remain inline per page.
 
 ## Local preview
 
@@ -94,12 +101,22 @@ The engineering personality lives in small accents only, not in the copy:
 
 ## Editing
 
-Everything lives in `index.html`:
-
-- **Copy** — the `<main>` sections (`hero`, `about`, `skills`, `experience`, `projects`, `contact`)
-- **Colors** — the `:root` CSS variables at the top of `<style>`
-- **Typewriter lines** — the `phrases` array in the `<script>` block
+- **Copy** — the `<main>` sections of each page
+- **Colors** — the `:root` CSS variables at the top of `styles.css`
+- **Typewriter lines** — the `phrases` array in `index.html`'s `<script>`
 - **Profile card rows** — the `<dl class="rows">` in the hero
+
+Adding a nav item means touching **three** places in `index.html`: the `<nav class="menu">`
+links, the section's `id`, and the id array passed to the scroll-spy observer near the bottom
+of the script — miss the last one and the link works but never highlights.
+
+## Attribution
+
+Forge Pilot is a fork of [VsAgentic](https://github.com/adospace/vs-agentic) by Adolfo
+Marinucci (MIT). Its page credits this prominently in a dedicated "Credit where it's due"
+section, and links to the upstream extension. **Do not remove or soften that section** — the
+MIT licence requires the copyright notice to travel with the work, and presenting a fork as
+wholly original work would be misleading regardless of the licence.
 
 ## Accessibility / robustness notes
 
