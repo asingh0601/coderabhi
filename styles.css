@@ -100,18 +100,25 @@ header.site.stuck {
   letter-spacing: -.01em;
 }
 
-.brand .mark {
-  width: 27px;
-  height: 27px;
-  border-radius: 7px;
-  display: grid;
-  place-items: center;
-  background: rgba(108, 155, 255, .14);
-  border: 1px solid rgba(108, 155, 255, .3);
-  color: var(--blue);
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 600;
+.brand .logo {
+  width: 30px;
+  height: 30px;
+  display: block;
+  flex: none;
+}
+
+/* full lockup in the footer */
+.foot-logo {
+  display: block;
+  width: 168px;
+  height: auto;
+  margin-bottom: 14px;
+  opacity: .85;
+  transition: opacity .2s;
+}
+
+.foot-logo:hover {
+  opacity: 1;
 }
 
 .head-right {
