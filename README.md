@@ -7,15 +7,52 @@ Personal site — single static page, no build step, no dependencies.
 | File | Purpose |
 |---|---|
 | `index.html` | Home page |
-| `forge-pilot.html` | Dedicated page for the Forge Pilot extension |
-| `styles.css` | Shared stylesheet for both pages |
-| `robots.txt` | Crawler rules |
-| `sitemap.xml` | Sitemap for `coderabhi.in` |
+| `forge-pilot.html` | Forge Pilot (Visual Studio extension) |
+| `ngx-circle-chart.html` | Library page + live demo |
+| `ngx-modern-calendar.html` | Library page + live demo |
+| `ngx-easy-captcha.html` | Library page + live demo |
+| `styles.css` | Shared stylesheet |
+| `page.js` | Shared script for the sub-pages |
+| `assets/` | Logo, favicons, social preview card |
+| `demo/` | **Built Angular demo apps** — see below |
+| `robots.txt` · `sitemap.xml` | Crawler rules + sitemap |
 | `CNAME` · `.nojekyll` | GitHub Pages custom domain + skip Jekyll |
 
-CSS lives in `styles.css` so the two pages can't drift apart. Page-specific rules
-(the Forge Pilot hero, feature grid and credit box) stay in a small `<style>` block on
-that page. Scripts remain inline per page.
+CSS lives in `styles.css` so the pages can't drift apart; `page.js` carries the shared
+nav/reveal behaviour for every page except `index.html`, which has extra logic of its own.
+
+## The live demos
+
+`demo/` holds the **real, compiled Angular apps** from `D:\Projects\angx-libs`, embedded in
+an iframe on each library page. They are genuine builds of the published packages, not
+reproductions.
+
+GitHub Pages has no build step, so the compiled output has to be committed. It is ~690 KB
+total (44–76 KB transferred per demo).
+
+**To refresh a demo after changing a library:**
+
+```bash
+cd D:/Projects/angx-libs/<lib> && npx ng build @angx/<lib> && npx ng build <lib> --base-href=./
+```
+
+Then copy `dist/<lib>/browser/` over `demo/<lib>/` in this repo.
+
+Two things to keep right:
+
+- **`--base-href`.** `ngx-circle-chart` and `ngx-modern-calendar` use `./` so they work from
+  any path. `ngx-easy-captcha` uses the absolute `/demo/ngx-easy-captcha/` because it is a
+  router SPA and its routes need a fixed root. Do not run these builds from Git Bash — MSYS
+  rewrites a leading `/` into a Windows path and silently corrupts the base href.
+- **Route fallbacks.** GitHub Pages can't rewrite, so `demo/ngx-easy-captcha/<route>/index.html`
+  is a copy of the app's `index.html` for each route. Re-copy them after a rebuild.
+
+Iframe `src` values point at an explicit `index.html`, not a directory, so the pages also
+work when opened straight off disk rather than through a server.
+
+**The captcha demo** uses Cloudflare's public test key `1x00000000000000000000AA`, which comes
+from the library repo itself. It passes automatically, so no visible checkbox is drawn — the
+form's "Token received" line is the proof it worked. The page says so explicitly.
 
 ## Local preview
 

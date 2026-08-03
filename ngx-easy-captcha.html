@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>@angx/ngx-easy-captcha — reCAPTCHA &amp; Turnstile for Angular · Abhishek Singh</title>
+  <meta name="description"
+    content="One free, open-source Angular service for both Google reCAPTCHA v3 and Cloudflare Turnstile. Loads each script on demand, cleans up after itself, and swaps providers in one line.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="@angx/ngx-easy-captcha — reCAPTCHA & Turnstile for Angular">
+  <meta property="og:description" content="One Angular service for both captcha providers. Free and open source.">
+  <meta property="og:url" content="https://coderabhi.in/ngx-easy-captcha.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/ngx-easy-captcha.html">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="index.html" class="brand"><img class="logo" src="assets/logo-mark.png" width="30" height="30"
+          alt="coderabhi logo"> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="index.html#about">About</a>
+          <a href="index.html#skills">Skills</a>
+          <a href="index.html#experience">Experience</a>
+          <a href="index.html#opensource">Open source</a>
+          <a class="ghost" href="index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container pkg-hero" id="top">
+      <h1 class="reveal"><span class="scope">&#64;angx/</span>ngx-easy-captcha</h1>
+
+      <p class="pkg-sub reveal">The "prove you're not a robot" check, added to an Angular app in one line — and
+        switched between Google and Cloudflare by changing a single word.</p>
+
+      <div class="pkg-badges reveal">
+        <span class="ok">● v3.0.0</span>
+        <span>MIT</span>
+        <span>Angular 21 · 22</span>
+        <span>reCAPTCHA v3</span>
+        <span>Turnstile</span>
+      </div>
+
+      <div class="btn-row reveal">
+        <a class="btn primary" href="#demo">See it running</a>
+        <a class="btn" href="https://www.npmjs.com/package/@angx/ngx-easy-captcha" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M0 8h24v8H12v-6H8v6H0V8zm2 2v4h2v-4H2zm12 0v4h2v-4h-2zm4 0v4h4v-4h-4z" />
+          </svg>
+          npm
+        </a>
+        <a class="btn" href="https://github.com/angx-libs/ngx-easy-captcha" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.2 18.3 5.5 18.3 5.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z" />
+          </svg>
+          Source
+        </a>
+      </div>
+    </div>
+
+    <!-- LIVE DEMO -->
+    <section id="demo">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Live demo</span>
+          <h2>A real challenge, on a real form</h2>
+          <p>The published package running Cloudflare Turnstile on a sign-in / sign-up form. Look for
+            <strong style="color:var(--green)">"Token received"</strong> under the buttons — that's the verification
+            token arriving from Cloudflare, which is the whole point of the library.</p>
+        </div>
+
+        <div class="demo-wrap reveal">
+          <div class="demo-bar">
+            <i style="background:#f7768e"></i><i style="background:#e0af68"></i><i style="background:#57cf9a"></i>
+            <span style="margin-left:6px">demo — cloudflare turnstile</span>
+            <span class="spacer"></span>
+            <a href="demo/ngx-easy-captcha/cloudflare-turnstile/index.html" target="_blank" rel="noopener">Open in a new tab ↗</a>
+          </div>
+          <iframe src="demo/ngx-easy-captcha/cloudflare-turnstile/index.html" title="Live demo of @angx/ngx-easy-captcha"
+            loading="lazy"></iframe>
+        </div>
+
+        <p class="demo-note reveal">The demo runs on Cloudflare's public
+          <strong style="color:var(--muted)">test</strong> site key
+          (<code style="font-family:var(--mono)">1x00000000000000000000AA</code>), which works on any domain and is
+          designed to pass automatically. Because it never needs to challenge anyone, Turnstile issues its token
+          straight away and draws no visible checkbox — so what you're seeing is the real integration succeeding,
+          just without the "I'm not a robot" step. Swap in your own site key and the widget appears where the gap is.
+          <br><br>
+          The reCAPTCHA v3 route isn't shown live: v3 is invisible by design, so there'd be nothing on screen but a
+          badge, and it needs a domain-registered key rather than a public test one.
+        </p>
+      </div>
+    </section>
+
+    <!-- USAGE -->
+    <section id="usage">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Usage</span>
+          <h2>One provider, one subscription</h2>
+        </div>
+
+        <div class="about-grid">
+          <div class="reveal">
+            <div class="code-block" style="margin-bottom:16px">
+              <div class="cb-bar">install</div>
+              <pre><span class="g">npm</span> i @angx/ngx-easy-captcha</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="cb-bar">component.ts</div>
+              <pre><span class="b">import</span> {
+  CaptchaProvider, provideNgxEasyCaptcha,
+  NgxEasyCaptchaService,
+} <span class="b">from</span> <span class="g">'@angx/ngx-easy-captcha'</span>;
+
+<span class="y">@Component</span>({
+  providers: [provideNgxEasyCaptcha({
+    provider: CaptchaProvider.CloudFlare,
+    siteKey: <span class="g">'0x4AAA...'</span>,
+    initializer: <span class="g">'turnstile-captcha'</span>,
+  })],
+  <span class="c">/* ... */</span>
+})
+<span class="b">export class</span> SignInComponent {
+  <span class="b">private readonly</span> captcha = inject(NgxEasyCaptchaService);
+  <span class="b">readonly</span> token = signal(<span class="g">''</span>);
+
+  <span class="b">constructor</span>() {
+    <span class="b">this</span>.captcha.$
+      .pipe(takeUntilDestroyed())
+      .subscribe(t =&gt; <span class="b">this</span>.token.set(t));
+  }
+}</pre>
+            </div>
+          </div>
+
+          <div class="panel reveal">
+            <p><strong>Switching provider is one word.</strong> Change
+              <code style="color:var(--blue)">CaptchaProvider.CloudFlare</code> to
+              <code style="color:var(--blue)">.Google</code> and the same subscription keeps working — the service
+              hides the difference between the two vendors' very different APIs.
+            </p>
+            <p><strong>The script loads on demand.</strong> Neither vendor's JavaScript is in your bundle or your
+              <code>index.html</code>; it's injected only when a component that needs it is created.
+            </p>
+            <p><strong>And it cleans up.</strong> When the injector that provided the service is destroyed, the
+              script tag, the rendered widget and the global it left on <code>window</code> are all removed —
+              cleanup doesn't depend on you remembering to unsubscribe.</p>
+            <p>The <code style="color:var(--blue)">initializer</code> means different things per provider: for
+              Turnstile it's the id prefix of the elements that should host a widget, so several forms on one page
+              each get their own. For reCAPTCHA it's the action name reported to Google.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API -->
+    <section id="api">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">API</span>
+          <h2>Configuration</h2>
+          <p><code style="font-family:var(--mono);color:var(--blue)">provideNgxEasyCaptcha({ ... })</code></p>
+        </div>
+
+        <div class="api-scroll reveal">
+          <table class="api-table">
+            <thead>
+              <tr>
+                <th>Option</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>What it does</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>provider</td>
+                <td>CaptchaProvider</td>
+                <td>yes</td>
+                <td><code>CaptchaProvider.CloudFlare</code> or <code>CaptchaProvider.Google</code>. The only line
+                  that changes when you switch vendors.</td>
+              </tr>
+              <tr>
+                <td>siteKey</td>
+                <td>string</td>
+                <td>yes</td>
+                <td>Your public site key from the provider's dashboard. Public by design — the matching secret key
+                  stays on your server.</td>
+              </tr>
+              <tr>
+                <td>initializer</td>
+                <td>string</td>
+                <td>yes</td>
+                <td>Turnstile: the id prefix of the host elements. reCAPTCHA: the action name.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="api-scroll reveal" style="margin-top:18px">
+          <table class="api-table">
+            <thead>
+              <tr>
+                <th>Service member</th>
+                <th>Type</th>
+                <th></th>
+                <th>What it does</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>$</td>
+                <td>Observable&lt;string&gt;</td>
+                <td>—</td>
+                <td>Emits the verification token as it's issued. Send it to your backend to verify.</td>
+              </tr>
+              <tr>
+                <td>refresh()</td>
+                <td>void</td>
+                <td>—</td>
+                <td>Re-runs the challenge — e.g. after a failed submit.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="demo-note reveal">A token only proves the check ran in the browser. <strong
+            style="color:var(--muted)">Always verify it server-side</strong> with your secret key before trusting a
+          submission — this library handles the front end, not the verification.</p>
+      </div>
+    </section>
+
+    <section id="get">
+      <div class="container">
+        <div class="contact reveal">
+          <h2>Free to use, MIT licensed</h2>
+          <p>Use it, fork it, ship it. Issues and pull requests are welcome.</p>
+          <div class="btn-row">
+            <a class="btn primary" href="https://www.npmjs.com/package/@angx/ngx-easy-captcha" target="_blank"
+              rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M0 8h24v8H12v-6H8v6H0V8zm2 2v4h2v-4H2zm12 0v4h2v-4h-2zm4 0v4h4v-4h-4z" />
+              </svg>
+              Install from npm
+            </a>
+            <a class="btn" href="https://github.com/angx-libs/ngx-easy-captcha" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.2 18.3 5.5 18.3 5.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z" />
+              </svg>
+              Source
+            </a>
+          </div>
+          <p style="margin:26px 0 0"><a class="back-link" href="index.html#opensource">← All my open source work</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a href="index.html"><img class="foot-logo" src="assets/logo-full.png" width="520" height="314"
+          alt="coderabhi"></a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="index.html">Home</a>
+        <a href="index.html#opensource">Open source</a>
+        <a href="https://www.npmjs.com/package/@angx/ngx-easy-captcha" target="_blank" rel="noopener">npm</a>
+        <a href="https://github.com/angx-libs/ngx-easy-captcha" target="_blank" rel="noopener">Repository</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="page.js"></script>
+</body>
+
+</html>

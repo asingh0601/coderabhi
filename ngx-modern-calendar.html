@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>@angx/ngx-modern-calendar — Angular calendar component · Abhishek Singh</title>
+  <meta name="description"
+    content="A free, open-source Angular calendar and date-picker component. Five built-in languages, selectable-date rules and a live demo.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="@angx/ngx-modern-calendar — Angular calendar component">
+  <meta property="og:description" content="A small, themeable, multi-language calendar for Angular. Free and open source.">
+  <meta property="og:url" content="https://coderabhi.in/ngx-modern-calendar.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/ngx-modern-calendar.html">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="index.html" class="brand"><img class="logo" src="assets/logo-mark.png" width="30" height="30"
+          alt="coderabhi logo"> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="index.html#about">About</a>
+          <a href="index.html#skills">Skills</a>
+          <a href="index.html#experience">Experience</a>
+          <a href="index.html#opensource">Open source</a>
+          <a class="ghost" href="index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container pkg-hero" id="top">
+      <h1 class="reveal"><span class="scope">&#64;angx/</span>ngx-modern-calendar</h1>
+
+      <p class="pkg-sub reveal">A calendar for Angular apps — pick a date, block out the days you don't want
+        bookable, and show it in the visitor's own language.</p>
+
+      <div class="pkg-badges reveal">
+        <span class="ok">● v3.0.0</span>
+        <span>MIT</span>
+        <span>Angular 21 · 22</span>
+        <span>5 languages</span>
+        <span>No dependencies</span>
+      </div>
+
+      <div class="btn-row reveal">
+        <a class="btn primary" href="#demo">See it running</a>
+        <a class="btn" href="https://www.npmjs.com/package/@angx/ngx-modern-calendar" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M0 8h24v8H12v-6H8v6H0V8zm2 2v4h2v-4H2zm12 0v4h2v-4h-2zm4 0v4h4v-4h-4z" />
+          </svg>
+          npm
+        </a>
+        <a class="btn" href="https://github.com/angx-libs/ngx-modern-calendar" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.2 18.3 5.5 18.3 5.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z" />
+          </svg>
+          Source
+        </a>
+      </div>
+    </div>
+
+    <!-- LIVE DEMO -->
+    <section id="demo">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Live demo</span>
+          <h2>The real component, running here</h2>
+          <p>The published package, built and embedded below. Click a date, change month, switch language.</p>
+        </div>
+
+        <div class="demo-wrap reveal">
+          <div class="demo-bar">
+            <i style="background:#f7768e"></i><i style="background:#e0af68"></i><i style="background:#57cf9a"></i>
+            <span style="margin-left:6px">demo</span>
+            <span class="spacer"></span>
+            <a href="demo/ngx-modern-calendar/index.html" target="_blank" rel="noopener">Open in a new tab ↗</a>
+          </div>
+          <iframe src="demo/ngx-modern-calendar/index.html" title="Live demo of @angx/ngx-modern-calendar"
+            loading="lazy"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- USAGE -->
+    <section id="usage">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Usage</span>
+          <h2>Drop it in and listen for a date</h2>
+        </div>
+
+        <div class="about-grid">
+          <div class="reveal">
+            <div class="code-block" style="margin-bottom:16px">
+              <div class="cb-bar">install</div>
+              <pre><span class="g">npm</span> i @angx/ngx-modern-calendar</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="cb-bar">component.ts</div>
+              <pre><span class="b">import</span> { NgxModernCalendarComponent }
+  <span class="b">from</span> <span class="g">'@angx/ngx-modern-calendar'</span>;
+
+<span class="y">@Component</span>({
+  imports: [NgxModernCalendarComponent],
+  template: <span class="g">`
+    &lt;modern-calendar
+      language="es"
+      [pastDates]="false"
+      (dateSelected)="onPick($event)" /&gt;
+  `</span>,
+})</pre>
+            </div>
+          </div>
+
+          <div class="panel reveal">
+            <p><strong>Five languages ship with it</strong> — English, Spanish, French, Hebrew and Hindi. Pass a
+              <code style="color:var(--blue)">language</code> code and the month names, weekday names and first day
+              of the week all follow. An unknown code falls back to English rather than breaking.
+            </p>
+            <p>Need a sixth? Pass your own <code style="color:var(--blue)">locale</code> object and it wins over the
+              built-in list — you're not limited to what I shipped.</p>
+            <p>To use it as a <strong>booking calendar</strong>, turn on
+              <code style="color:var(--blue)">datesFilter</code> and supply the dates or weekdays that should be
+              selectable. Everything else is greyed out, and each available date can carry a payload that comes back
+              to you when it's picked.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API -->
+    <section id="api">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">API</span>
+          <h2>Inputs &amp; outputs</h2>
+          <p>Selector: <code style="font-family:var(--mono);color:var(--blue)">&lt;modern-calendar&gt;</code></p>
+        </div>
+
+        <div class="api-scroll reveal">
+          <table class="api-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Default</th>
+                <th>What it does</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>language</td>
+                <td>string</td>
+                <td>'en'</td>
+                <td>Built-in locale: <code>en</code>, <code>es</code>, <code>fr</code>, <code>he</code> or
+                  <code>hi</code>. Unknown codes fall back to English.
+                </td>
+              </tr>
+              <tr>
+                <td>locale</td>
+                <td>CalendarLocale</td>
+                <td>null</td>
+                <td>A full locale object, for languages beyond the built-in five. Takes precedence over
+                  <code>language</code>.
+                </td>
+              </tr>
+              <tr>
+                <td>selectedDates</td>
+                <td>Date[]</td>
+                <td>[]</td>
+                <td>Dates to render as already selected.</td>
+              </tr>
+              <tr>
+                <td>datesFilter</td>
+                <td>boolean</td>
+                <td>false</td>
+                <td>Restrict what can be picked to <code>availableDates</code> / <code>availableWeekDays</code>.</td>
+              </tr>
+              <tr>
+                <td>pastDates</td>
+                <td>boolean</td>
+                <td>true</td>
+                <td>Allow selecting days before today. Set false for booking flows.</td>
+              </tr>
+              <tr>
+                <td>availableDates</td>
+                <td>AvailableDate[]</td>
+                <td>[]</td>
+                <td>Specific selectable dates, used when <code>datesFilter</code> is on. Each can carry a payload
+                  returned on selection.</td>
+              </tr>
+              <tr>
+                <td>availableWeekDays</td>
+                <td>AvailableWeekDay[]</td>
+                <td>[]</td>
+                <td>Selectable weekdays, used when <code>datesFilter</code> is on — e.g. weekdays only.</td>
+              </tr>
+              <tr>
+                <td>firstDayOfWeek</td>
+                <td>number</td>
+                <td>null</td>
+                <td>Override the locale's first day of the week. 0 = Sunday.</td>
+              </tr>
+              <tr>
+                <td>dateSelected</td>
+                <td>output&lt;CalendarSelection&gt;</td>
+                <td>—</td>
+                <td>Emits the picked date plus any payload attached to it.</td>
+              </tr>
+              <tr>
+                <td>monthChanged</td>
+                <td>output&lt;Date&gt;</td>
+                <td>—</td>
+                <td>Emits the first of the month whenever the visible month changes — useful for fetching that
+                  month's availability.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="demo-note reveal">Locale objects and the full type definitions are documented in the
+          <a style="color:var(--blue)" href="https://github.com/angx-libs/ngx-modern-calendar" target="_blank"
+            rel="noopener">repository README</a>.
+        </p>
+      </div>
+    </section>
+
+    <section id="get">
+      <div class="container">
+        <div class="contact reveal">
+          <h2>Free to use, MIT licensed</h2>
+          <p>Use it, fork it, ship it. Issues and pull requests are welcome.</p>
+          <div class="btn-row">
+            <a class="btn primary" href="https://www.npmjs.com/package/@angx/ngx-modern-calendar" target="_blank"
+              rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M0 8h24v8H12v-6H8v6H0V8zm2 2v4h2v-4H2zm12 0v4h2v-4h-2zm4 0v4h4v-4h-4z" />
+              </svg>
+              Install from npm
+            </a>
+            <a class="btn" href="https://github.com/angx-libs/ngx-modern-calendar" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.2 18.3 5.5 18.3 5.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z" />
+              </svg>
+              Source
+            </a>
+          </div>
+          <p style="margin:26px 0 0"><a class="back-link" href="index.html#opensource">← All my open source work</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a href="index.html"><img class="foot-logo" src="assets/logo-full.png" width="520" height="314"
+          alt="coderabhi"></a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="index.html">Home</a>
+        <a href="index.html#opensource">Open source</a>
+        <a href="https://www.npmjs.com/package/@angx/ngx-modern-calendar" target="_blank" rel="noopener">npm</a>
+        <a href="https://github.com/angx-libs/ngx-modern-calendar" target="_blank" rel="noopener">Repository</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="page.js"></script>
+</body>
+
+</html>
