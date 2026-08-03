@@ -92,32 +92,47 @@
       <div class="container">
         <div class="sec-head reveal">
           <span class="kicker">Live demo</span>
-          <h2>A real challenge, on a real form</h2>
-          <p>The published package running Cloudflare Turnstile on a sign-in / sign-up form. Look for
-            <strong style="color:var(--green)">"Token received"</strong> under the buttons — that's the verification
-            token arriving from Cloudflare, which is the whole point of the library.</p>
+          <h2>Both providers, running here</h2>
+          <p>The same form, the same library, the same subscription — wired to Cloudflare below and to Google
+            underneath it. Look for <strong style="color:var(--green)">"Token received"</strong> in each: that's the
+            verification token arriving, which is the whole point of the library.</p>
         </div>
 
         <div class="demo-wrap reveal">
           <div class="demo-bar">
             <i style="background:#f7768e"></i><i style="background:#e0af68"></i><i style="background:#57cf9a"></i>
-            <span style="margin-left:6px">demo — cloudflare turnstile</span>
+            <span style="margin-left:6px">cloudflare turnstile</span>
             <span class="spacer"></span>
-            <a href="demo/ngx-easy-captcha/cloudflare-turnstile/index.html" target="_blank" rel="noopener">Open in a new tab ↗</a>
+            <a href="demo/ngx-easy-captcha/cloudflare-turnstile/index.html" target="_blank" rel="noopener">Open in a
+              new tab ↗</a>
           </div>
-          <iframe src="demo/ngx-easy-captcha/cloudflare-turnstile/index.html" title="Live demo of @angx/ngx-easy-captcha"
-            loading="lazy"></iframe>
+          <iframe src="demo/ngx-easy-captcha/cloudflare-turnstile/index.html"
+            title="Live Cloudflare Turnstile demo of @angx/ngx-easy-captcha" loading="lazy"></iframe>
         </div>
 
-        <p class="demo-note reveal">The demo runs on Cloudflare's public
-          <strong style="color:var(--muted)">test</strong> site key
-          (<code style="font-family:var(--mono)">1x00000000000000000000AA</code>), which works on any domain and is
-          designed to pass automatically. Because it never needs to challenge anyone, Turnstile issues its token
-          straight away and draws no visible checkbox — so what you're seeing is the real integration succeeding,
-          just without the "I'm not a robot" step. Swap in your own site key and the widget appears where the gap is.
-          <br><br>
-          The reCAPTCHA v3 route isn't shown live: v3 is invisible by design, so there'd be nothing on screen but a
-          badge, and it needs a domain-registered key rather than a public test one.
+        <p class="demo-note reveal" style="margin-bottom:26px">Running on Cloudflare's public
+          <strong style="color:var(--muted)">test</strong> key
+          (<code style="font-family:var(--mono)">1x00000000000000000000AA</code>), which passes automatically. Because
+          it never needs to challenge anyone, Turnstile issues the token immediately and draws no checkbox — the
+          integration is real, it just skips the "I'm not a robot" step. Your own key puts the widget in that gap.
+        </p>
+
+        <div class="demo-wrap reveal">
+          <div class="demo-bar">
+            <i style="background:#f7768e"></i><i style="background:#e0af68"></i><i style="background:#57cf9a"></i>
+            <span style="margin-left:6px">google recaptcha v3</span>
+            <span class="spacer"></span>
+            <a href="demo/ngx-easy-captcha/google-recaptcha/index.html" target="_blank" rel="noopener">Open in a new
+              tab ↗</a>
+          </div>
+          <iframe src="demo/ngx-easy-captcha/google-recaptcha/index.html"
+            title="Live Google reCAPTCHA demo of @angx/ngx-easy-captcha" loading="lazy"></iframe>
+        </div>
+
+        <p class="demo-note reveal">reCAPTCHA v3 never interrupts anyone — there's no puzzle and no checkbox. It scores
+          the visit silently in the background, so the only things you can see are the reCAPTCHA badge in the corner
+          and the token count on the form. Both are real: this panel runs on a live site key registered for this
+          domain.
         </p>
       </div>
     </section>
