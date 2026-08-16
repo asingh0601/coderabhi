@@ -472,8 +472,49 @@
       <div class="container">
         <div class="contact reveal">
           <h2>Let's build something solid</h2>
-          <p>Interesting engineering problems, AI products, or just a good conversation about either — GitHub is the
-            fastest way to reach me.</p>
+          <p>Interesting engineering problems, AI products, or just a good conversation about either. Send me a
+            message and it lands in my inbox.</p>
+
+          <form class="contact-form" id="contactForm" novalidate>
+            <div class="field">
+              <label for="cf-name">Name</label>
+              <input id="cf-name" name="name" type="text" autocomplete="name" required maxlength="80"
+                aria-describedby="cf-name-err">
+              <span class="field-err" id="cf-name-err"></span>
+            </div>
+
+            <div class="field">
+              <label for="cf-email">Email</label>
+              <input id="cf-email" name="email" type="email" autocomplete="email" required maxlength="120"
+                aria-describedby="cf-email-err">
+              <span class="field-err" id="cf-email-err"></span>
+            </div>
+
+            <div class="field field-wide">
+              <label for="cf-message">Message</label>
+              <textarea id="cf-message" name="message" rows="5" required maxlength="4000"
+                aria-describedby="cf-message-err"></textarea>
+              <span class="field-err" id="cf-message-err"></span>
+            </div>
+
+            <!-- Bots fill hidden fields; people never see this one. -->
+            <input type="checkbox" name="botcheck" class="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+            <div class="form-foot">
+              <button class="btn primary" type="submit" id="cf-submit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="m22 2-7 20-4-9-9-4Z" />
+                  <path d="M22 2 11 13" />
+                </svg>
+                <span>Send message</span>
+              </button>
+              <p class="form-status" id="cf-status" role="status" aria-live="polite"></p>
+            </div>
+          </form>
+
+          <p class="or-line">or find me here</p>
+
           <div class="btn-row">
             <a class="btn primary" href="https://github.com/asingh0601" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" fill="currentColor">
@@ -584,6 +625,112 @@
       ['about', 'skills', 'experience', 'projects', 'opensource', 'contact']
         .map(id => document.getElementById(id)).forEach(s => sio.observe(s));
     }
+
+    // --- contact form ---------------------------------------------------
+    // Posts to Web3Forms, which maps the access key to my address server-side.
+    // The address itself is deliberately not in this page, in the markup or
+    // anywhere in the repo.
+    const WEB3FORMS_KEY = 'fe9c3aa7-9e58-4dfd-813f-4e813769a5fd';
+
+    (function contactForm() {
+      const form = document.getElementById('contactForm');
+      if (!form) return;
+
+      // Without a key the form cannot deliver anything, so don't show one.
+      if (!/^[0-9a-f-]{30,}$/i.test(WEB3FORMS_KEY)) {
+        form.remove();
+        const orLine = document.querySelector('.or-line');
+        if (orLine) orLine.remove();
+        return;
+      }
+
+      const status = document.getElementById('cf-status');
+      const submit = document.getElementById('cf-submit');
+      const submitLabel = submit.querySelector('span');
+      const fields = {
+        name: document.getElementById('cf-name'),
+        email: document.getElementById('cf-email'),
+        message: document.getElementById('cf-message'),
+      };
+
+      const setError = (key, msg) => {
+        const input = fields[key];
+        const slot = document.getElementById('cf-' + key + '-err');
+        slot.textContent = msg || '';
+        if (msg) input.setAttribute('aria-invalid', 'true');
+        else input.removeAttribute('aria-invalid');
+        return !msg;
+      };
+
+      const validate = () => {
+        const name = fields.name.value.trim();
+        const email = fields.email.value.trim();
+        const message = fields.message.value.trim();
+        // Deliberately loose: the only authority on whether an address works
+        // is whether mail reaches it.
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+
+        const results = [
+          setError('name', name ? '' : 'Please tell me your name.'),
+          setError('email', email ? (emailOk ? '' : 'That address looks incomplete.') : 'I need an address to reply to.'),
+          setError('message', message.length >= 10 ? '' : 'A little more detail, please.'),
+        ];
+        return results.every(Boolean);
+      };
+
+      // Clear a field's error as soon as it's being fixed.
+      Object.keys(fields).forEach((key) => {
+        fields[key].addEventListener('input', () => {
+          if (fields[key].getAttribute('aria-invalid')) setError(key, '');
+        });
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        status.className = 'form-status';
+        status.textContent = '';
+
+        if (!validate()) {
+          const firstBad = form.querySelector('[aria-invalid="true"]');
+          if (firstBad) firstBad.focus();
+          return;
+        }
+
+        submit.disabled = true;
+        submitLabel.textContent = 'Sending…';
+
+        try {
+          const res = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({
+              access_key: WEB3FORMS_KEY,
+              subject: 'coderabhi.in — message from ' + fields.name.value.trim(),
+              from_name: 'coderabhi.in',
+              name: fields.name.value.trim(),
+              email: fields.email.value.trim(),
+              message: fields.message.value.trim(),
+              botcheck: form.botcheck.checked,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+
+          if (res.ok && data.success) {
+            form.reset();
+            status.className = 'form-status ok';
+            status.textContent = 'Thanks — that reached me. I\'ll reply to the address you gave.';
+          } else {
+            throw new Error(data.message || 'Request failed with ' + res.status);
+          }
+        } catch (err) {
+          status.className = 'form-status bad';
+          status.textContent = 'That didn\'t send. Try again, or reach me on GitHub below.';
+        } finally {
+          submit.disabled = false;
+          submitLabel.textContent = 'Send message';
+        }
+      });
+    })();
 
     // typewriter
     const phrases = [

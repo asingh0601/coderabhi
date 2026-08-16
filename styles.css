@@ -1092,6 +1092,131 @@ h1 .hl {
   justify-content: center;
 }
 
+/* ---------- CONTACT FORM ---------- */
+.contact-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 620px;
+  margin: 0 auto 30px;
+  text-align: left;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border-radius: 9px;
+  border: 1px solid var(--line-2);
+  background: var(--bg-2);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  transition: border-color .18s, background .18s;
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--dim);
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  background: var(--panel);
+}
+
+.field input[aria-invalid="true"],
+.field textarea[aria-invalid="true"] {
+  border-color: #f7768e;
+}
+
+.field-err {
+  font-size: 12.6px;
+  color: #f7768e;
+  min-height: 1em;
+}
+
+/* Honeypot: off-screen rather than display:none, which some bots skip. */
+.botcheck {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.form-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.form-foot .btn {
+  cursor: pointer;
+}
+
+.form-foot .btn[disabled] {
+  opacity: .6;
+  cursor: default;
+}
+
+.form-status {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+  min-height: 1em;
+}
+
+.form-status.ok {
+  color: var(--green);
+}
+
+.form-status.bad {
+  color: #f7768e;
+}
+
+.or-line {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--dim);
+  margin: 0 0 16px;
+}
+
+@media (max-width: 620px) {
+  .contact-form {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- FOOTER ---------- */
 footer {
   border-top: 1px solid var(--line);
