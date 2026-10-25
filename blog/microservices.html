@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Microservices that don't fall over — caching, events and the parts nobody warns you about</title>
+  <meta name="description"
+    content="A working engineer's guide to microservices: where to draw service boundaries, when to use events instead of calls, how caching actually fails, and the failure modes that only show up in production.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Microservices that don't fall over">
+  <meta property="og:description"
+    content="Service boundaries, event-driven messaging, caching that fails safely, and the failure modes that only show up in production.">
+  <meta property="og:url" content="https://coderabhi.in/blog/microservices.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/blog/microservices.html">
+  <link rel="icon" href="../assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.png" width="30" height="30"
+          alt="coderabhi logo"> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="../index.html#about">About</a>
+          <a href="../index.html#skills">Skills</a>
+          <a href="../index.html#experience">Experience</a>
+          <a href="../index.html#opensource">Open source</a>
+          <a href="index.html">Blog</a>
+          <a class="ghost" href="../index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <article>
+      <div class="container post-hero" id="top">
+        <div class="post-meta reveal">
+          <span>Backend</span>
+          <span class="dot"></span>
+          <time datetime="2026-10-25">25 October 2026</time>
+          <span class="dot"></span>
+          <span>18 min read</span>
+        </div>
+        <h1 class="reveal">Microservices that don't fall over</h1>
+        <p class="post-standfirst reveal">Splitting a system into services is the easy part. The hard part is
+          everything that happens in the gaps between them — the calls that hang, the caches that lie, the events
+          that arrive twice. Here is what I have learned keeping those gaps closed.</p>
+      </div>
+
+      <div class="container">
+        <nav class="toc reveal" aria-label="Contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#why">The only good reason to split</a></li>
+            <li><a href="#boundaries">Drawing the boundaries</a></li>
+            <li><a href="#talking">How services talk: calls vs events</a></li>
+            <li><a href="#events">Event-driven, properly</a></li>
+            <li><a href="#data">Data: the part that hurts</a></li>
+            <li><a href="#saga">The saga pattern, in detail</a></li>
+            <li><a href="#caching">Caching, and how it fails</a></li>
+            <li><a href="#resilience">Designing for the bad day</a></li>
+            <li><a href="#observability">Seeing inside</a></li>
+            <li><a href="#checklist">The checklist I actually use</a></li>
+          </ol>
+        </nav>
+
+        <!-- Arrowheads, defined once: SVG marker refs resolve across every
+             svg in the document, so four diagrams can share three markers
+             instead of each redeclaring them and duplicating the ids. -->
+        <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+          <defs>
+            <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head" /></marker>
+            <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-blue" /></marker>
+            <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-warn" /></marker>
+          </defs>
+        </svg>
+
+        <div class="post-body">
+
+          <h2 id="why">The only good reason to split</h2>
+
+          <p>Microservices are not a goal. They are a trade: you give up the simplicity of one deployable and one
+            database, and in exchange you buy the ability to <strong>change, scale and fail in parts</strong>.</p>
+
+          <p>That trade is worth making when one of these is true:</p>
+
+          <ul>
+            <li><strong>Teams are colliding.</strong> Four teams in one codebase means release trains, merge queues
+              and a bug in checkout blocking a copy change on the homepage.</li>
+            <li><strong>One part has a different shape.</strong> Image processing needs CPU and can be slow;
+              the API needs to answer in 50 ms. Mashed together, you size everything for the worst case.</li>
+            <li><strong>One part must not take the rest down.</strong> A report that scans a year of data should
+              never exhaust the connection pool that logins depend on.</li>
+          </ul>
+
+          <div class="callout warn">
+            <b>Not a reason</b>
+            "It is the modern way." A well-structured monolith with clear internal modules beats a distributed
+            system with unclear ones, every time. Distribution adds network calls, partial failure and eventual
+            consistency to <em>every</em> interaction that crosses a boundary. You should be getting something
+            concrete back for that.
+          </div>
+
+          <p>My rule: start modular, split when a seam actually hurts. You will know — it shows up as a deployment
+            you are afraid of, or a slow query that takes down something unrelated.</p>
+
+          <h2 id="boundaries">Drawing the boundaries</h2>
+
+          <p>The most expensive mistake in this whole field is a boundary in the wrong place. Services split along
+            the wrong lines do not reduce coupling; they convert a method call you could refactor in an afternoon
+            into a network contract you cannot change without a migration plan.</p>
+
+          <h3>Split by business capability, not by layer</h3>
+
+          <p>A "data service", an "API service" and a "UI service" are three layers of one thing. Every feature
+            touches all three, so every feature needs three deploys in order. That is a distributed monolith: all
+            the pain, none of the benefit.</p>
+
+          <p>Split by what the business does: <code>Orders</code>, <code>Payments</code>, <code>Shipping</code>,
+            <code>Identity</code>. Each owns its data, its rules and its vocabulary.</p>
+
+          <h3>The test I use</h3>
+
+          <p>For a candidate boundary, ask: <strong>can this service answer its most common question without
+              calling anyone else?</strong> If "show me an order" needs three synchronous calls to assemble a
+            response, the boundary is wrong, or the data needs to be copied.</p>
+
+          <div class="callout">
+            <b>The same word means different things</b>
+            A "customer" in Billing is a payment method and a tax status. In Shipping it is an address and a
+            delivery window. In Support it is a contact history. Trying to build one shared Customer model that
+            serves all three gives you a table nobody owns and everybody blocks on. Let each service keep the
+            slice it needs, keyed by a shared id.
+          </div>
+
+          <h2 id="talking">How services talk: calls vs events</h2>
+
+          <p>Two services can interact in two fundamentally different ways, and choosing wrongly is the root of
+            most "microservices are slow and fragile" complaints.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Synchronous call</th>
+                <th>Asynchronous event</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>"Tell me the answer now"</td>
+                <td>"This happened; react if you care"</td>
+              </tr>
+              <tr>
+                <td>Caller waits, caller is coupled to callee being up</td>
+                <td>Publisher does not know or care who listens</td>
+              </tr>
+              <tr>
+                <td>Failure is immediate and visible</td>
+                <td>Failure is delayed and must be designed for</td>
+              </tr>
+              <tr>
+                <td>Good for: reads the user is waiting on</td>
+                <td>Good for: side effects, fan-out, slow work</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Synchronous chains are where latency goes to die</h3>
+
+          <p>Latency adds up, and availability multiplies down. If an API calls three services and each is up
+            99.9% of the time and answers in 80 ms, your endpoint is up about 99.7% of the time and takes 240 ms
+            before it has done any work of its own. Add a retry and you have doubled the worst case.</p>
+
+          <pre><code><span class="c">// The shape to avoid: a chain the user waits on.</span>
+GET /order/42
+  → Orders            (30ms)
+      → Customers     (60ms)
+          → Billing   (90ms)   <span class="c">// four hops, one slow link stalls everything</span>
+              → Tax   (120ms)</code></pre>
+
+          <p>The fix is usually not "make each hop faster". It is to stop making the hop at request time: either
+            the data is already here (copied in by an event), or the work is not needed to answer (pushed out to a
+            queue).</p>
+
+          <h3>When to reach for each</h3>
+
+          <ul>
+            <li><strong>The user is waiting and needs the answer to be right now</strong> — synchronous call, with
+              a timeout you actually chose.</li>
+            <li><strong>Something else should happen because of this</strong> — publish an event. Sending the
+              confirmation email is not the order service's job.</li>
+            <li><strong>The work is slow, bursty, or allowed to be late</strong> — queue it. Thumbnails, exports,
+              reindexing, invoices.</li>
+          </ul>
+
+          <h2 id="events">Event-driven, properly</h2>
+
+          <p>"We will just publish events" is where many teams get into trouble, because a message bus moves the
+            hard problems rather than removing them. Four things decide whether an event-driven system is calm or
+            a nightmare.</p>
+
+          <h3>1. The dual-write problem, and the outbox</h3>
+
+          <p>Here is a bug that will happen to you:</p>
+
+          <pre><code><span class="c">// Looks fine. Is not fine.</span>
+<span class="k">await</span> _db.SaveChangesAsync();        <span class="c">// order committed</span>
+<span class="k">await</span> _bus.PublishAsync(orderPlaced); <span class="c">// process dies here</span></code></pre>
+
+          <p>The order exists; the event never shipped. Nothing downstream knows. Swap the order of the two lines
+            and you get the opposite bug: an event about an order that was rolled back.</p>
+
+          <p>You cannot make a database commit and a broker publish atomic. So do not try. Write the event
+            <strong>into the same database transaction</strong>, in an outbox table, and let a separate process
+            publish it.</p>
+
+          <pre><code><span class="k">using var</span> tx = <span class="k">await</span> _db.Database.BeginTransactionAsync();
+
+_db.Orders.Add(order);
+_db.Outbox.Add(<span class="k">new</span> OutboxMessage {
+    Type    = <span class="s">"order.placed"</span>,
+    Payload = JsonSerializer.Serialize(evt),
+    Status  = OutboxStatus.Pending
+});
+
+<span class="k">await</span> _db.SaveChangesAsync();   <span class="c">// both rows, or neither</span>
+<span class="k">await</span> tx.CommitAsync();
+
+<span class="c">// A background worker reads Pending rows, publishes, marks Sent.</span>
+<span class="c">// Crash anywhere and it retries. At-least-once, guaranteed.</span></code></pre>
+
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 210" role="img"
+              aria-label="One transaction writes the order and the event to the same database. A relay then publishes the event to the broker.">
+              <rect x="8" y="24" width="300" height="130" rx="10" class="d-box-good" />
+              <text x="22" y="46" class="d-sub">ONE DATABASE TRANSACTION</text>
+
+              <rect x="26" y="60" width="124" height="52" rx="8" class="d-box" />
+              <text x="44" y="82" class="d-label">orders</text>
+              <text x="44" y="99" class="d-sub">the new row</text>
+
+              <rect x="166" y="60" width="124" height="52" rx="8" class="d-box" />
+              <text x="184" y="82" class="d-label">outbox</text>
+              <text x="184" y="99" class="d-sub">the event</text>
+
+              <text x="22" y="140" class="d-note">both rows commit, or neither does</text>
+
+              <rect x="352" y="60" width="118" height="52" rx="8" class="d-box-accent" />
+              <text x="370" y="82" class="d-label">relay</text>
+              <text x="370" y="99" class="d-sub">reads pending</text>
+
+              <rect x="512" y="60" width="110" height="52" rx="8" class="d-box" />
+              <text x="530" y="82" class="d-label">broker</text>
+
+              <rect x="650" y="60" width="102" height="52" rx="8" class="d-box" />
+              <text x="666" y="82" class="d-label">consumer</text>
+
+              <path d="M308 86 H346" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M470 86 H506" class="d-arrow" marker-end="url(#a)" />
+              <path d="M622 86 H644" class="d-arrow" marker-end="url(#a)" />
+
+              <path d="M411 112 V150 H352" class="d-arrow-blue" marker-end="url(#ab)" />
+              <text x="368" y="172" class="d-note">mark Sent — crash before this and it simply retries</text>
+            </svg>
+            <figcaption>The database is the only thing that has to be right. Publishing becomes a retryable
+              step rather than a second system that can disagree.</figcaption>
+          </figure>
+
+          <div class="callout good">
+            <b>What this buys you</b>
+            The database is the single source of truth about whether something happened. The broker becomes a
+            delivery mechanism rather than a second system that can disagree with your data.
+          </div>
+
+          <h3>2. Everything is delivered at least once</h3>
+
+          <p>Exactly-once delivery is not a thing you can buy. Brokers retry, consumers time out after doing the
+            work, networks drop acknowledgements. Plan for duplicates instead of hoping.</p>
+
+          <p>The cure is <strong>idempotency</strong>: processing the same message twice has the same effect as
+            once. Usually that means recording what you have already handled.</p>
+
+          <pre><code><span class="k">public async Task</span> <span class="f">Handle</span>(OrderPlaced evt)
+{
+    <span class="c">// The id comes from the message, not from us.</span>
+    <span class="k">if</span> (<span class="k">await</span> _db.Processed.AnyAsync(p =&gt; p.MessageId == evt.MessageId))
+        <span class="k">return</span>;
+
+    <span class="k">await</span> _invoices.CreateAsync(evt);
+    _db.Processed.Add(<span class="k">new</span>(evt.MessageId));
+    <span class="k">await</span> _db.SaveChangesAsync();  <span class="c">// effect + marker, one transaction</span>
+}</code></pre>
+
+          <p>Note that the marker and the effect commit together. Writing the marker first gives you a message
+            that is recorded as done but never did anything.</p>
+
+
+          <h3>The other half: the inbox</h3>
+
+          <p>The outbox makes sure an event <em>leaves</em> exactly in step with the data. The inbox is its mirror
+            on the receiving side: it makes sure an event that arrives more than once is only <em>acted on</em>
+            once. Together they are what people mean by "transactional messaging".</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 196" role="img"
+              aria-label="A message arrives, the consumer checks an inbox table, and either drops it as a duplicate or handles it and records the id in the same transaction.">
+              <rect x="8" y="60" width="104" height="50" rx="8" class="d-box" />
+              <text x="26" y="90" class="d-label">broker</text>
+
+              <path d="M112 85 H150" class="d-arrow" marker-end="url(#a)" />
+
+              <rect x="154" y="52" width="150" height="66" rx="8" class="d-box-accent" />
+              <text x="172" y="78" class="d-label">seen this id?</text>
+              <text x="172" y="96" class="d-sub">select from inbox</text>
+
+              <path d="M304 70 H372" class="d-arrow-warn" marker-end="url(#aw)" />
+              <text x="312" y="60" class="d-note">yes</text>
+              <rect x="376" y="44" width="150" height="50" rx="8" class="d-box-warn" />
+              <text x="394" y="74" class="d-label">drop it</text>
+
+              <path d="M304 104 H372" class="d-arrow-blue" marker-end="url(#ab)" />
+              <text x="312" y="124" class="d-note">no</text>
+
+              <rect x="376" y="104" width="376" height="72" rx="10" class="d-box-good" />
+              <text x="394" y="126" class="d-sub">ONE DATABASE TRANSACTION</text>
+              <rect x="394" y="134" width="150" height="32" rx="7" class="d-box" />
+              <text x="410" y="155" class="d-label">do the work</text>
+              <rect x="564" y="134" width="170" height="32" rx="7" class="d-box" />
+              <text x="580" y="155" class="d-label">record the id</text>
+            </svg>
+            <figcaption>The effect and the "already handled" marker commit together. Record the id first and a
+              crash leaves a message marked done that never did anything.</figcaption>
+          </figure>
+
+          <p>Two details decide whether an inbox works:</p>
+
+          <ul>
+            <li><strong>The id must come from the producer</strong>, not from the consumer. A id generated on
+              receipt is different on every redelivery, which is exactly the case you are trying to catch.</li>
+            <li><strong>Prune it.</strong> An inbox table grows forever otherwise. Keep a window comfortably
+              longer than your broker's maximum retry age and delete beyond it.</li>
+          </ul>
+
+          <div class="callout">
+            <b>When you can skip the inbox</b>
+            If the operation is naturally idempotent — setting a status to <code>Shipped</code>, upserting by a
+            natural key — a duplicate changes nothing and you do not need the table. Reach for an inbox when the
+            work <em>accumulates</em>: charging a card, incrementing a counter, sending an email.
+          </div>
+
+          <h3>3. Ordering is weaker than you think</h3>
+
+          <p>Most brokers guarantee order only within a partition or queue. Two events about the same order can
+            arrive out of sequence if they took different paths or one was retried.</p>
+
+          <ul>
+            <li><strong>Partition by entity.</strong> Key messages by order id so everything about one order goes
+              through the same partition in sequence.</li>
+            <li><strong>Carry a version.</strong> Include a sequence number and let consumers ignore anything
+              older than what they have already applied.</li>
+            <li><strong>Prefer events that are not order-sensitive.</strong> "Order total is now 40" survives
+              reordering. "Add 10 to the total" does not.</li>
+          </ul>
+
+          <h3>4. Where failed messages go</h3>
+
+          <p>A consumer that fails and requeues the same message immediately will do it forever, at whatever rate
+            the broker allows, usually while writing a log line each time. The pattern that works:</p>
+
+          <ul>
+            <li><strong>Retry with backoff and jitter</strong> — a few attempts, spaced out, randomised so a
+              thousand consumers do not all retry on the same second.</li>
+            <li><strong>Then stop.</strong> After a bounded number of attempts, move the message to a dead-letter
+              queue with the error attached.</li>
+            <li><strong>Make dead letters visible and replayable.</strong> A dead-letter queue nobody looks at is
+              just a slower way of dropping data.</li>
+          </ul>
+
+          <div class="callout warn">
+            <b>Distinguish "the message is bad" from "the world is bad"</b>
+            A malformed payload will never succeed — dead-letter it on the first try. A 503 from a provider will
+            succeed later — retry it. Treating these the same either burns your retry budget on hopeless messages
+            or discards good ones during an outage.
+          </div>
+
+          <h2 id="data">Data: the part that hurts</h2>
+
+          <p>Each service owning its own database is what makes independent deployment possible. It is also what
+            makes everything else difficult, because you have given up joins and transactions across the system.</p>
+
+          <h3>Eventual consistency, stated honestly</h3>
+
+          <p>Once data is copied between services, there is a window where they disagree. That window is a
+            product decision, not just a technical one. "Your order shows as placed but the invoice appears in a
+            few seconds" is usually fine. "Your payment succeeded but your balance has not moved" usually is not.</p>
+
+          <h3>No distributed transactions</h3>
+
+          <p>A two-phase commit across services is a lock held over a network, which means one slow participant
+            stalls everyone and a coordinator crash leaves locks behind. Nobody wants that in a request path.
+            What replaces it is the saga, which is big enough to deserve <a href="#saga">its own section</a>.</p>
+
+          <h3>CQRS, only where it earns its place</h3>
+
+          <p>If a screen needs data from four services, build a read model: a denormalised projection, kept up to
+            date by events, that answers that screen in one query. This is a genuine fix for the synchronous chain
+            problem.</p>
+
+          <p>It is also a second copy of your data with its own staleness and rebuild story. Add it when a read is
+            demonstrably too slow or too chatty — not by default.</p>
+
+
+          <h2 id="saga">The saga pattern, in detail</h2>
+
+          <p>A saga is how you run a workflow across services when you cannot have one transaction over all of
+            them. Instead of one atomic unit, you get <strong>a sequence of local transactions, each with a
+              compensating action</strong> that undoes its effect if a later step fails.</p>
+
+          <p>Placing an order touches three services:</p>
+
+          <pre><code>1. Reserve stock      <span class="c">compensate:</span> release the reservation
+2. Charge the card    <span class="c">compensate:</span> refund
+3. Book the shipment  <span class="c">compensate:</span> cancel the booking</code></pre>
+
+          <p>If step 3 fails, the saga walks backwards: refund the card, release the stock. The system ends up
+            consistent — just not instantaneously, and not by rolling anything back.</p>
+
+          <div class="callout warn">
+            <b>Compensation is not rollback</b>
+            A rollback erases history. A refund is a new fact that appears on a statement next to the charge. An
+            email already sent cannot be unsent; the compensation is a second email. Model the business process
+            to be honest about this, because the customer will see both halves.
+          </div>
+
+          <h3>Two ways to run one</h3>
+
+          <p>Sagas come in two shapes, and the choice matters more than the name.</p>
+
+          <h3>Choreography: everyone listens</h3>
+
+          <p>Each service reacts to the previous service's event. There is no coordinator.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 210" role="img"
+              aria-label="Orders, Payments and Shipping each react to the previous event, with compensating events flowing back on failure.">
+              <rect x="20" y="40" width="160" height="56" rx="9" class="d-box-accent" />
+              <text x="40" y="66" class="d-label">Orders</text>
+              <text x="40" y="84" class="d-sub">order.placed</text>
+
+              <rect x="300" y="40" width="160" height="56" rx="9" class="d-box" />
+              <text x="320" y="66" class="d-label">Payments</text>
+              <text x="320" y="84" class="d-sub">payment.taken</text>
+
+              <rect x="580" y="40" width="160" height="56" rx="9" class="d-box" />
+              <text x="600" y="66" class="d-label">Shipping</text>
+              <text x="600" y="84" class="d-sub">shipment.failed</text>
+
+              <path d="M180 68 H294" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M460 68 H574" class="d-arrow-blue" marker-end="url(#ab)" />
+
+              <path d="M660 96 V140 H380" class="d-arrow-warn" marker-end="url(#aw)" />
+              <text x="470" y="132" class="d-note">shipment.failed — refund</text>
+
+              <path d="M380 150 V176 H100 V96" class="d-arrow-warn" marker-end="url(#aw)" />
+              <text x="180" y="170" class="d-note">payment.refunded — release stock</text>
+            </svg>
+            <figcaption>Nothing is in charge. Each service knows only its own step and what to undo.</figcaption>
+          </figure>
+
+          <p><strong>Good:</strong> no single point of failure, services stay decoupled, adding a listener needs
+            no change upstream.</p>
+
+          <p><strong>Bad:</strong> the workflow exists nowhere. To answer "why is this order stuck?" you read
+            four codebases and correlate logs. Past three or four steps this becomes genuinely hard, and cyclic
+            event chains are easy to create by accident.</p>
+
+          <h3>Orchestration: one service holds the plan</h3>
+
+          <p>A coordinator tells each service what to do and reacts to the reply.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 232" role="img"
+              aria-label="An orchestrator sends commands to Inventory, Payments and Shipping and receives replies, tracking saga state.">
+              <rect x="276" y="16" width="208" height="62" rx="10" class="d-box-accent" />
+              <text x="296" y="42" class="d-label">Order saga</text>
+              <text x="296" y="60" class="d-sub">state: awaiting payment</text>
+
+              <rect x="20" y="150" width="190" height="56" rx="9" class="d-box" />
+              <text x="40" y="176" class="d-label">Inventory</text>
+              <text x="40" y="194" class="d-sub">reserve / release</text>
+
+              <rect x="285" y="150" width="190" height="56" rx="9" class="d-box" />
+              <text x="305" y="176" class="d-label">Payments</text>
+              <text x="305" y="194" class="d-sub">charge / refund</text>
+
+              <rect x="550" y="150" width="190" height="56" rx="9" class="d-box" />
+              <text x="570" y="176" class="d-label">Shipping</text>
+              <text x="570" y="194" class="d-sub">book / cancel</text>
+
+              <path d="M300 78 L140 144" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M380 78 V144" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M460 78 L625 144" class="d-arrow-blue" marker-end="url(#ab)" />
+
+              <text x="120" y="112" class="d-note">command</text>
+              <text x="392" y="112" class="d-note">command</text>
+              <text x="560" y="112" class="d-note">command</text>
+            </svg>
+            <figcaption>The saga is a state machine in one place, with a row per run you can query.</figcaption>
+          </figure>
+
+          <p><strong>Good:</strong> the workflow is one readable thing. You can query "which sagas are stuck in
+            awaiting-payment?" and get an answer from a table. Compensation order is explicit.</p>
+
+          <p><strong>Bad:</strong> the orchestrator is a dependency for everyone and can drift into holding
+            business logic that belongs in the services.</p>
+
+          <div class="callout good">
+            <b>What I reach for</b>
+            Choreography for two or three steps where the chain is obvious. Orchestration the moment there is a
+            step that can fail in several ways, a timeout that matters, or anyone asks for a status screen. The
+            cost of the orchestrator is paid back the first time you have to explain a stuck order.
+          </div>
+
+          <h3>The part people miss: no isolation</h3>
+
+          <p>A saga gives up the I in ACID. Between step 1 and step 3, the system is in a state no single
+            transaction would ever expose: stock reserved, card not yet charged. Other requests can see it.</p>
+
+          <p>Three ways to handle that:</p>
+
+          <ul>
+            <li><strong>Semantic lock.</strong> Mark the record as in-flight — an order in <code>Pending</code>,
+              stock in <code>Reserved</code> rather than <code>Available</code>. Other work treats those states
+              as "not yours to touch".</li>
+            <li><strong>Pick a pivot.</strong> Order the steps so everything before a chosen point is undoable
+              and everything after is guaranteed to succeed or retry forever. Charging the card is a natural
+              pivot: do reversible things first.</li>
+            <li><strong>Make it commutative.</strong> Where it fits, design steps whose order does not change the
+              outcome, so a late compensation cannot corrupt a later update.</li>
+          </ul>
+
+          <h3>Failures a saga must survive</h3>
+
+          <table>
+            <thead>
+              <tr>
+                <th>What happens</th>
+                <th>What has to be true</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>A step is retried</td>
+                <td>Every step is idempotent — an inbox, or a naturally repeatable operation</td>
+              </tr>
+              <tr>
+                <td>A compensation fails</td>
+                <td>It retries forever and alerts. Never let it give up silently and leave money reserved</td>
+              </tr>
+              <tr>
+                <td>A reply never arrives</td>
+                <td>Every step has a timeout that moves the saga on, usually to compensation</td>
+              </tr>
+              <tr>
+                <td>The orchestrator restarts</td>
+                <td>State is in the database, not in memory, and resumes from the last recorded step</td>
+              </tr>
+              <tr>
+                <td>A compensation arrives late</td>
+                <td>It is keyed to the saga id and step, so it cannot undo a newer, unrelated change</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>In practice the saga state is a row like this, and the whole pattern becomes a lot less mysterious
+            once you see it as one:</p>
+
+          <pre><code><span class="k">public class</span> <span class="f">OrderSaga</span>
+{
+    <span class="k">public</span> Guid        Id            { <span class="k">get</span>; <span class="k">set</span>; }
+    <span class="k">public</span> SagaStep    Current       { <span class="k">get</span>; <span class="k">set</span>; }  <span class="c">// Reserving, Charging, Booking, Done, Compensating</span>
+    <span class="k">public</span> DateTime    StepDeadline  { <span class="k">get</span>; <span class="k">set</span>; }  <span class="c">// a sweeper moves on anything past this</span>
+    <span class="k">public</span> <span class="k">string</span>      FailureReason { <span class="k">get</span>; <span class="k">set</span>; }
+    <span class="k">public</span> List&lt;<span class="k">string</span>&gt; Completed     { <span class="k">get</span>; <span class="k">set</span>; }  <span class="c">// what to undo, newest first</span>
+}</code></pre>
+
+          <div class="callout">
+            <b>Before you build one</b>
+            A saga is the right answer to "these steps are in different services and all of them must happen".
+            It is the wrong answer to "I did not want to put these two tables in the same service". If the steps
+            always run together and always belong to one business decision, the cheaper fix is usually one
+            service and one transaction.
+          </div>
+
+          <h2 id="caching">Caching, and how it fails</h2>
+
+          <p>Caching is the highest-leverage performance work available, and the easiest to get subtly wrong. A
+            cache is a second copy of the truth, which means it can be wrong, and being wrong quietly is worse
+            than being slow loudly.</p>
+
+          <h3>The patterns, and when each fits</h3>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Pattern</th>
+                <th>How it works</th>
+                <th>Use when</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Cache-aside</strong></td>
+                <td>App checks cache, misses, loads from DB, writes to cache</td>
+                <td>The default. Simple, and the cache going down degrades to slow rather than broken.</td>
+              </tr>
+              <tr>
+                <td><strong>Read-through</strong></td>
+                <td>Cache itself loads on a miss</td>
+                <td>You want the loading logic in one place and your cache supports it.</td>
+              </tr>
+              <tr>
+                <td><strong>Write-through</strong></td>
+                <td>Writes go to cache and DB together</td>
+                <td>Reads immediately after writes must be correct.</td>
+              </tr>
+              <tr>
+                <td><strong>Write-behind</strong></td>
+                <td>Write to cache, flush to DB later</td>
+                <td>Very write-heavy and you can genuinely afford to lose the tail. Rare.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Invalidation: prefer short TTLs to clever rules</h3>
+
+          <p>Every cached item should have a TTL, even ones you also invalidate explicitly. The TTL is your
+            backstop for the invalidation you forgot to write, the deploy that bypassed your code path, and the
+            manual database fix someone made at 2am.</p>
+
+          <pre><code><span class="c">// Expiry is not optional. "Until something clears it" is not a policy.</span>
+<span class="k">await</span> _cache.SetStringAsync(key, json, <span class="k">new</span>() {
+    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
+    SlidingExpiration               = TimeSpan.FromMinutes(2)
+});</code></pre>
+
+          <p>Where correctness matters more than hit rate, include a version in the key — <code>user:42:v7</code>.
+            Bumping the version makes every old entry unreachable instantly, with no deletes to coordinate, and
+            the old entries fall out on their own TTL.</p>
+
+          <h3>The stampede, and the three fixes</h3>
+
+          <p>A popular key expires. Two thousand requests miss simultaneously. Two thousand identical queries hit
+            the database, which falls over, so nothing repopulates the cache, so the next two thousand do the same
+            thing. This is the failure that turns a cache from a speed-up into an outage amplifier.</p>
+
+          <ul>
+            <li><strong>Lock the rebuild.</strong> First miss takes a short-lived distributed lock and loads;
+              everyone else waits briefly or serves the stale value.</li>
+            <li><strong>Refresh ahead.</strong> At 80% of the TTL, one request refreshes in the background while
+              the rest keep being served the still-valid entry.</li>
+            <li><strong>Jitter the TTL.</strong> Ten minutes plus up to sixty random seconds, so a batch of keys
+              written together does not all expire together.</li>
+          </ul>
+
+          <div class="callout good">
+            <b>Cheap and effective</b>
+            Jitter costs one line and removes an entire class of synchronised-expiry incidents. If you take one
+            thing from this section, take that.
+          </div>
+
+          <h3>Do not cache what you cannot afford to be stale</h3>
+
+          <p>Permissions, balances, stock levels during checkout. Either do not cache them, or cache for seconds
+            with an explicit invalidation on write. A stale permission check is a security bug wearing a
+            performance costume.</p>
+
+          <h3>Measure the hit rate or you are guessing</h3>
+
+          <p>A cache with a 30% hit rate is usually adding a network hop and a consistency problem in exchange for
+            very little. Instrument hits and misses per key family. The numbers are routinely surprising — the key
+            you were sure was hot often is not.</p>
+
+          <h2 id="resilience">Designing for the bad day</h2>
+
+          <p>In a monolith, a slow function is slow. In a distributed system, a slow service becomes a queue of
+            waiting threads in every service that calls it, and the failure spreads outward. Most big outages are
+            this, not a crash.</p>
+
+          <h3>Timeouts</h3>
+
+          <p>Every network call needs a timeout you chose deliberately. The default is often infinite, or 100
+            seconds, which is infinite as far as a user is concerned. Budget them: if your endpoint must answer in
+            2 s and makes two calls, those calls do not get 2 s each.</p>
+
+          <h3>Retries, carefully</h3>
+
+          <p>Retries fix transient faults and amplify sustained ones. Retry only what is safe to repeat
+            (idempotent operations), only a small number of times, with exponential backoff and jitter — and never
+            retry at several layers at once. Three layers retrying three times each is twenty-seven requests from
+            one click.</p>
+
+          <h3>Circuit breakers</h3>
+
+          <p>When a dependency is clearly down, stop calling it. Fail fast, serve a degraded response, and let one
+            trial request decide when it is back.</p>
+
+          <pre><code><span class="c">// Open after 5 consecutive faults, stay open 30s, then try one.</span>
+<span class="c">// Crucially: a 400 is not a fault. The provider answered correctly;</span>
+<span class="c">// our request was wrong. Only count faults that are theirs —</span>
+<span class="c">// 5xx, 429, timeouts, connection errors.</span></code></pre>
+
+          <p>Getting that distinction wrong means a wave of validation errors trips the breaker and takes down a
+            healthy integration.</p>
+
+          <h3>Bulkheads</h3>
+
+          <p>Separate the resources used by different dependencies. If calls to the slow reporting service have
+            their own bounded connection pool, they cannot consume every connection and starve the login path.
+            This is what stops one bad dependency becoming a total outage.</p>
+
+          <h3>Degrade rather than fail</h3>
+
+          <p>Ask what the page can still do without each piece. Recommendations unavailable? Show the product
+            without them. Decide this deliberately, because the default is a 500.</p>
+
+          <h2 id="observability">Seeing inside</h2>
+
+          <p>In one process a stack trace tells you what happened. Across twelve services, a single user action is
+            twelve stack traces in twelve places, and none of them is the whole story.</p>
+
+          <ul>
+            <li><strong>Correlation ids.</strong> Generate one at the edge, pass it through every call and onto
+              every message, log it everywhere. This is the minimum, and it is cheap.</li>
+            <li><strong>Structured logs.</strong> Log fields, not sentences. <code>order_id=42</code> is
+              searchable; "processing order 42" is not, reliably.</li>
+            <li><strong>Distributed tracing.</strong> One timeline showing where a request actually spent its
+              time. This is how you find out the 400 ms is a chatty loop, not the database.</li>
+            <li><strong>Percentiles, never averages.</strong> An average hides the tail. p95 and p99 are what your
+              unhappiest users experience, and tails are where distributed systems live.</li>
+          </ul>
+
+          <div class="callout">
+            <b>Alert on symptoms, not causes</b>
+            "CPU is at 80%" might be fine. "Checkout error rate is above 2%" is never fine. Alert on what users
+            feel, then use dashboards to find the cause. Teams that alert on causes end up ignoring their alerts.
+          </div>
+
+          <h2 id="checklist">The checklist I actually use</h2>
+
+          <p>Before a new service or integration goes live:</p>
+
+          <ul>
+            <li>Does it own its data, or is it reaching into someone else's tables?</li>
+            <li>Does every outbound call have a timeout, and do the timeouts fit the caller's budget?</li>
+            <li>Are retries bounded, jittered, and only on idempotent operations?</li>
+            <li>Are events written through an outbox, so the data and the event cannot disagree?</li>
+            <li>Can every consumer handle the same message twice?</li>
+            <li>Do failed messages land somewhere visible and replayable?</li>
+            <li>Does every cache entry have a TTL, and is the TTL jittered?</li>
+            <li>What does this page do when this dependency is down?</li>
+            <li>Does one correlation id follow the whole request, including through the broker?</li>
+            <li>Is there an alert on a symptom a user would notice?</li>
+          </ul>
+
+          <p>None of this is exotic. It is the unglamorous half of the work, and it is the half that decides
+            whether your architecture diagram survives contact with real traffic.</p>
+
+          <div class="callout">
+            <b>One last thing</b>
+            If you are not sure you need microservices yet, you probably do not. Build the modular monolith, keep
+            the seams clean, and split the first piece that genuinely hurts. You will make a far better boundary
+            with that evidence than with a whiteboard.
+          </div>
+
+          <p style="margin-top:34px"><a class="back-link" href="index.html">← More posts</a></p>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a href="../index.html"><img class="foot-logo" src="../assets/logo-full.png" width="520" height="314"
+          alt="coderabhi"></a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Blog</a>
+        <a href="../index.html#opensource">Open source</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../page.js"></script>
+  <script src="../enhance.js"></script>
+</body>
+
+</html>

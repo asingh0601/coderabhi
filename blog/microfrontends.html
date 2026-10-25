@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Microfrontends: when splitting the UI is worth it — Abhishek Singh</title>
+  <meta name="description"
+    content="Shell and remotes, build-time versus run-time composition, shared dependencies and version skew, routing ownership, style isolation, and the honest cost of splitting a frontend.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Microfrontends: when splitting the UI is worth it">
+  <meta property="og:description"
+    content="Shell and remotes, shared dependencies, routing ownership, and the costs nobody mentions.">
+  <meta property="og:url" content="https://coderabhi.in/blog/microfrontends.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/blog/microfrontends.html">
+  <link rel="icon" href="../assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.png" width="30" height="30"
+          alt="coderabhi logo"> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="../index.html#about">About</a>
+          <a href="../index.html#skills">Skills</a>
+          <a href="../index.html#experience">Experience</a>
+          <a href="../index.html#opensource">Open source</a>
+          <a href="index.html">Blog</a>
+          <a class="ghost" href="../index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <article>
+      <div class="container post-hero" id="top">
+        <div class="post-meta reveal">
+          <span>Frontend</span>
+          <span class="dot"></span>
+          <time datetime="2026-10-25">25 October 2026</time>
+          <span class="dot"></span>
+          <span>13 min read</span>
+        </div>
+        <h1 class="reveal">Microfrontends: when splitting the UI is worth it</h1>
+        <p class="post-standfirst reveal">The same trade as microservices, played out in the browser — with one
+          extra complication nobody warns you about: every piece has to load into the same page, at the same
+          time, and still feel like one product.</p>
+      </div>
+
+      <div class="container">
+        <nav class="toc reveal" aria-label="Contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#why">The problem it solves</a></li>
+            <li><a href="#shapes">Four ways to compose a UI</a></li>
+            <li><a href="#federation">Shell and remotes</a></li>
+            <li><a href="#shared">Shared dependencies and version skew</a></li>
+            <li><a href="#routing">Who owns the URL</a></li>
+            <li><a href="#styles">Looking like one product</a></li>
+            <li><a href="#cost">The honest costs</a></li>
+          </ol>
+        </nav>
+
+        <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+          <defs>
+            <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head" /></marker>
+            <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-blue" /></marker>
+            <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-warn" /></marker>
+          </defs>
+        </svg>
+
+        <div class="post-body">
+
+          <h2 id="why">The problem it solves</h2>
+
+          <p>Microfrontends solve an organisational problem, not a technical one. The symptom is always the same:
+            several teams share one frontend repository, and shipping has become a negotiation.</p>
+
+          <ul>
+            <li>A release train, because nobody can deploy without everyone else's work being ready.</li>
+            <li>A merge queue that is permanently full.</li>
+            <li>One team's failing test blocking four teams' features.</li>
+            <li>An upgrade nobody performs because it would touch every page at once.</li>
+          </ul>
+
+          <p>If none of those describe you, stop here. A single well-structured frontend with clear module
+            boundaries and lazy-loaded routes gives you most of the benefit and none of the cost. I have seen more
+            projects damaged by premature splitting than by a monolith that got slightly large.</p>
+
+          <div class="callout warn">
+            <b>The test</b>
+            Count the teams that need to deploy the frontend independently. If the answer is one, you do not have
+            this problem. Independent deployability is the only thing microfrontends actually buy, and you pay for
+            it whether or not you use it.
+          </div>
+
+          <h2 id="shapes">Four ways to compose a UI</h2>
+
+          <p>"Microfrontend" covers several very different architectures. They are not interchangeable.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Approach</th>
+                <th>Composed at</th>
+                <th>Independent deploy?</th>
+                <th>Reality</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Packages</strong></td>
+                <td>Build time</td>
+                <td>No</td>
+                <td>Each team publishes a library; the shell rebuilds to pick it up. Simple and safe, but a
+                  release still needs a shell build, so it does not solve the deployment problem.</td>
+              </tr>
+              <tr>
+                <td><strong>iframes</strong></td>
+                <td>Run time</td>
+                <td>Yes</td>
+                <td>Total isolation, which is both the feature and the problem. Routing, modals, sizing and shared
+                  auth all become work. Genuinely good for embedding something foreign.</td>
+              </tr>
+              <tr>
+                <td><strong>Web components</strong></td>
+                <td>Run time</td>
+                <td>Yes</td>
+                <td>Framework-neutral, real style encapsulation via shadow DOM. Awkward when you need rich data
+                  across the boundary, since attributes are strings.</td>
+              </tr>
+              <tr>
+                <td><strong>Module federation</strong></td>
+                <td>Run time</td>
+                <td>Yes</td>
+                <td>The shell loads code from another deployed bundle at run time, sharing framework instances.
+                  The most capable, and the one with the sharpest edges.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h2 id="federation">Shell and remotes</h2>
+
+          <p>The run-time model that most teams land on: a thin <strong>shell</strong> owns the frame — the
+            layout, navigation, authentication and routing — and loads <strong>remotes</strong> on demand. Each
+            remote is a separately built, separately deployed application.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 266" role="img"
+              aria-label="A shell application owns layout, auth and routing, and loads three independently deployed remotes at run time.">
+              <rect x="150" y="16" width="460" height="86" rx="10" class="d-box-accent" />
+              <text x="172" y="40" class="d-label">Shell</text>
+              <text x="172" y="58" class="d-sub">layout · navigation · auth · routing</text>
+              <text x="172" y="78" class="d-sub">owns nothing a feature team would want to change</text>
+
+              <rect x="20" y="168" width="208" height="76" rx="9" class="d-box" />
+              <text x="40" y="194" class="d-label">Orders</text>
+              <text x="40" y="212" class="d-sub">team A · own pipeline</text>
+              <text x="40" y="230" class="d-sub">orders.example.com</text>
+
+              <rect x="276" y="168" width="208" height="76" rx="9" class="d-box" />
+              <text x="296" y="194" class="d-label">Billing</text>
+              <text x="296" y="212" class="d-sub">team B · own pipeline</text>
+              <text x="296" y="230" class="d-sub">billing.example.com</text>
+
+              <rect x="532" y="168" width="208" height="76" rx="9" class="d-box" />
+              <text x="552" y="194" class="d-label">Support</text>
+              <text x="552" y="212" class="d-sub">team C · own pipeline</text>
+              <text x="552" y="230" class="d-sub">support.example.com</text>
+
+              <path d="M280 102 L150 162" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M380 102 V162" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M480 102 L612 162" class="d-arrow-blue" marker-end="url(#ab)" />
+
+              <text x="150" y="134" class="d-note">loaded at run time, only when the route is visited</text>
+            </svg>
+            <figcaption>Each remote deploys on its own schedule. The shell discovers the new version on the next
+              page load, with no rebuild.</figcaption>
+          </figure>
+
+          <p>The shell should stay boring and almost empty. Every piece of business logic that creeps into it
+            becomes a thing all teams must coordinate on, which is precisely what you split up to avoid.</p>
+
+          <div class="callout">
+            <b>Remotes must fail softly</b>
+            A remote is fetched over the network at run time, so it can be slow, cached stale, or missing entirely
+            during a deploy. Wrap every remote in an error boundary with a retry. Without one, a failed fetch of
+            the billing bundle blank-screens the whole application — including the five sections that were fine.
+          </div>
+
+          <h2 id="shared">Shared dependencies and version skew</h2>
+
+          <p>This is where the real difficulty lives. Three remotes each built with their own copy of a framework
+            means the user downloads it three times, and — worse — you get three separate framework instances,
+            each with its own injection context and its own idea of global state.</p>
+
+          <p>So the framework is declared <em>shared</em>: loaded once, by whichever part loads first, and reused.
+            Which immediately raises the question nobody enjoys: what if the versions differ?</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 212" role="img"
+              aria-label="Without sharing, each remote ships its own framework copy. With sharing, one copy is loaded once and reused by all remotes.">
+              <text x="16" y="26" class="d-sub">WITHOUT SHARING</text>
+              <rect x="16" y="38" width="130" height="56" rx="8" class="d-box-warn" />
+              <text x="32" y="62" class="d-label">Orders</text>
+              <text x="32" y="80" class="d-sub">+ framework</text>
+              <rect x="158" y="38" width="130" height="56" rx="8" class="d-box-warn" />
+              <text x="174" y="62" class="d-label">Billing</text>
+              <text x="174" y="80" class="d-sub">+ framework</text>
+              <rect x="300" y="38" width="130" height="56" rx="8" class="d-box-warn" />
+              <text x="316" y="62" class="d-label">Support</text>
+              <text x="316" y="80" class="d-sub">+ framework</text>
+              <text x="446" y="70" class="d-note">three downloads, three instances, three states</text>
+
+              <text x="16" y="134" class="d-sub">SHARED SINGLETON</text>
+              <rect x="16" y="146" width="130" height="50" rx="8" class="d-box" />
+              <text x="32" y="176" class="d-label">Orders</text>
+              <rect x="158" y="146" width="130" height="50" rx="8" class="d-box" />
+              <text x="174" y="176" class="d-label">Billing</text>
+              <rect x="300" y="146" width="130" height="50" rx="8" class="d-box" />
+              <text x="316" y="176" class="d-label">Support</text>
+
+              <rect x="462" y="146" width="188" height="50" rx="8" class="d-box-good" />
+              <text x="480" y="176" class="d-label">framework (one copy)</text>
+
+              <path d="M146 171 H154" class="d-arrow" marker-end="url(#a)" />
+              <path d="M288 171 H296" class="d-arrow" marker-end="url(#a)" />
+              <path d="M430 171 H456" class="d-arrow-blue" marker-end="url(#ab)" />
+            </svg>
+            <figcaption>Sharing is not only a size optimisation. Two instances of a framework in one page break
+              anything that relies on a single registry.</figcaption>
+          </figure>
+
+          <p>Practical rules that keep this manageable:</p>
+
+          <ul>
+            <li><strong>Mark the framework and the router as singletons.</strong> Two routers fighting over the
+              same URL is a genuinely baffling bug to debug.</li>
+            <li><strong>Agree a version window, and enforce it in CI.</strong> Not "everyone upgrades on the same
+              day" — that recreates the release train — but "everyone is within one minor version", checked
+              automatically.</li>
+            <li><strong>Decide loudly what happens on a mismatch.</strong> Silently loading two copies produces
+              symptoms that look like anything but a version problem. Warning at startup saves days.</li>
+            <li><strong>Do not share your own code across remotes.</strong> A shared utility package is a shared
+              deploy dependency wearing a disguise.</li>
+          </ul>
+
+          <h2 id="routing">Who owns the URL</h2>
+
+          <p>Two routers now exist: the shell's, and each remote's. The split that works is simple and worth
+            stating explicitly:</p>
+
+          <pre><code>/orders/*     <span class="c">// shell: this prefix belongs to the orders remote</span>
+  /orders/42  <span class="c">// remote: everything after the prefix is mine</span>
+  /orders/new</code></pre>
+
+          <p>The shell matches a prefix and hands over. It must not know that <code>/orders/42/refund</code>
+            exists — the moment it does, adding a page requires a shell deploy.</p>
+
+          <div class="callout good">
+            <b>Deep links are the acceptance test</b>
+            Paste a deep URL into a fresh tab. The shell must boot, authenticate, load the right remote and land
+            on the right screen. If that works, routing ownership is correct. If it only works by clicking through
+            from the home page, a remote is depending on state the shell set up earlier.
+          </div>
+
+          <h2 id="styles">Looking like one product</h2>
+
+          <p>Users do not know or care that four teams built the page. If the buttons are three different blues,
+            the architecture has leaked into the product.</p>
+
+          <ul>
+            <li><strong>Design tokens, not a component library, are the hard dependency.</strong> Colours,
+              spacing and type as CSS custom properties published centrally. A remote reads
+              <code>var(--brand)</code> and cannot drift.</li>
+            <li><strong>Scope styles, always.</strong> Shadow DOM, CSS modules, or a per-remote class prefix.
+              Global selectors from one remote reaching into another is the worst class of bug here: it appears
+              only when both are on screen, which no single team's test suite covers.</li>
+            <li><strong>Own the shared chrome in the shell.</strong> Header, navigation, toasts, modals. Three
+              implementations of a toast is how you end up with three stacking contexts fighting.</li>
+            <li><strong>Version the design system, do not pin it.</strong> Remotes should be able to take a token
+              update without a coordinated release.</li>
+          </ul>
+
+          <h2 id="cost">The honest costs</h2>
+
+          <p>Everything above is manageable. The costs below are real and permanent, and worth stating before a
+            team commits:</p>
+
+          <ul>
+            <li><strong>Local development is harder.</strong> Working on one remote means running the shell too,
+              against either local or deployed versions of the others.</li>
+            <li><strong>End-to-end tests have no natural home.</strong> A journey crossing three remotes belongs
+              to no team, so it rots unless someone is explicitly assigned it.</li>
+            <li><strong>Payload goes up, not down.</strong> Shared dependencies help, but a shell plus three
+              remotes is more bytes and more requests than one optimally bundled app.</li>
+            <li><strong>Debugging crosses repositories.</strong> A stack trace from a federated bundle points at
+              code that lives somewhere else, built by a pipeline you may not have access to.</li>
+            <li><strong>Upgrades need coordination anyway.</strong> A major framework upgrade touches every remote.
+              You bought independent deploys, not independent dependencies.</li>
+          </ul>
+
+          <div class="callout">
+            <b>What I would do again</b>
+            Start with one well-structured application and lazy-loaded feature modules. Keep the boundaries clean
+            — each feature owning its own routes, state and API client — so that if the organisation grows into
+            needing independent deploys, extracting a remote is mechanical rather than a rewrite. The boundary is
+            the valuable part. The separate deployment is just what you do with it once the pain is real.
+          </div>
+
+          <p style="margin-top:34px"><a class="back-link" href="index.html">← More posts</a></p>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a href="../index.html"><img class="foot-logo" src="../assets/logo-full.png" width="520" height="314"
+          alt="coderabhi"></a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Blog</a>
+        <a href="../index.html#opensource">Open source</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../page.js"></script>
+  <script src="../enhance.js"></script>
+</body>
+
+</html>

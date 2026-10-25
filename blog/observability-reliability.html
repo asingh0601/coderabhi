@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Observability and reliability: knowing before your users do — Abhishek Singh</title>
+  <meta name="description"
+    content="Logs, metrics and traces that are worth the money; why averages lie; SLOs and error budgets; and the alert design that stops teams from ignoring their pager.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Observability and reliability: knowing before your users do">
+  <meta property="og:description"
+    content="Why averages lie, what to alert on, and how to make a system explain itself at 3am.">
+  <meta property="og:url" content="https://coderabhi.in/blog/observability-reliability.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/blog/observability-reliability.html">
+  <link rel="icon" href="../assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.png" width="30" height="30"
+          alt="coderabhi logo"> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="../index.html#about">About</a>
+          <a href="../index.html#skills">Skills</a>
+          <a href="../index.html#experience">Experience</a>
+          <a href="../index.html#opensource">Open source</a>
+          <a href="index.html">Blog</a>
+          <a class="ghost" href="../index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <article>
+      <div class="container post-hero" id="top">
+        <div class="post-meta reveal">
+          <span>Reliability</span>
+          <span class="dot"></span>
+          <time datetime="2026-10-25">25 October 2026</time>
+          <span class="dot"></span>
+          <span>14 min read</span>
+        </div>
+        <h1 class="reveal">Observability and reliability: knowing before your users do</h1>
+        <p class="post-standfirst reveal">Monitoring tells you the thing you predicted has happened.
+          Observability lets you answer a question you had not thought of yet — at 3am, from a dashboard, without
+          deploying a new log line.</p>
+      </div>
+
+      <div class="container">
+        <nav class="toc reveal" aria-label="Contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#three">Three signals, three jobs</a></li>
+            <li><a href="#correlation">The correlation id</a></li>
+            <li><a href="#averages">Why averages lie</a></li>
+            <li><a href="#slo">SLOs and error budgets</a></li>
+            <li><a href="#alerts">Alerts people do not ignore</a></li>
+            <li><a href="#patterns">Failure patterns worth recognising</a></li>
+            <li><a href="#start">Where to start tomorrow</a></li>
+          </ol>
+        </nav>
+
+        <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+          <defs>
+            <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head" /></marker>
+            <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-blue" /></marker>
+            <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-warn" /></marker>
+          </defs>
+        </svg>
+
+        <div class="post-body">
+
+          <h2 id="three">Three signals, three jobs</h2>
+
+          <p>Logs, metrics and traces are not three ways of doing the same thing. Each answers a different
+            question, and a system missing one of them has a blind spot you will eventually find the hard way.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Signal</th>
+                <th>Answers</th>
+                <th>Shape</th>
+                <th>Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Metrics</strong></td>
+                <td>Is something wrong, and since when?</td>
+                <td>Numbers over time, aggregated</td>
+                <td>Cheap — flat with traffic</td>
+              </tr>
+              <tr>
+                <td><strong>Traces</strong></td>
+                <td>Where did this request spend its time?</td>
+                <td>One timeline per request, across services</td>
+                <td>Moderate — sample it</td>
+              </tr>
+              <tr>
+                <td><strong>Logs</strong></td>
+                <td>What exactly happened in this case?</td>
+                <td>Events with detail</td>
+                <td>Expensive — grows with traffic</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>The working pattern is to move between them: a metric tells you error rate jumped at 14:10, a trace
+            shows the time is going to one dependency, logs for that trace tell you which input broke it. Each one
+            narrows the search for the next.</p>
+
+          <h3>Log fields, not sentences</h3>
+
+          <pre><code><span class="c">// Unsearchable. The id is inside prose.</span>
+_logger.LogInformation($<span class="s">"Processing order {order.Id} for {customer.Name}"</span>);
+
+<span class="c">// Searchable, filterable, aggregatable.</span>
+_logger.LogInformation(<span class="s">"Order processing started {OrderId} {CustomerId} {Total}"</span>,
+    order.Id, customer.Id, order.Total);</code></pre>
+
+          <p>The second form lets you ask "every event for order 42 across all services" and get an answer. The
+            first lets you grep, which stops working the moment someone rewords the message.</p>
+
+          <div class="callout warn">
+            <b>Logs are where observability budgets go to die</b>
+            A debug line on a hot path is free in development and ruinous at ten thousand requests a second. Log
+            at the boundaries — request in, dependency called, request out — plus anything genuinely unexpected.
+            Everything in between belongs in a trace span or a metric.
+          </div>
+
+          <h2 id="correlation">The correlation id</h2>
+
+          <p>If you do one thing from this article, do this one. It is close to free and it is the difference
+            between an investigation and a guess.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 206" role="img"
+              aria-label="One id is generated at the gateway and travels through every service, onto the message broker and into every log line.">
+              <rect x="10" y="48" width="130" height="56" rx="8" class="d-box-accent" />
+              <text x="26" y="72" class="d-label">gateway</text>
+              <text x="26" y="90" class="d-sub">id created here</text>
+
+              <rect x="176" y="48" width="118" height="56" rx="8" class="d-box" />
+              <text x="192" y="80" class="d-label">API</text>
+
+              <rect x="330" y="48" width="118" height="56" rx="8" class="d-box" />
+              <text x="346" y="80" class="d-label">Orders</text>
+
+              <rect x="484" y="48" width="118" height="56" rx="8" class="d-box" />
+              <text x="500" y="80" class="d-label">broker</text>
+
+              <rect x="638" y="48" width="112" height="56" rx="8" class="d-box" />
+              <text x="654" y="80" class="d-label">worker</text>
+
+              <path d="M140 76 H170" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M294 76 H324" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M448 76 H478" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M602 76 H632" class="d-arrow-blue" marker-end="url(#ab)" />
+
+              <rect x="10" y="142" width="740" height="44" rx="8" class="d-box-good" />
+              <text x="28" y="169" class="d-sub">every log line in every box carries the same id — one query
+                returns the whole story</text>
+            </svg>
+            <figcaption>The broker hop is the one teams forget. An id that stops at the queue leaves async work
+              uninvestigable.</figcaption>
+          </figure>
+
+          <p>Generate it at the edge if the caller did not supply one, put it in a log scope so every line picks
+            it up automatically, forward it on outbound calls, and <strong>copy it into message headers</strong>
+            when you publish. Return it on error responses too — then a user's screenshot of an error page is a
+            complete bug report.</p>
+
+          <h2 id="averages">Why averages lie</h2>
+
+          <p>An average response time of 120 ms sounds healthy. It is also perfectly consistent with one in every
+            hundred users waiting nine seconds, because the other ninety-nine pull the mean back down.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 212" role="img"
+              aria-label="A latency distribution where most requests are fast but a long tail extends far to the right, with the average sitting among the fast requests and p99 far out in the tail.">
+              <path d="M40 170 H730" class="d-arrow" />
+              <text x="640" y="192" class="d-sub">response time</text>
+
+              <path d="M60 170 C 130 170, 150 54, 200 54 C 250 54, 268 120, 310 142
+                       C 380 170, 460 160, 560 164 C 640 167, 690 168, 724 169"
+                class="d-arrow-blue" />
+
+              <path d="M196 44 V170" class="d-tx" />
+              <text x="150" y="36" class="d-note">average 120ms</text>
+
+              <path d="M560 128 V170" class="d-arrow-warn" />
+              <text x="492" y="120" class="d-note">p99 — 9 seconds</text>
+
+              <text x="300" y="92" class="d-note">most requests are fine</text>
+              <text x="430" y="196" class="d-note">the tail is where your angriest users live</text>
+            </svg>
+            <figcaption>One in a hundred sounds rare until you notice a page makes thirty calls — then most page
+              loads contain at least one slow one.</figcaption>
+          </figure>
+
+          <p>So: <strong>record latency as a histogram and alert on p95 and p99</strong>. And remember that tail
+            latency compounds. If a page makes thirty backend calls and each independently has a 1% chance of
+            being slow, roughly a quarter of page loads include a slow call. That is how a "1% problem" becomes
+            the thing everyone complains about.</p>
+
+          <div class="callout">
+            <b>Watch what the percentile is over</b>
+            A p99 across every endpoint is dominated by whichever endpoint is busiest. Slice by endpoint, and by
+            tenant if you are multi-tenant — one customer with ten times the data routinely has a completely
+            different experience of the same system, and the global number hides it entirely.
+          </div>
+
+          <h2 id="slo">SLOs and error budgets</h2>
+
+          <p>"The site should be up" is not a target anyone can act on. An SLO makes reliability a number you can
+            trade against delivery speed, which is what it actually is.</p>
+
+          <ul>
+            <li><strong>SLI</strong> — what you measure. "Percentage of checkout requests that return a success
+              status within 500 ms."</li>
+            <li><strong>SLO</strong> — the target. "99.5% over 30 days."</li>
+            <li><strong>Error budget</strong> — what is left. 99.5% over 30 days allows roughly 3.6 hours of
+              failure.</li>
+          </ul>
+
+          <p>The budget is the useful part, because it turns an argument into arithmetic. Plenty of budget left
+            means ship the risky change. Budget exhausted means the next sprint is reliability work, and nobody
+            has to win a debate about it.</p>
+
+          <div class="callout good">
+            <b>Do not set it to 99.99% because it sounds impressive</b>
+            Each nine costs roughly ten times the previous one, and it is paid in engineering time you are not
+            spending on features. Pick the number where users stop noticing, not the number that looks good on a
+            slide. For most internal and B2B systems that is considerably lower than people expect.
+          </div>
+
+          <h2 id="alerts">Alerts people do not ignore</h2>
+
+          <p>An alert that fires and needs no action trains everyone to dismiss alerts. After a few weeks of that,
+            your alerting system is actively harmful: it is there, it costs money, and it has taught the team not
+            to look.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Alert on</th>
+                <th>Not on</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Checkout error rate above 2% for 5 minutes</td>
+                <td>CPU above 80%</td>
+              </tr>
+              <tr>
+                <td>p99 latency above 2s for 10 minutes</td>
+                <td>A single slow request</td>
+              </tr>
+              <tr>
+                <td>Queue depth growing for 15 minutes</td>
+                <td>Queue depth above 100</td>
+              </tr>
+              <tr>
+                <td>Error budget burning fast enough to exhaust in 3 days</td>
+                <td>Any single failed request</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>The pattern in the left column is that every row describes something a user would feel, sustained
+            long enough to be real. The right column is either a cause that is often fine, or a blip.</p>
+
+          <p>Two rules I hold to:</p>
+
+          <ul>
+            <li><strong>Every alert names an action.</strong> If the response is "watch it", it is a dashboard,
+              not a page.</li>
+            <li><strong>Symptoms page, causes inform.</strong> High CPU is a clue you look up once an alert has
+              already told you users are suffering. On its own it is noise.</li>
+          </ul>
+
+          <h2 id="patterns">Failure patterns worth recognising</h2>
+
+          <p>Most production incidents are one of a handful of shapes. Knowing them turns a long investigation
+            into a quick one.</p>
+
+          <ul>
+            <li><strong>Thread or connection pool exhaustion.</strong> One slow dependency, every worker blocked
+              waiting on it, everything unrelated dies too. The signature is rising latency across endpoints that
+              share nothing but a pool. Fixed by timeouts and separate pools per dependency.</li>
+            <li><strong>Retry storm.</strong> A dependency wobbles, everything retries, the extra load keeps it
+              down. Signature: request volume to one service rising while its success rate falls. Fixed by
+              bounded retries with jitter and a circuit breaker.</li>
+            <li><strong>Cache stampede.</strong> A hot key expires, every request misses at once, the database
+              takes the full load. Signature: a latency cliff exactly on a TTL boundary. Fixed by jittered TTLs
+              and a lock on rebuild.</li>
+            <li><strong>Queue backlog.</strong> Consumers slower than producers. Signature: depth rising
+              steadily. Alert on the <em>trend</em>, not a threshold — by the time a fixed number is crossed you
+              are usually hours behind.</li>
+            <li><strong>The slow leak.</strong> Memory climbs over days until a restart. Signature: a sawtooth
+              that correlates with deploys rather than traffic.</li>
+          </ul>
+
+          <div class="callout">
+            <b>Write the incident down, honestly and blamelessly</b>
+            Timeline, impact, what you believed at each point and what was actually true. The value is less in
+            the fix than in the gap between those last two — that gap is a missing signal, and closing it is the
+            observability work that actually matters.
+          </div>
+
+          <h2 id="start">Where to start tomorrow</h2>
+
+          <p>If you have nothing, this order gets you the most for the least:</p>
+
+          <ol>
+            <li><strong>Correlation ids</strong> through every service and every message. One afternoon.</li>
+            <li><strong>Structured logs</strong> with fields, at the boundaries only.</li>
+            <li><strong>Four metrics per service</strong>: request rate, error rate, latency histogram,
+              saturation of whatever runs out first.</li>
+            <li><strong>One SLO</strong> on the one journey that matters most. Not twelve.</li>
+            <li><strong>One alert</strong> on that SLO's burn rate, that pages a human who can act.</li>
+            <li><strong>Tracing</strong> once you have more than a handful of services and the hops are the
+              mystery.</li>
+          </ol>
+
+          <p>That is a week of work, not a platform migration. The goal is modest and worth stating plainly: when
+            something breaks, you should find out from your own system rather than from a customer, and you
+            should be able to tell what broke without deploying anything to find out.</p>
+
+          <p style="margin-top:34px"><a class="back-link" href="index.html">← More posts</a></p>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a href="../index.html"><img class="foot-logo" src="../assets/logo-full.png" width="520" height="314"
+          alt="coderabhi"></a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Blog</a>
+        <a href="../index.html#opensource">Open source</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../page.js"></script>
+  <script src="../enhance.js"></script>
+</body>
+
+</html>

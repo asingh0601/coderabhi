@@ -574,71 +574,130 @@ h1 .hl {
 }
 
 /* ---------- EXPERIENCE ---------- */
+/* A rail down the left with a card per role. The rail is three layers:
+   a faint full-height track, a bright portion that fills as you scroll
+   (enhance.js sets --fill), and one node per card sitting on top. */
 .timeline {
   position: relative;
-  padding-left: 28px;
+  padding-left: 38px;
 }
 
 .timeline::before {
   content: "";
   position: absolute;
-  left: 5px;
-  top: 10px;
-  bottom: 10px;
-  width: 1.5px;
-  background: linear-gradient(var(--blue), rgba(108, 155, 255, .25), transparent);
+  left: 7px;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--line-2);
 }
 
 .job {
   position: relative;
-  padding-bottom: 28px;
+  margin-bottom: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  transition: border-color .22s, transform .22s, box-shadow .22s;
 }
 
 .job:last-child {
-  padding-bottom: 0;
+  margin-bottom: 0;
 }
 
+.job:hover {
+  border-color: var(--line-2);
+  transform: translateX(3px);
+  box-shadow: 0 14px 30px -26px #000;
+}
+
+/* the node on the rail */
 .job::before {
   content: "";
   position: absolute;
-  left: -27px;
-  top: 8px;
-  width: 11px;
-  height: 11px;
+  left: -36px;
+  top: 24px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: var(--bg);
   border: 2px solid var(--line-2);
+  transition: border-color .22s, background .22s, transform .22s;
+  z-index: 1;
+}
+
+/* the short arm joining the node to the card */
+.job::after {
+  content: "";
+  position: absolute;
+  left: -24px;
+  top: 29px;
+  width: 16px;
+  height: 2px;
+  background: var(--line-2);
+  transition: background .22s;
+}
+
+.job:hover::before {
+  border-color: var(--blue);
+  transform: scale(1.15);
+}
+
+.job:hover::after {
+  background: var(--blue);
+}
+
+/* the current role reads as current without needing to be read */
+.job.now {
+  border-color: rgba(87, 207, 154, .3);
+  background: linear-gradient(135deg, rgba(87, 207, 154, .06), var(--panel) 55%);
 }
 
 .job.now::before {
   border-color: var(--green);
-  box-shadow: 0 0 0 4px rgba(87, 207, 154, .13);
+  background: var(--green);
+}
+
+.job.now::after {
+  background: rgba(87, 207, 154, .5);
 }
 
 .j-top {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 8px 12px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .job h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: 16.5px;
   font-weight: 600;
+  letter-spacing: -.01em;
 }
 
+/* the date earns its own chip so the eye can scan the column */
 .job .when {
+  margin-left: auto;
   font-family: var(--mono);
-  font-size: 12.2px;
+  font-size: 11.6px;
   color: var(--dim);
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .job .tag {
-  font-size: 11.4px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 2px 9px;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  padding: 3px 9px;
   border-radius: 999px;
   color: var(--green);
   border: 1px solid rgba(87, 207, 154, .35);
@@ -648,8 +707,31 @@ h1 .hl {
 .job p {
   margin: 0;
   color: var(--muted);
-  font-size: 15.2px;
+  font-size: 14.8px;
   max-width: 720px;
+}
+
+@media (max-width: 700px) {
+  .timeline {
+    padding-left: 26px;
+  }
+
+  .job {
+    padding: 15px 16px;
+  }
+
+  .job::before {
+    left: -25px;
+    top: 20px;
+  }
+
+  .job::after {
+    display: none;
+  }
+
+  .job .when {
+    margin-left: 0;
+  }
 }
 
 /* ---------- PROJECTS ---------- */
@@ -1390,4 +1472,946 @@ footer {
   border-radius: 6px;
   border: 1px solid rgba(87, 207, 154, .3);
   font-size: 11.4px;
+}
+
+/* ============================================================
+   ENHANCEMENTS  (enhance.js)
+   Scroll progress, cursor spotlight, timeline fill, command palette.
+   Every one is additive: if the script never runs, the page is
+   exactly what it was.
+   ============================================================ */
+
+/* ---------- scroll progress ---------- */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  z-index: 70;
+  background: linear-gradient(90deg, var(--blue), var(--green));
+  transition: width .08s linear;
+  pointer-events: none;
+}
+
+/* ---------- cursor spotlight on cards ---------- */
+.card,
+.panel,
+.sk,
+.feature {
+  position: relative;
+  overflow: hidden;
+}
+
+.card::after,
+.panel::after,
+.sk::after,
+.feature::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0),
+      rgba(108, 155, 255, .10), transparent 65%);
+}
+
+.card:hover::after,
+.panel:hover::after,
+.sk:hover::after,
+.feature:hover::after {
+  opacity: 1;
+}
+
+/* ---------- timeline fills as you scroll ---------- */
+.timeline::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 14px;
+  width: 2px;
+  border-radius: 2px;
+  height: var(--fill, 0);
+  background: linear-gradient(var(--blue), var(--green));
+  transition: height .15s linear;
+}
+
+.job.now::before {
+  animation: dot-pulse 2.6s ease-in-out infinite;
+}
+
+.job.now:hover::before {
+  border-color: var(--green);
+}
+
+@keyframes dot-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(87, 207, 154, .13);
+  }
+
+  50% {
+    box-shadow: 0 0 0 9px rgba(87, 207, 154, .03);
+  }
+}
+
+/* ---------- keyboard hint in the header ---------- */
+.kbd-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--line-2);
+  background: var(--bg-2);
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: color .18s, border-color .18s;
+}
+
+.kbd-hint:hover {
+  color: var(--text);
+  border-color: var(--blue);
+}
+
+/* ---------- command palette ---------- */
+.cmdk-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 14vh 18px 18px;
+  background: rgba(5, 7, 12, .72);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.cmdk-overlay[hidden] {
+  display: none;
+}
+
+.cmdk {
+  width: 100%;
+  max-width: 520px;
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 30px 70px -30px #000;
+  overflow: hidden;
+  animation: cmdk-in .16s ease-out;
+}
+
+@keyframes cmdk-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(.985);
+  }
+}
+
+.cmdk-input {
+  width: 100%;
+  padding: 15px 17px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15.5px;
+}
+
+.cmdk-input:focus {
+  outline: none;
+}
+
+.cmdk-input::placeholder {
+  color: var(--dim);
+}
+
+.cmdk-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.cmdk-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 14.5px;
+  cursor: pointer;
+}
+
+.cmdk-item[aria-selected="true"] {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.cmdk-kind {
+  font-family: var(--mono);
+  font-size: 10.6px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--dim);
+  flex: none;
+}
+
+.cmdk-empty {
+  padding: 18px 14px;
+  color: var(--dim);
+  font-size: 14px;
+  text-align: center;
+}
+
+.cmdk-foot {
+  display: flex;
+  gap: 14px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-2);
+  font-family: var(--mono);
+  font-size: 10.8px;
+  color: var(--dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .scroll-progress,
+  .timeline::after {
+    transition: none;
+  }
+
+  .cmdk {
+    animation: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .kbd-hint {
+    display: none;
+  }
+
+  .cmdk-overlay {
+    padding-top: 8vh;
+  }
+}
+
+/* ---------- request-flow diagram ---------- */
+.flow {
+  margin: 26px 0 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 22px;
+}
+
+.flow-cap {
+  font-family: var(--mono);
+  font-size: 12.4px;
+  color: var(--blue);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+/* Narrow screens scroll the track rather than squashing six boxes. */
+.flow-scroll {
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.flow-track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-width: 720px;
+}
+
+.flow-node {
+  flex: 1 1 0;
+  min-width: 104px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--bg-2);
+  padding: 13px 12px;
+  text-align: center;
+  transition: border-color .2s, transform .2s, background .2s;
+}
+
+.flow-node:hover {
+  border-color: var(--blue);
+  background: var(--panel-2);
+  transform: translateY(-3px);
+}
+
+.flow-node.accent {
+  border-color: rgba(87, 207, 154, .4);
+}
+
+.flow-node.accent:hover {
+  border-color: var(--green);
+}
+
+.fn-ico {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 7px;
+}
+
+.flow-node b {
+  display: block;
+  font-size: 13.4px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+.flow-node em {
+  display: block;
+  font-style: normal;
+  font-size: 11.6px;
+  line-height: 1.4;
+  color: var(--dim);
+}
+
+/* the connector: a dashed line with the dashes travelling along it */
+.flow-link {
+  flex: 0 0 26px;
+  align-self: center;
+  height: 2px;
+  background-image: linear-gradient(90deg, var(--line-2) 55%, transparent 0);
+  background-size: 9px 2px;
+  background-repeat: repeat-x;
+  animation: flow-dash 1s linear infinite;
+}
+
+@keyframes flow-dash {
+  to {
+    background-position: 9px 0;
+  }
+}
+
+.flow-note {
+  margin: 16px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ---------- live page vitals ---------- */
+.vitals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  padding-top: 22px;
+  padding-bottom: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.vitals[hidden] {
+  display: none;
+}
+
+.vitals-label {
+  color: var(--blue);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.vital b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.vital.ok b {
+  color: var(--green);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-link {
+    animation: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .flow {
+    padding: 18px 14px;
+  }
+
+  .vitals {
+    gap: 6px 14px;
+    font-size: 11.4px;
+  }
+}
+
+/* ---------- timeline: commit-graph treatment ---------- */
+.j-tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 13px 0 0;
+  padding: 0;
+}
+
+.j-tags li {
+  font-family: var(--mono);
+  font-size: 11.2px;
+  color: var(--dim);
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  padding: 3px 8px;
+  border-radius: 5px;
+  transition: color .18s, border-color .18s;
+}
+
+.job:hover .j-tags li {
+  color: var(--muted);
+  border-color: var(--line-2);
+}
+
+.job.now .j-tags li {
+  border-color: rgba(87, 207, 154, .22);
+}
+
+/* the node becomes a commit marker: ring outside, core inside */
+.job::before {
+  background: var(--bg);
+  border-width: 2px;
+}
+
+.job.now::before {
+  box-shadow: 0 0 0 4px rgba(87, 207, 154, .14), 0 0 14px rgba(87, 207, 154, .35);
+}
+
+/* ---------- geeky pass: monospace headings ---------- */
+h1,
+.sec-head h2,
+.contact h2,
+.pkg-hero h1,
+.fp-hero h1 {
+  font-family: var(--mono);
+  letter-spacing: -.02em;
+}
+
+h1 {
+  font-weight: 700;
+}
+
+/* section kickers read as shell prompts */
+.kicker::before {
+  content: "$ ";
+  color: var(--green);
+}
+
+.flow-cap::before {
+  content: "// ";
+  color: var(--dim);
+}
+
+nav.menu a.ghost {
+  font-family: var(--mono);
+  font-size: 13.6px;
+}
+
+.btn {
+  font-family: var(--mono);
+  font-size: 13.6px;
+}
+
+.job h3,
+.card h3,
+.repo h3,
+.drives h3,
+.sk h3,
+.feature h3 {
+  font-family: var(--mono);
+  letter-spacing: -.01em;
+}
+
+@media (max-width: 700px) {
+}
+
+/* ---------- BLOG ---------- */
+.post-hero {
+  padding-top: 58px;
+  padding-bottom: 30px;
+  max-width: 760px;
+}
+
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 12.2px;
+  color: var(--dim);
+  margin-bottom: 18px;
+}
+
+.post-meta .dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--line-2);
+}
+
+.post-hero h1 {
+  font-size: clamp(27px, 4.4vw, 40px);
+  line-height: 1.16;
+  margin-bottom: 16px;
+}
+
+.post-standfirst {
+  font-size: 17.5px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* contents rail */
+.toc {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 18px 20px;
+  margin: 0 0 34px;
+  max-width: 760px;
+}
+
+.toc h2 {
+  margin: 0 0 11px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+.toc ol {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  color: var(--dim);
+  font-size: 14.4px;
+}
+
+.toc a {
+  color: var(--muted);
+}
+
+.toc a:hover {
+  color: var(--text);
+}
+
+/* the article body */
+.post-body {
+  max-width: 760px;
+  font-size: 16.4px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+.post-body h2 {
+  font-family: var(--mono);
+  font-size: 23px;
+  line-height: 1.3;
+  color: var(--text);
+  letter-spacing: -.015em;
+  margin: 48px 0 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 90px;
+}
+
+.post-body h3 {
+  font-family: var(--mono);
+  font-size: 17px;
+  color: var(--text);
+  margin: 30px 0 10px;
+  scroll-margin-top: 90px;
+}
+
+.post-body p {
+  margin: 0 0 18px;
+}
+
+.post-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.post-body a {
+  color: var(--blue);
+  border-bottom: 1px solid transparent;
+}
+
+.post-body a:hover {
+  border-bottom-color: var(--blue);
+}
+
+.post-body ul,
+.post-body ol {
+  margin: 0 0 18px;
+  padding-left: 22px;
+  display: grid;
+  gap: 8px;
+}
+
+.post-body li::marker {
+  color: var(--line-2);
+}
+
+.post-body code {
+  font-family: var(--mono);
+  font-size: .88em;
+  color: var(--green);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.post-body pre {
+  margin: 0 0 20px;
+  padding: 16px 18px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.post-body pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+.post-body pre .c {
+  color: var(--dim);
+}
+
+.post-body pre .k {
+  color: #b18cf0;
+}
+
+.post-body pre .s {
+  color: var(--green);
+}
+
+.post-body pre .f {
+  color: var(--blue);
+}
+
+/* a point worth stopping on */
+.callout {
+  border: 1px solid var(--line-2);
+  border-left: 3px solid var(--blue);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 16px 18px;
+  margin: 0 0 22px;
+  font-size: 15.6px;
+}
+
+.callout.warn {
+  border-left-color: var(--amber);
+}
+
+.callout.good {
+  border-left-color: var(--green);
+}
+
+.callout b {
+  color: var(--text);
+  display: block;
+  margin-bottom: 5px;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.post-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14.6px;
+  margin: 0 0 22px;
+}
+
+.post-body th,
+.post-body td {
+  text-align: left;
+  padding: 10px 13px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.post-body thead th {
+  background: var(--bg-2);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12.4px;
+  font-weight: 600;
+}
+
+/* post list */
+.post-list {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+}
+
+.post-card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 22px 24px;
+  transition: border-color .22s, transform .22s;
+}
+
+.post-card:hover {
+  border-color: var(--blue);
+  transform: translateY(-3px);
+}
+
+.post-card h3 {
+  margin: 8px 0 8px;
+  font-family: var(--mono);
+  font-size: 19px;
+  color: var(--text);
+  letter-spacing: -.015em;
+}
+
+.post-card p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+@media (max-width: 700px) {
+  .post-body {
+    font-size: 15.8px;
+  }
+
+  .post-body h2 {
+    font-size: 20px;
+    margin-top: 38px;
+  }
+}
+
+/* ---------- skills: group notes + role linking ---------- */
+.sk-note {
+  margin: -8px 0 14px;
+  font-size: 13px;
+  color: var(--dim);
+  line-height: 1.5;
+}
+
+/* a chip that maps to a role is clickable, and says so */
+.chip.linked {
+  cursor: pointer;
+  border-style: dashed;
+}
+
+.chip.linked:hover,
+.chip.linked:focus-visible {
+  color: var(--text);
+  border-color: var(--blue);
+  border-style: solid;
+}
+
+.chip.linked:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.chip.on {
+  color: #08101f;
+  background: var(--blue);
+  border-color: var(--blue);
+  border-style: solid;
+}
+
+/* the timeline answers the question */
+.job.dim {
+  opacity: .32;
+  filter: saturate(.5);
+}
+
+.job.match {
+  border-color: var(--blue);
+}
+
+.job.dim,
+.job.match {
+  transition: opacity .25s, border-color .25s, filter .25s;
+}
+
+.skill-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 9px 14px;
+  border: 1px solid rgba(108, 155, 255, .35);
+  border-radius: 999px;
+  background: rgba(108, 155, 255, .08);
+  font-family: var(--mono);
+  font-size: 12.4px;
+  color: var(--blue);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.skill-filter[hidden] {
+  display: none;
+}
+
+.skill-filter-clear {
+  border: 0;
+  background: none;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.skill-filter-clear:hover {
+  color: var(--text);
+}
+
+/* ---------- article diagrams ---------- */
+.diagram {
+  margin: 0 0 24px;
+  padding: 20px 18px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  overflow-x: auto;
+}
+
+.diagram svg {
+  display: block;
+  width: 100%;
+  min-width: 540px;
+  height: auto;
+}
+
+.diagram figcaption {
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--dim);
+  line-height: 1.5;
+  min-width: 540px;
+}
+
+/* shared primitives so every diagram reads the same way */
+.d-box {
+  fill: var(--panel);
+  stroke: var(--line-2);
+  stroke-width: 1.5;
+}
+
+.d-box-accent {
+  fill: rgba(108, 155, 255, .10);
+  stroke: var(--blue);
+  stroke-width: 1.5;
+}
+
+.d-box-good {
+  fill: rgba(87, 207, 154, .10);
+  stroke: var(--green);
+  stroke-width: 1.5;
+}
+
+.d-box-warn {
+  fill: rgba(224, 175, 104, .10);
+  stroke: var(--amber);
+  stroke-width: 1.5;
+}
+
+.d-tx {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.d-label {
+  fill: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.d-sub {
+  fill: var(--dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+}
+
+.d-note {
+  fill: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+}
+
+.d-arrow {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 1.5;
+}
+
+.d-arrow-blue {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 1.5;
+}
+
+.d-arrow-warn {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.d-head {
+  fill: var(--line-2);
+}
+
+.d-head-blue {
+  fill: var(--blue);
+}
+
+.d-head-warn {
+  fill: var(--amber);
 }

@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Docker, Kubernetes and Azure without the cargo cult — Abhishek Singh</title>
+  <meta name="description"
+    content="What a container actually is, which Kubernetes objects you really need, the probes and limits that decide whether a deploy is safe, and how to pick an Azure compute service without over-buying.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Docker, Kubernetes and Azure without the cargo cult">
+  <meta property="og:description"
+    content="Images, probes, limits, rollouts and choosing the smallest cloud service that does the job.">
+  <meta property="og:url" content="https://coderabhi.in/blog/cloud-azure-kubernetes-docker.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/blog/cloud-azure-kubernetes-docker.html">
+  <link rel="icon" href="../assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.png" width="30" height="30"
+          alt="coderabhi logo"> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="../index.html#about">About</a>
+          <a href="../index.html#skills">Skills</a>
+          <a href="../index.html#experience">Experience</a>
+          <a href="../index.html#opensource">Open source</a>
+          <a href="index.html">Blog</a>
+          <a class="ghost" href="../index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <article>
+      <div class="container post-hero" id="top">
+        <div class="post-meta reveal">
+          <span>Cloud</span>
+          <span class="dot"></span>
+          <time datetime="2026-10-25">25 October 2026</time>
+          <span class="dot"></span>
+          <span>15 min read</span>
+        </div>
+        <h1 class="reveal">Docker, Kubernetes and Azure without the cargo cult</h1>
+        <p class="post-standfirst reveal">Most teams running Kubernetes do not need it, and most teams who do need
+          it are using about eight of its features. Here is the small set that actually decides whether your
+          deploys are safe.</p>
+      </div>
+
+      <div class="container">
+        <nav class="toc reveal" aria-label="Contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#containers">What a container actually is</a></li>
+            <li><a href="#images">Images: smaller, and not running as root</a></li>
+            <li><a href="#objects">The Kubernetes objects you need</a></li>
+            <li><a href="#probes">Probes: the two that are not the same</a></li>
+            <li><a href="#limits">Requests and limits</a></li>
+            <li><a href="#rollout">Deploying without dropping requests</a></li>
+            <li><a href="#azure">Choosing an Azure service</a></li>
+          </ol>
+        </nav>
+
+        <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+          <defs>
+            <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head" /></marker>
+            <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-blue" /></marker>
+            <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-warn" /></marker>
+          </defs>
+        </svg>
+
+        <div class="post-body">
+
+          <h2 id="containers">What a container actually is</h2>
+
+          <p>A container is not a small virtual machine. It is a normal process on the host kernel, with its view
+            of the world restricted — its own filesystem, network and process tree, and a ceiling on how much CPU
+            and memory it may use.</p>
+
+          <p>Which explains several things that confuse people the first time:</p>
+
+          <ul>
+            <li><strong>There is no boot.</strong> A container starts as fast as a process starts, because that is
+              all it is.</li>
+            <li><strong>The kernel is shared.</strong> Windows containers need a Windows host; Linux containers
+              need a Linux one. There is no magic layer in between.</li>
+            <li><strong>PID 1 is your process</strong>, which means signal handling is yours. A process that
+              ignores a termination signal gets killed hard after the grace period, mid-request.</li>
+            <li><strong>The filesystem vanishes</strong> when the container does. Anything written inside it and
+              not on a mounted volume is gone.</li>
+          </ul>
+
+          <h2 id="images">Images: smaller, and not running as root</h2>
+
+          <p>An image is a stack of read-only layers. Each instruction in the build adds one, and layers are
+            cached by content — which is the whole basis of a fast build.</p>
+
+          <pre><code><span class="c"># Build in one image, ship from a smaller one.</span>
+<span class="k">FROM</span> mcr.microsoft.com/dotnet/sdk:10.0 <span class="k">AS</span> build
+<span class="k">WORKDIR</span> /src
+
+<span class="c"># Restore before copying the source: dependencies change far less</span>
+<span class="c"># often than code, so this layer stays cached across most builds.</span>
+<span class="k">COPY</span> *.csproj .
+<span class="k">RUN</span> dotnet restore
+
+<span class="k">COPY</span> . .
+<span class="k">RUN</span> dotnet publish -c Release -o /app
+
+<span class="c"># The runtime image carries no compiler and no source.</span>
+<span class="k">FROM</span> mcr.microsoft.com/dotnet/aspnet:10.0
+<span class="k">WORKDIR</span> /app
+<span class="k">COPY</span> --from=build /app .
+<span class="k">USER</span> $APP_UID
+<span class="k">ENTRYPOINT</span> [<span class="s">"dotnet"</span>, <span class="s">"MyApi.dll"</span>]</code></pre>
+
+          <p>Three habits that pay for themselves:</p>
+
+          <ul>
+            <li><strong>Copy the dependency manifest before the source.</strong> It is the single biggest build
+              speed win and the one most often missed.</li>
+            <li><strong>Multi-stage, always.</strong> The build tools are an attack surface you do not need to
+              ship and do not want to pay to store.</li>
+            <li><strong>Do not run as root.</strong> It costs one line. A container escape from a root process is
+              a much worse day than one from an unprivileged one.</li>
+          </ul>
+
+          <div class="callout warn">
+            <b>Never bake secrets into an image</b>
+            A layer is permanent. Deleting a file in a later layer does not remove it from the earlier one — it
+            is still in the image, readable by anyone who pulls it. Secrets come from the environment or a vault
+            at run time, not from the build.
+          </div>
+
+          <h2 id="objects">The Kubernetes objects you need</h2>
+
+          <p>Kubernetes has a large API. A normal web service needs five objects, and you can go a long way
+            before needing a sixth.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 250" role="img"
+              aria-label="Ingress routes traffic to a Service, which load balances across Pods created by a Deployment, with configuration from ConfigMap and Secret.">
+              <rect x="20" y="22" width="150" height="50" rx="8" class="d-box-accent" />
+              <text x="38" y="52" class="d-label">Ingress</text>
+
+              <rect x="20" y="100" width="150" height="50" rx="8" class="d-box-accent" />
+              <text x="38" y="130" class="d-label">Service</text>
+
+              <rect x="20" y="178" width="150" height="54" rx="8" class="d-box" />
+              <text x="38" y="202" class="d-label">Deployment</text>
+              <text x="38" y="220" class="d-sub">replicas: 3</text>
+
+              <rect x="250" y="92" width="130" height="66" rx="8" class="d-box-good" />
+              <text x="268" y="118" class="d-label">Pod</text>
+              <text x="268" y="136" class="d-sub">your container</text>
+
+              <rect x="400" y="92" width="130" height="66" rx="8" class="d-box-good" />
+              <text x="418" y="118" class="d-label">Pod</text>
+              <text x="418" y="136" class="d-sub">your container</text>
+
+              <rect x="550" y="92" width="130" height="66" rx="8" class="d-box-good" />
+              <text x="568" y="118" class="d-label">Pod</text>
+              <text x="568" y="136" class="d-sub">your container</text>
+
+              <path d="M95 72 V94" class="d-arrow" marker-end="url(#a)" />
+              <path d="M170 125 H244" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M170 125 L244 110" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M170 125 L244 140" class="d-arrow-blue" marker-end="url(#ab)" />
+
+              <path d="M95 178 V160 H244" class="d-arrow" marker-end="url(#a)" />
+              <text x="100" y="172" class="d-note">creates and replaces</text>
+
+              <rect x="250" y="196" width="200" height="42" rx="8" class="d-box" />
+              <text x="268" y="222" class="d-label">ConfigMap</text>
+              <rect x="470" y="196" width="210" height="42" rx="8" class="d-box-warn" />
+              <text x="488" y="222" class="d-label">Secret</text>
+
+              <text x="196" y="42" class="d-note">host and path rules, TLS</text>
+              <text x="196" y="66" class="d-note">one stable address, load balances</text>
+            </svg>
+            <figcaption>Ingress is the front door, Service is the stable address, Deployment keeps the right
+              number of Pods alive.</figcaption>
+          </figure>
+
+          <p>The mental model worth holding: <strong>Pods are cattle</strong>. They are created, killed and
+            replaced constantly — by a deploy, by a node being drained, by an autoscaler. Anything your app keeps
+            in memory and cares about will be lost, without warning, at an inconvenient moment. Sessions belong in
+            a shared cache; files belong in object storage.</p>
+
+          <h2 id="probes">Probes: the two that are not the same</h2>
+
+          <p>This is the single most common misconfiguration I see, and it causes outages that look like
+            everything else.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Readiness</th>
+                <th>Liveness</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Question</td>
+                <td>Can I serve traffic right now?</td>
+                <td>Am I broken beyond recovery?</td>
+              </tr>
+              <tr>
+                <td>On failure</td>
+                <td>Removed from the load balancer; keeps running</td>
+                <td><strong>Killed and restarted</strong></td>
+              </tr>
+              <tr>
+                <td>Should check</td>
+                <td>Dependencies needed to serve, warm-up complete</td>
+                <td>Almost nothing — just that the process responds</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout warn">
+            <b>The outage this causes</b>
+            Put a database check in your liveness probe. The database has a slow minute. Every pod fails liveness
+            and is killed. They restart, find the database still slow, and are killed again — now you have a
+            crash loop and zero capacity during a blip you would otherwise have survived. A dependency check
+            belongs in <em>readiness</em>: stop taking traffic, stay alive, recover.
+          </div>
+
+          <pre><code>readinessProbe:
+  httpGet: { path: /health/ready, port: 8080 }
+  periodSeconds: 5
+livenessProbe:
+  httpGet: { path: /health/live, port: 8080 }   <span class="c"># returns 200 if the process is up</span>
+  periodSeconds: 20
+  failureThreshold: 3
+startupProbe:
+  httpGet: { path: /health/live, port: 8080 }   <span class="c"># slow start without a loose liveness probe</span>
+  failureThreshold: 30
+  periodSeconds: 5</code></pre>
+
+          <h2 id="limits">Requests and limits</h2>
+
+          <p>Two numbers with very different consequences. <strong>Requests</strong> are what the scheduler
+            reserves — they decide where a pod lands. <strong>Limits</strong> are the ceiling, and the two
+            resources behave completely differently at that ceiling:</p>
+
+          <ul>
+            <li><strong>Over the CPU limit: throttled.</strong> The app gets slow. Nothing crashes, nothing logs
+              an error, and the symptom looks like a performance problem rather than a configuration one.</li>
+            <li><strong>Over the memory limit: killed.</strong> Immediately, with no grace period and no chance to
+              finish the current request. You see the exit code and nothing else.</li>
+          </ul>
+
+          <div class="callout">
+            <b>Set memory requests and limits equal; be generous with CPU</b>
+            Memory is incompressible — there is no "slightly less memory", only enough or dead — so predictable is
+            better than optimistic. CPU is compressible, so a tight limit mostly buys you mysterious latency. A
+            good default is to set the CPU request from observed usage and leave the CPU limit high or unset.
+          </div>
+
+          <h2 id="rollout">Deploying without dropping requests</h2>
+
+          <p>A rolling update replaces pods gradually, which only works if the app participates. The sequence when
+            a pod is told to stop:</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 190" role="img"
+              aria-label="Shutdown sequence: pod marked terminating, removed from endpoints, SIGTERM sent, in-flight requests finish, then the process exits.">
+              <rect x="10" y="66" width="136" height="58" rx="8" class="d-box-warn" />
+              <text x="26" y="90" class="d-label">terminating</text>
+              <text x="26" y="108" class="d-sub">deploy starts</text>
+
+              <rect x="170" y="66" width="152" height="58" rx="8" class="d-box" />
+              <text x="186" y="90" class="d-label">out of rotation</text>
+              <text x="186" y="108" class="d-sub">no new requests</text>
+
+              <rect x="346" y="66" width="152" height="58" rx="8" class="d-box-accent" />
+              <text x="362" y="90" class="d-label">SIGTERM</text>
+              <text x="362" y="108" class="d-sub">your app must listen</text>
+
+              <rect x="522" y="66" width="140" height="58" rx="8" class="d-box-good" />
+              <text x="538" y="90" class="d-label">drain</text>
+              <text x="538" y="108" class="d-sub">finish in-flight</text>
+
+              <rect x="686" y="66" width="64" height="58" rx="8" class="d-box" />
+              <text x="702" y="100" class="d-label">exit</text>
+
+              <path d="M146 95 H164" class="d-arrow" marker-end="url(#a)" />
+              <path d="M322 95 H340" class="d-arrow" marker-end="url(#a)" />
+              <path d="M498 95 H516" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M662 95 H680" class="d-arrow" marker-end="url(#a)" />
+
+              <text x="186" y="152" class="d-note">removal from the load balancer is not instant — a short
+                preStop sleep covers the gap</text>
+            </svg>
+            <figcaption>Dropped requests during deploys are nearly always one of two things: the app ignoring
+              SIGTERM, or exiting before the load balancer stopped sending it traffic.</figcaption>
+          </figure>
+
+          <p>The fixes are small and specific:</p>
+
+          <ul>
+            <li><strong>Handle SIGTERM</strong> and stop accepting new work while finishing what is in flight.
+              Most modern web frameworks do this if you let them shut down gracefully instead of calling
+              <code>Environment.Exit</code>.</li>
+            <li><strong>Add a short <code>preStop</code> sleep</strong> — a few seconds. Endpoint removal
+              propagates asynchronously, so without it a proxy can still send you a request after you have begun
+              shutting down.</li>
+            <li><strong>Set a termination grace period</strong> longer than your slowest reasonable request.</li>
+            <li><strong>Add a PodDisruptionBudget</strong> so voluntary disruptions — node upgrades, scale-downs —
+              cannot take every replica at once.</li>
+          </ul>
+
+          <h2 id="azure">Choosing an Azure service</h2>
+
+          <p>The main skill here is not using Kubernetes. Pick the least capable service that does the job, and
+            move up only when you hit a wall you can name.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Good for</th>
+                <th>You give up</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>App Service</strong></td>
+                <td>A web app or API with predictable shape. Deploy slots, autoscale and TLS are built in, and
+                  there is no cluster to run.</td>
+                <td>Fine-grained control over networking and scheduling.</td>
+              </tr>
+              <tr>
+                <td><strong>Container Apps</strong></td>
+                <td>Containers and background workers without a cluster. Scales on HTTP traffic or queue depth,
+                  including to zero. This is the sweet spot for most microservice work.</td>
+                <td>Direct access to the Kubernetes API and custom operators.</td>
+              </tr>
+              <tr>
+                <td><strong>Functions</strong></td>
+                <td>Event-driven, short-lived, bursty work. Pay for execution rather than uptime.</td>
+                <td>Long-running processes, and a cold-start tax on latency-sensitive paths.</td>
+              </tr>
+              <tr>
+                <td><strong>AKS</strong></td>
+                <td>Many services, a platform team, real need for custom networking, operators or node-level
+                  control.</td>
+                <td>Weekends. A cluster is a product you now own, upgrade and secure.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout good">
+            <b>Two things to set up before the first deploy, on any of them</b>
+            <strong>Managed identity</strong> instead of connection strings — the platform hands your app a token
+            for the database and the storage account, and there is no secret to leak or rotate. And
+            <strong>infrastructure as code</strong> from day one; the resource created by hand at 11pm is the one
+            nobody can recreate when the region has a bad day.
+          </div>
+
+          <p>The thread running through all of this: containers made deployment boring, and the orchestration
+            layer exists to keep it boring. Every feature you adopt is a thing you maintain. The teams I have seen
+            running comfortably use a small, well-understood subset and spend their attention on the application
+            instead.</p>
+
+          <p style="margin-top:34px"><a class="back-link" href="index.html">← More posts</a></p>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a href="../index.html"><img class="foot-logo" src="../assets/logo-full.png" width="520" height="314"
+          alt="coderabhi"></a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Blog</a>
+        <a href="../index.html#opensource">Open source</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../page.js"></script>
+  <script src="../enhance.js"></script>
+</body>
+
+</html>

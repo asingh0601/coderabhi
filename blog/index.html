@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog — Abhishek Singh</title>
+  <meta name="description"
+    content="Notes on backend engineering: microservices, caching, event-driven systems and the failure modes that only show up in production.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Blog — Abhishek Singh">
+  <meta property="og:description" content="Notes on backend engineering, written from production rather than theory.">
+  <meta property="og:url" content="https://coderabhi.in/blog/">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/blog/">
+  <link rel="icon" href="../assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.png" width="30" height="30"
+          alt="coderabhi logo"> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="../index.html#about">About</a>
+          <a href="../index.html#skills">Skills</a>
+          <a href="../index.html#experience">Experience</a>
+          <a href="../index.html#opensource">Open source</a>
+          <a href="index.html">Blog</a>
+          <a class="ghost" href="../index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container pkg-hero" id="top">
+      <span class="kicker reveal">Blog</span>
+      <h1 class="reveal">Notes from the server side</h1>
+      <p class="pkg-sub reveal">Things I have learned keeping systems up — written from production, not from a
+        conference talk. No growth-hacking, no listicles.</p>
+    </div>
+
+    <section>
+      <div class="container">
+        <div class="post-list">
+          <a class="post-card reveal" href="microservices.html">
+            <div class="post-meta">
+              <span>Backend</span>
+              <span class="dot"></span>
+              <time datetime="2026-10-25">25 October 2026</time>
+              <span class="dot"></span>
+              <span>18 min read</span>
+            </div>
+            <h3>Microservices that don't fall over</h3>
+            <p>Splitting a system into services is the easy part. The hard part is the gaps between them. Service boundaries, the outbox and inbox patterns, the saga pattern in detail, cache stampedes, circuit breakers and the failure modes that only show up under real traffic.</p>
+            <div class="c-foot"><span>Microservices</span><span>Saga</span><span>Caching</span><span>Event-driven</span></div>
+          </a>
+
+          <a class="post-card reveal" href="csharp-design-patterns.html">
+            <div class="post-meta">
+              <span>C#</span>
+              <span class="dot"></span>
+              <time datetime="2026-10-25">25 October 2026</time>
+              <span class="dot"></span>
+              <span>12 min read</span>
+            </div>
+            <h3>C# design patterns that still earn their place</h3>
+            <p>Half the Gang of Four catalogue is now a language feature. Which patterns survived, which ones records and pattern matching quietly replaced, and how to apply the survivors with dependency injection without building a maze.</p>
+            <div class="c-foot"><span>C#</span><span>Patterns</span><span>DI</span><span>Architecture</span></div>
+          </a>
+
+          <a class="post-card reveal" href="agentic-ai-development.html">
+            <div class="post-meta">
+              <span>AI</span>
+              <span class="dot"></span>
+              <time datetime="2026-10-25">25 October 2026</time>
+              <span class="dot"></span>
+              <span>14 min read</span>
+            </div>
+            <h3>Agentic AI for development, from someone who built one</h3>
+            <p>I built a coding assistant into Visual Studio. The tool-use loop, why context is the real constraint, how prompt caching silently breaks, the permission model that makes it safe, and where agents genuinely help versus where they waste your time.</p>
+            <div class="c-foot"><span>Agents</span><span>LLM</span><span>Tooling</span><span>Context</span></div>
+          </a>
+
+          <a class="post-card reveal" href="microfrontends.html">
+            <div class="post-meta">
+              <span>Frontend</span>
+              <span class="dot"></span>
+              <time datetime="2026-10-25">25 October 2026</time>
+              <span class="dot"></span>
+              <span>13 min read</span>
+            </div>
+            <h3>Microfrontends: when splitting the UI is worth it</h3>
+            <p>Shell and remotes, build-time versus run-time composition, shared dependencies and version skew, who owns the URL, keeping four teams looking like one product, and the costs nobody puts in the pitch.</p>
+            <div class="c-foot"><span>Microfrontends</span><span>Angular</span><span>Architecture</span></div>
+          </a>
+
+          <a class="post-card reveal" href="cloud-azure-kubernetes-docker.html">
+            <div class="post-meta">
+              <span>Cloud</span>
+              <span class="dot"></span>
+              <time datetime="2026-10-25">25 October 2026</time>
+              <span class="dot"></span>
+              <span>15 min read</span>
+            </div>
+            <h3>Docker, Kubernetes and Azure without the cargo cult</h3>
+            <p>What a container actually is, the five Kubernetes objects you really need, the probe misconfiguration that turns a blip into a crash loop, graceful shutdown, and picking the smallest Azure service that does the job.</p>
+            <div class="c-foot"><span>Docker</span><span>Kubernetes</span><span>Azure</span><span>DevOps</span></div>
+          </a>
+
+          <a class="post-card reveal" href="observability-reliability.html">
+            <div class="post-meta">
+              <span>Reliability</span>
+              <span class="dot"></span>
+              <time datetime="2026-10-25">25 October 2026</time>
+              <span class="dot"></span>
+              <span>14 min read</span>
+            </div>
+            <h3>Observability and reliability: knowing before your users do</h3>
+            <p>Logs, metrics and traces and what each is for, why averages hide your worst users, correlation ids across the broker, SLOs and error budgets, and alert design that stops a team ignoring its pager.</p>
+            <div class="c-foot"><span>Observability</span><span>SLO</span><span>Tracing</span><span>Alerting</span></div>
+          </a>
+        </div>
+
+        <p class="demo-note reveal" style="max-width:760px;margin-top:26px">Six so far. If you want to argue
+          with any of it, <a style="color:var(--blue)" href="https://github.com/asingh0601" target="_blank"
+            rel="noopener">GitHub</a> is the place.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a href="../index.html"><img class="foot-logo" src="../assets/logo-full.png" width="520" height="314"
+          alt="coderabhi"></a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="../index.html">Home</a>
+        <a href="../index.html#opensource">Open source</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://aitranslate.in" target="_blank" rel="noopener">AITranslate</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../page.js"></script>
+  <script src="../enhance.js"></script>
+</body>
+
+</html>

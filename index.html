@@ -52,6 +52,7 @@
           <a href="#experience">Experience</a>
           <a href="#projects">Projects</a>
           <a href="#opensource">Open source</a>
+          <a href="blog/index.html">Blog</a>
           <a class="ghost" href="#contact">Get in touch</a>
         </nav>
 
@@ -205,6 +206,52 @@
             </ul>
           </div>
         </div>
+
+        <!-- What "the invisible half" actually looks like -->
+        <figure class="flow reveal">
+          <figcaption class="flow-cap">What happens between a tap and an answer</figcaption>
+          <div class="flow-scroll">
+            <ol class="flow-track">
+              <li class="flow-node">
+                <span class="fn-ico">🌐</span>
+                <b>Browser</b>
+                <em>someone taps a button</em>
+              </li>
+              <li class="flow-link" aria-hidden="true"></li>
+              <li class="flow-node">
+                <span class="fn-ico">🛡️</span>
+                <b>Gateway</b>
+                <em>who are you, how often</em>
+              </li>
+              <li class="flow-link" aria-hidden="true"></li>
+              <li class="flow-node">
+                <span class="fn-ico">⚙️</span>
+                <b>API</b>
+                <em>the rules of the business</em>
+              </li>
+              <li class="flow-link" aria-hidden="true"></li>
+              <li class="flow-node accent">
+                <span class="fn-ico">⚡</span>
+                <b>Cache</b>
+                <em>answer without asking twice</em>
+              </li>
+              <li class="flow-link" aria-hidden="true"></li>
+              <li class="flow-node">
+                <span class="fn-ico">📨</span>
+                <b>Queue</b>
+                <em>slow work, moved offstage</em>
+              </li>
+              <li class="flow-link" aria-hidden="true"></li>
+              <li class="flow-node">
+                <span class="fn-ico">🗄️</span>
+                <b>Database</b>
+                <em>the part that must not lie</em>
+              </li>
+            </ol>
+          </div>
+          <p class="flow-note">Every box is somewhere a request can get slow, or get lost. Most of my work is
+            making sure it does neither.</p>
+        </figure>
       </div>
     </section>
 
@@ -214,12 +261,13 @@
         <div class="sec-head reveal">
           <span class="kicker">Skills</span>
           <h2>What I work with</h2>
-          <p>Deep in the .NET and cloud world, comfortable most places else.</p>
+          <p>Deep in the .NET and cloud world, comfortable most places else. <strong>Click anything below</strong> to see which roles it was used on.</p>
         </div>
 
         <div class="skill-groups">
           <div class="sk reveal">
             <h3>Backend &amp; architecture</h3>
+            <p class="sk-note">Where most of the eleven years went.</p>
             <div class="chips">
               <span class="chip">.NET Core</span><span class="chip">C#</span><span class="chip">REST APIs</span>
               <span class="chip">Microservices</span><span class="chip">System design</span>
@@ -229,6 +277,7 @@
 
           <div class="sk reveal">
             <h3>Data &amp; messaging</h3>
+            <p class="sk-note">Making the slow parts fast, and the heavy parts async.</p>
             <div class="chips">
               <span class="chip">SQL Server</span><span class="chip">Redis</span><span class="chip">RabbitMQ</span>
               <span class="chip">Elasticsearch</span><span class="chip">Performance tuning</span>
@@ -237,6 +286,7 @@
 
           <div class="sk cloud reveal">
             <h3>Cloud &amp; delivery</h3>
+            <p class="sk-note">Shipping it, running it, watching it.</p>
             <div class="chips">
               <span class="chip">Azure</span><span class="chip">AWS</span><span class="chip">Docker</span>
               <span class="chip">Kubernetes</span><span class="chip">CI/CD</span><span class="chip">Monitoring</span>
@@ -245,6 +295,7 @@
 
           <div class="sk ai reveal">
             <h3>AI &amp; automation</h3>
+            <p class="sk-note">Recent, and in production rather than in demos.</p>
             <div class="chips">
               <span class="chip">LLM integration</span><span class="chip">Prompt engineering</span>
               <span class="chip">AI agents</span><span class="chip">Document AI &amp; OCR</span>
@@ -253,6 +304,7 @@
 
           <div class="sk reveal">
             <h3>Frontend</h3>
+            <p class="sk-note">Enough to build and wire a real interface.</p>
             <div class="chips">
               <span class="chip">Angular</span><span class="chip">TypeScript</span>
               <span class="chip">Component libraries</span>
@@ -261,6 +313,7 @@
 
           <div class="sk reveal">
             <h3>How I work</h3>
+            <p class="sk-note">The habits that survive contact with a deadline.</p>
             <div class="chips">
               <span class="chip">Agile</span><span class="chip">Code review</span><span class="chip">Testing</span>
               <span class="chip">Mentoring</span><span class="chip">Technical ownership</span>
@@ -289,6 +342,7 @@
             </div>
             <p>Leading the engineering behind a consumer marketplace — the architecture, the backend systems and
               getting the work out the door.</p>
+            <ul class="j-tags"><li>.NET Core</li><li>Azure</li><li>Angular</li><li>System design</li></ul>
           </article>
 
           <article class="job reveal">
@@ -298,6 +352,7 @@
             </div>
             <p>Led a brand-new platform built from the ground up on Microsoft Azure — designing how the whole system
               fitted together and taking it to launch.</p>
+            <ul class="j-tags"><li>Azure</li><li>AKS</li><li>Cosmos DB</li><li>Angular</li><li>Architecture</li></ul>
           </article>
 
           <article class="job reveal">
@@ -308,6 +363,7 @@
             <p>The only engineer on a platform law firms use to run cases, documents and payments. Rebuilt the engine
               underneath it so the app responded around 45% faster, and moved the slow jobs into the background so
               nothing kept people waiting.</p>
+            <ul class="j-tags"><li>ASP.NET Core</li><li>RabbitMQ</li><li>Redis</li><li>SQL Server</li><li>Angular</li></ul>
           </article>
 
           <article class="job reveal">
@@ -318,6 +374,7 @@
             <p>Built the systems behind customer verification and compliance checks for a financial platform, and
               owned the pipelines that process trades end to end. Cut production incidents by more than 20%, reviewed
               code and mentored other engineers.</p>
+            <ul class="j-tags"><li>.NET</li><li>Microservices</li><li>Distributed systems</li><li>Mentoring</li></ul>
           </article>
 
           <article class="job reveal">
@@ -327,6 +384,7 @@
             </div>
             <p>Led the engineering behind a product that spots security weaknesses in real time, managed a small team,
               and halved the time it took to get new releases out the door.</p>
+            <ul class="j-tags"><li>.NET</li><li>CI/CD</li><li>Real-time</li><li>Team lead</li></ul>
           </article>
 
           <article class="job reveal">
@@ -336,6 +394,7 @@
             </div>
             <p>Handled data at scale: importing millions of records at a time and making the system's queries roughly
               twice as fast.</p>
+            <ul class="j-tags"><li>.NET Core</li><li>SQL Server</li><li>Bulk pipelines</li></ul>
           </article>
 
           <article class="job reveal">
@@ -345,6 +404,7 @@
             </div>
             <p>Built publishing and analytics tools, led a team of 10–12 engineers, and owned how the apps were put
               together from the interface down to the data.</p>
+            <ul class="j-tags"><li>Angular</li><li>CMS</li><li>Analytics</li><li>Team of 10-12</li></ul>
           </article>
         </div>
       </div>
@@ -562,6 +622,15 @@
   </main>
 
   <footer>
+    <!-- Measured in the visitor's own browser, not typed in by me. -->
+    <div class="container vitals" id="vitals" hidden>
+      <span class="vitals-label">this page, measured just now</span>
+      <span class="vital"><b data-vital="weight">—</b> transferred</span>
+      <span class="vital"><b data-vital="requests">—</b> requests</span>
+      <span class="vital ok"><b data-vital="frameworks">—</b></span>
+      <span class="vital ok"><b data-vital="trackers">—</b></span>
+    </div>
+
     <div class="container">
       <a href="#top"><img class="foot-logo" src="assets/logo-full.png" width="520" height="314"
           alt="coderabhi"></a>
@@ -575,6 +644,7 @@
         <a href="https://marketplace.visualstudio.com/publishers/er-abhishek" target="_blank"
           rel="noopener">Marketplace</a>
         <a href="https://aitranslate.in" target="_blank" rel="noopener">AITranslate</a>
+        <a href="blog/index.html">Blog</a>
       </div>
     </div>
   </footer>
@@ -762,6 +832,9 @@
     })();
   </script>
   <script src="stats.js"></script>
+  <script src="skills.js"></script>
+  <script src="vitals.js"></script>
+  <script src="enhance.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agentic AI for development, from someone who built one — Abhishek Singh</title>
+  <meta name="description"
+    content="What an agentic coding assistant actually is: the tool-use loop, why context is the real constraint, how prompt caching works, and where agents genuinely help versus where they waste your time.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Agentic AI for development, from someone who built one">
+  <meta property="og:description"
+    content="The tool-use loop, context as the real constraint, caching, permissions, and where agents actually help.">
+  <meta property="og:url" content="https://coderabhi.in/blog/agentic-ai-development.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/blog/agentic-ai-development.html">
+  <link rel="icon" href="../assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.png" width="30" height="30"
+          alt="coderabhi logo"> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="../index.html#about">About</a>
+          <a href="../index.html#skills">Skills</a>
+          <a href="../index.html#experience">Experience</a>
+          <a href="../index.html#opensource">Open source</a>
+          <a href="index.html">Blog</a>
+          <a class="ghost" href="../index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <article>
+      <div class="container post-hero" id="top">
+        <div class="post-meta reveal">
+          <span>AI</span>
+          <span class="dot"></span>
+          <time datetime="2026-10-25">25 October 2026</time>
+          <span class="dot"></span>
+          <span>14 min read</span>
+        </div>
+        <h1 class="reveal">Agentic AI for development, from someone who built one</h1>
+        <p class="post-standfirst reveal">I built a coding assistant into Visual Studio. The interesting part was
+          never the model — it was the loop around it, the context you feed it, and deciding what it is allowed to
+          do without asking.</p>
+      </div>
+
+      <div class="container">
+        <nav class="toc reveal" aria-label="Contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#loop">What "agentic" actually means</a></li>
+            <li><a href="#tools">Tools are the product</a></li>
+            <li><a href="#context">Context is the real constraint</a></li>
+            <li><a href="#caching">Caching, and the silent invalidator</a></li>
+            <li><a href="#permissions">Permissions: the UX problem</a></li>
+            <li><a href="#verify">Make it check its own work</a></li>
+            <li><a href="#where">Where it helps, where it does not</a></li>
+          </ol>
+        </nav>
+
+        <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+          <defs>
+            <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head" /></marker>
+            <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-blue" /></marker>
+            <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-warn" /></marker>
+          </defs>
+        </svg>
+
+        <div class="post-body">
+
+          <h2 id="loop">What "agentic" actually means</h2>
+
+          <p>A chatbot answers. An agent <em>acts, looks at the result, and decides what to do next</em>. That is
+            the whole distinction, and it is implemented by a loop that is almost disappointingly simple.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 240" role="img"
+              aria-label="A loop: send the conversation to the model, the model either finishes or requests tools, the host executes them and appends results, then repeats.">
+              <rect x="40" y="26" width="200" height="56" rx="9" class="d-box" />
+              <text x="60" y="52" class="d-label">send conversation</text>
+              <text x="60" y="70" class="d-sub">system, tools, history</text>
+
+              <rect x="300" y="26" width="190" height="56" rx="9" class="d-box-accent" />
+              <text x="320" y="52" class="d-label">model replies</text>
+              <text x="320" y="70" class="d-sub">text, or tool calls</text>
+
+              <rect x="556" y="26" width="170" height="56" rx="9" class="d-box-good" />
+              <text x="576" y="58" class="d-label">done — answer</text>
+
+              <rect x="300" y="146" width="190" height="60" rx="9" class="d-box" />
+              <text x="320" y="172" class="d-label">host runs them</text>
+              <text x="320" y="190" class="d-sub">read, edit, test, shell</text>
+
+              <path d="M240 54 H294" class="d-arrow" marker-end="url(#a)" />
+              <path d="M490 54 H550" class="d-arrow" marker-end="url(#a)" />
+              <text x="498" y="44" class="d-note">end_turn</text>
+
+              <path d="M395 82 V140" class="d-arrow-blue" marker-end="url(#ab)" />
+              <text x="404" y="116" class="d-note">tool_use</text>
+
+              <path d="M300 176 H140 V82" class="d-arrow-blue" marker-end="url(#ab)" />
+              <text x="150" y="200" class="d-note">append every result, then go round again</text>
+            </svg>
+            <figcaption>The model never touches your machine. It asks; the host decides whether to comply.
+            </figcaption>
+          </figure>
+
+          <p>Two details in that loop matter more than they look.</p>
+
+          <p><strong>One reply can contain several tool calls.</strong> When it does, run them and return
+            <em>all</em> of the results in a single message back. Splitting them across several messages teaches
+            the model, within that conversation, that parallel calls do not work — so it stops making them and
+            everything gets slower.</p>
+
+          <p><strong>A failed tool is still a result.</strong> Return the failure, marked as an error, rather than
+            dropping it. An agent told "that path does not exist" corrects itself on the next turn. An agent told
+            nothing repeats the same call, because from where it sits nothing happened.</p>
+
+          <h2 id="tools">Tools are the product</h2>
+
+          <p>The model is a commodity; everyone has access to roughly the same ones. What differs between a useful
+            assistant and a frustrating one is the tool surface: what it can see, what it can change, and how
+            precisely it can express an intention.</p>
+
+          <p>The set that pulls its weight is small:</p>
+
+          <ul>
+            <li><strong>Search</strong> — find files by name and by content. This is how an agent orients itself
+              in a codebase it has never seen.</li>
+            <li><strong>Read</strong> — a file, or a range of lines. Ranges matter: reading a 4,000-line file to
+              change one method is how you burn a context window.</li>
+            <li><strong>Edit</strong> — a precise replacement of known text, not "write the whole file". Whole-file
+              writes destroy anything the model did not think to reproduce.</li>
+            <li><strong>Run</strong> — tests, build, linter. This is what turns a plausible answer into a verified
+              one.</li>
+          </ul>
+
+          <div class="callout">
+            <b>Fewer, sharper tools beat more tools</b>
+            Every tool definition sits in the context of every request, and a near-duplicate pair ("edit file"
+            and "modify file") mostly produces wrong choices. One good edit tool with a clear description
+            outperforms three overlapping ones.
+          </div>
+
+          <h2 id="context">Context is the real constraint</h2>
+
+          <p>Context windows are large now, which has not made context management less important — it has made it
+            less obvious when you are doing it badly. Everything in the window competes for attention, you pay for
+            all of it on every turn, and a window full of noise produces worse answers than a smaller window full
+            of signal.</p>
+
+          <p>In practice, a turn is assembled roughly like this:</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 200" role="img"
+              aria-label="Request layout: tools then system prompt then history, stable first and volatile last, with a cache boundary after the stable part.">
+              <rect x="10" y="40" width="150" height="76" rx="9" class="d-box-good" />
+              <text x="28" y="66" class="d-label">tools</text>
+              <text x="28" y="84" class="d-sub">rarely change</text>
+
+              <rect x="176" y="40" width="186" height="76" rx="9" class="d-box-good" />
+              <text x="194" y="66" class="d-label">system prompt</text>
+              <text x="194" y="84" class="d-sub">rules, conventions</text>
+
+              <rect x="378" y="40" width="186" height="76" rx="9" class="d-box-accent" />
+              <text x="396" y="66" class="d-label">history</text>
+              <text x="396" y="84" class="d-sub">grows each turn</text>
+
+              <rect x="580" y="40" width="170" height="76" rx="9" class="d-box-warn" />
+              <text x="598" y="66" class="d-label">this message</text>
+              <text x="598" y="84" class="d-sub">always new</text>
+
+              <path d="M370 24 V132" class="d-tx" />
+              <text x="196" y="156" class="d-note">cacheable prefix — identical bytes every turn</text>
+              <text x="396" y="156" class="d-note">volatile — changes, so it goes last</text>
+
+              <text x="196" y="180" class="d-note">order is fixed: tools, then system, then messages</text>
+            </svg>
+            <figcaption>Stable content first, volatile content last. That ordering is what makes caching possible
+              at all.</figcaption>
+          </figure>
+
+          <p>The non-obvious part: <strong>the things you most want to inject — the current file, the time, a
+              request id — are exactly the things that must go last</strong>, because anything placed before the
+            history invalidates it.</p>
+
+          <h2 id="caching">Caching, and the silent invalidator</h2>
+
+          <p>Prompt caching works on an exact prefix match. The provider hashes the request from the beginning;
+            everything that matches a previous request can be served from cache, and <strong>the first byte that
+              differs invalidates everything after it</strong>.</p>
+
+          <p>Which produces a failure mode worth knowing, because nothing errors:</p>
+
+          <pre><code><span class="c">// Looks harmless. Costs you the entire cache, every single turn.</span>
+system = $<span class="s">"You are a coding assistant. Current time: {DateTime.Now}"</span>;</code></pre>
+
+          <p>The timestamp is in the prefix, so the prefix is different on every request, so nothing is ever a hit.
+            The agent still works. It is just several times more expensive and slower to first token, and nothing
+            in the response says so.</p>
+
+          <div class="callout good">
+            <b>How to catch it</b>
+            The usage figures on every response report how many input tokens were read from cache. If that number
+            is near zero from the second turn onwards, you have an invalidator — a timestamp, an unsorted
+            dictionary serialised into the prompt, a tool list built in nondeterministic order, or a per-request
+            id placed too early. Log it and alert on it.
+          </div>
+
+          <p>The same reasoning explains a rule that surprises people: <strong>do not rewrite history</strong>.
+            Editing or re-summarising earlier turns changes the prefix, so the cache dies and the cost of the
+            conversation jumps. Append; do not revise.</p>
+
+          <h3>When the conversation gets too long</h3>
+
+          <p>Two different remedies, often confused:</p>
+
+          <ul>
+            <li><strong>Clearing</strong> removes old content outright — typically stale tool results, which are
+              the bulkiest and least useful thing in a long session.</li>
+            <li><strong>Compaction</strong> replaces old turns with a summary, keeping the thread of the
+              conversation at a fraction of the tokens.</li>
+          </ul>
+
+          <p>Clearing is cheaper and safer; reach for it first. Compaction keeps more meaning, at the cost of a
+            summarisation pass and a rewritten prefix.</p>
+
+          <h2 id="permissions">Permissions: the UX problem</h2>
+
+          <p>An agent that can edit files and run commands is, in security terms, a program executing instructions
+            derived from text. The hard question is not "can it do damage" but "how often do we interrupt the
+            human to ask".</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 206" role="img"
+              aria-label="A requested tool call is checked against a policy and either runs, is refused, or waits for the user to approve it.">
+              <rect x="10" y="66" width="150" height="56" rx="9" class="d-box-accent" />
+              <text x="28" y="92" class="d-label">tool requested</text>
+              <text x="28" y="110" class="d-sub">edit, run, delete</text>
+
+              <path d="M160 94 H206" class="d-arrow" marker-end="url(#a)" />
+
+              <rect x="210" y="58" width="160" height="72" rx="9" class="d-box" />
+              <text x="228" y="84" class="d-label">policy</text>
+              <text x="228" y="102" class="d-sub">what is pre-approved</text>
+
+              <path d="M370 76 H446" class="d-arrow-blue" marker-end="url(#ab)" />
+              <rect x="450" y="24" width="150" height="48" rx="8" class="d-box-good" />
+              <text x="468" y="54" class="d-label">run it</text>
+
+              <path d="M370 94 H446" class="d-arrow" marker-end="url(#a)" />
+              <rect x="450" y="88" width="150" height="48" rx="8" class="d-box-warn" />
+              <text x="468" y="118" class="d-label">ask the human</text>
+
+              <path d="M370 112 H446" class="d-arrow-warn" marker-end="url(#aw)" />
+              <rect x="450" y="150" width="150" height="46" rx="8" class="d-box" />
+              <text x="468" y="179" class="d-label">refuse</text>
+
+              <text x="620" y="118" class="d-note">the answer goes back</text>
+              <text x="620" y="136" class="d-note">as a tool result either way</text>
+            </svg>
+            <figcaption>A refusal is not an error. It is information the agent should receive and adapt to.
+            </figcaption>
+          </figure>
+
+          <p>Modes that proved genuinely useful, rather than theoretically complete:</p>
+
+          <ul>
+            <li><strong>Plan first.</strong> The agent may read anything and write nothing until it has stated
+              what it intends to do. This catches the "confidently solving the wrong problem" failure, which is
+              the expensive one.</li>
+            <li><strong>Approve edits.</strong> Reads and searches run freely; every write is shown as a diff and
+              waits. This is the default I keep coming back to.</li>
+            <li><strong>Approve commands.</strong> Edits flow, but anything touching a shell asks.</li>
+            <li><strong>Autonomous.</strong> For a sandbox or a throwaway branch, where the cost of a bad action
+              is a <code>git reset</code>.</li>
+          </ul>
+
+          <div class="callout warn">
+            <b>The real risk is not the model going rogue</b>
+            It is that the agent reads a file, a web page or an issue containing text that reads like an
+            instruction, and treats it as one. Content it fetches is <em>data</em>, not direction. The defence is
+            the permission gate — not trusting the model to notice it is being manipulated.
+          </div>
+
+          <h2 id="verify">Make it check its own work</h2>
+
+          <p>The single biggest difference between an assistant that saves time and one that costs it is whether
+            it verifies. A model producing a change that looks right is unreliable. A model producing a change and
+            then running the test suite is doing engineering.</p>
+
+          <p>So: give it the ability to run tests, build, and type-check — and ask for the change to be verified
+            rather than merely written. The loop above is what makes this possible: it sees the failure output and
+            gets another turn.</p>
+
+          <div class="callout good">
+            <b>The cheapest quality win</b>
+            A project file that states how to run the tests, how the code is laid out and what the conventions
+            are. It is read once per session, it is cacheable, and it removes an entire category of confidently
+            wrong output. Most of the "this tool is bad at our codebase" complaints I have seen were a missing
+            page of context.
+          </div>
+
+          <h2 id="where">Where it helps, where it does not</h2>
+
+          <p>Four questions decide whether an agent is the right shape for a task:</p>
+
+          <ul>
+            <li><strong>Is it multi-step and hard to fully specify up front?</strong> If you could write the exact
+              steps, write the script instead — it is cheaper and deterministic.</li>
+            <li><strong>Is the outcome worth the latency and cost?</strong> Agents are slower per task than a
+              single call, because they take several turns.</li>
+            <li><strong>Is the model actually good at this?</strong> Be honest about the task type.</li>
+            <li><strong>Can a mistake be caught and undone?</strong> Version control and tests make errors cheap.
+              Production data makes them expensive.</li>
+          </ul>
+
+          <p>Where it genuinely earns its place, in my experience: exploring an unfamiliar codebase, mechanical
+            refactors across many files, writing the tests nobody wants to write, turning a stack trace into a
+            diagnosis, and first drafts of code that has a clear specification.</p>
+
+          <p>Where it does not: anything where the hard part is deciding <em>what</em> to build, anything load
+            bearing that nobody will review, and anything whose correctness you cannot check. The agent is fast at
+            producing plausible work. Deciding whether plausible is correct is still the job.</p>
+
+          <p style="margin-top:34px"><a class="back-link" href="index.html">← More posts</a></p>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a href="../index.html"><img class="foot-logo" src="../assets/logo-full.png" width="520" height="314"
+          alt="coderabhi"></a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Blog</a>
+        <a href="../index.html#opensource">Open source</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../page.js"></script>
+  <script src="../enhance.js"></script>
+</body>
+
+</html>

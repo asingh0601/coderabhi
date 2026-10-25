@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C# design patterns that still earn their place — Abhishek Singh</title>
+  <meta name="description"
+    content="Which design patterns still matter in modern C#, which ones the language quietly replaced, and how to apply the survivors with dependency injection, records and pattern matching.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="C# design patterns that still earn their place">
+  <meta property="og:description"
+    content="The patterns worth keeping, the ones the language replaced, and how to tell the difference.">
+  <meta property="og:url" content="https://coderabhi.in/blog/csharp-design-patterns.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/blog/csharp-design-patterns.html">
+  <link rel="icon" href="../assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.png" width="30" height="30"
+          alt="coderabhi logo"> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="../index.html#about">About</a>
+          <a href="../index.html#skills">Skills</a>
+          <a href="../index.html#experience">Experience</a>
+          <a href="../index.html#opensource">Open source</a>
+          <a href="index.html">Blog</a>
+          <a class="ghost" href="../index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <article>
+      <div class="container post-hero" id="top">
+        <div class="post-meta reveal">
+          <span>C#</span>
+          <span class="dot"></span>
+          <time datetime="2026-10-25">25 October 2026</time>
+          <span class="dot"></span>
+          <span>12 min read</span>
+        </div>
+        <h1 class="reveal">C# design patterns that still earn their place</h1>
+        <p class="post-standfirst reveal">Half the Gang of Four catalogue is now a language feature. The half that
+          survived is worth knowing properly — and worth not reaching for out of habit.</p>
+      </div>
+
+      <div class="container">
+        <nav class="toc reveal" aria-label="Contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#replaced">Patterns the language replaced</a></li>
+            <li><a href="#strategy">Strategy: the one you already use</a></li>
+            <li><a href="#decorator">Decorator: behaviour without edits</a></li>
+            <li><a href="#result">Result: errors that are not exceptions</a></li>
+            <li><a href="#mediator">Mediator: useful and overused</a></li>
+            <li><a href="#repository">Repository: the argument</a></li>
+            <li><a href="#rules">How I decide</a></li>
+          </ol>
+        </nav>
+
+        <!-- Arrowheads defined once; marker refs resolve across every svg here. -->
+        <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+          <defs>
+            <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head" /></marker>
+            <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-blue" /></marker>
+            <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-warn" /></marker>
+          </defs>
+        </svg>
+
+        <div class="post-body">
+
+          <h2 id="replaced">Patterns the language replaced</h2>
+
+          <p>A pattern is a workaround for something the language cannot say directly. When the language learns to
+            say it, the pattern stops being wisdom and starts being noise. These are the ones I no longer write:</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Pattern</th>
+                <th>What replaced it</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Singleton</td>
+                <td><code>AddSingleton&lt;T&gt;()</code>. The container owns the lifetime, and the class stays
+                  testable because nothing reaches for a static instance.</td>
+              </tr>
+              <tr>
+                <td>Abstract Factory, in most cases</td>
+                <td>Constructor injection, or <code>IEnumerable&lt;T&gt;</code> of every registered
+                  implementation.</td>
+              </tr>
+              <tr>
+                <td>Builder, for data</td>
+                <td><code>record</code> with <code>init</code> setters and <code>with</code> expressions.</td>
+              </tr>
+              <tr>
+                <td>Visitor</td>
+                <td>Pattern matching on a closed hierarchy. A <code>switch</code> expression over sealed types
+                  does the same job in five lines.</td>
+              </tr>
+              <tr>
+                <td>Observer, hand-rolled</td>
+                <td><code>IObservable&lt;T&gt;</code>, events, or a real message broker if it crosses a process.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout warn">
+            <b>Singleton is not the same as a singleton lifetime</b>
+            The pattern means a class controls its own instantiation through a static accessor, which makes it
+            global mutable state you cannot substitute in a test. Registering a normal class with a singleton
+            lifetime gives you one instance without any of that. They are frequently confused and they are not
+            the same thing.
+          </div>
+
+          <h2 id="strategy">Strategy: the one you already use</h2>
+
+          <p>Strategy is "pick the implementation at runtime", and in a DI container it barely looks like a
+            pattern. The useful version registers every implementation and selects by a key.</p>
+
+          <pre><code><span class="k">public interface</span> <span class="f">IPaymentProvider</span>
+{
+    <span class="k">string</span> Key { <span class="k">get</span>; }
+    Task&lt;Result&gt; <span class="f">ChargeAsync</span>(Payment p, CancellationToken ct);
+}
+
+<span class="c">// every provider registered against the same interface</span>
+services.AddScoped&lt;IPaymentProvider, CardProvider&gt;();
+services.AddScoped&lt;IPaymentProvider, BankTransferProvider&gt;();
+services.AddScoped&lt;IPaymentProvider, WalletProvider&gt;();
+
+<span class="k">public class</span> <span class="f">PaymentService</span>(IEnumerable&lt;IPaymentProvider&gt; providers)
+{
+    <span class="k">public</span> Task&lt;Result&gt; <span class="f">ChargeAsync</span>(Payment p, CancellationToken ct)
+    {
+        <span class="k">var</span> provider = providers.FirstOrDefault(x =&gt; x.Key == p.Method)
+            ?? <span class="k">throw new</span> NotSupportedException(p.Method);
+
+        <span class="k">return</span> provider.ChargeAsync(p, ct);
+    }
+}</code></pre>
+
+          <p>Adding a provider is one new class and one registration. No switch statement grows, and nothing
+            existing is edited — which is the whole point.</p>
+
+          <div class="callout">
+            <b>The tell that you need it</b>
+            A <code>switch</code> on a type or a mode string that gets a new arm every time the business adds an
+            option, in a method that also does other work. If the arms differ only in a value, keep the switch; a
+            dictionary is not a pattern. If they differ in behaviour, make them classes.
+          </div>
+
+          <h2 id="decorator">Decorator: behaviour without edits</h2>
+
+          <p>Decorator wraps an implementation in another implementation of the same interface. It is how you add
+            caching, retries, logging or metrics to something without touching it — and how you keep those four
+            concerns from being tangled into the thing that does the actual work.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 180" role="img"
+              aria-label="A call passes through logging, caching and retry decorators before reaching the real repository.">
+              <rect x="8" y="58" width="120" height="56" rx="9" class="d-box" />
+              <text x="26" y="84" class="d-label">caller</text>
+              <text x="26" y="101" class="d-sub">sees IPrices</text>
+
+              <rect x="166" y="58" width="130" height="56" rx="9" class="d-box-accent" />
+              <text x="184" y="84" class="d-label">Logging</text>
+              <text x="184" y="101" class="d-sub">timing, errors</text>
+
+              <rect x="332" y="58" width="130" height="56" rx="9" class="d-box-accent" />
+              <text x="350" y="84" class="d-label">Caching</text>
+              <text x="350" y="101" class="d-sub">hit? return</text>
+
+              <rect x="498" y="58" width="120" height="56" rx="9" class="d-box-accent" />
+              <text x="516" y="84" class="d-label">Retry</text>
+              <text x="516" y="101" class="d-sub">backoff</text>
+
+              <rect x="650" y="58" width="102" height="56" rx="9" class="d-box-good" />
+              <text x="666" y="84" class="d-label">real</text>
+              <text x="666" y="101" class="d-sub">the work</text>
+
+              <path d="M128 86 H160" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M296 86 H326" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M462 86 H492" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M618 86 H644" class="d-arrow-blue" marker-end="url(#ab)" />
+
+              <text x="190" y="146" class="d-note">every layer implements the same interface, so any one can be
+                removed</text>
+            </svg>
+            <figcaption>The caller cannot tell how many layers there are. Neither can the innermost class.
+            </figcaption>
+          </figure>
+
+          <pre><code><span class="k">public class</span> <span class="f">CachedPrices</span>(IPrices inner, IDistributedCache cache) : IPrices
+{
+    <span class="k">public async</span> Task&lt;<span class="k">decimal</span>&gt; <span class="f">GetAsync</span>(<span class="k">int</span> sku, CancellationToken ct)
+    {
+        <span class="k">var</span> key = $<span class="s">"price:{sku}"</span>;
+        <span class="k">var</span> hit = <span class="k">await</span> cache.GetStringAsync(key, ct);
+        <span class="k">if</span> (hit <span class="k">is not null</span>) <span class="k">return decimal</span>.Parse(hit);
+
+        <span class="k">var</span> value = <span class="k">await</span> inner.GetAsync(sku, ct);   <span class="c">// delegate, do not reimplement</span>
+
+        <span class="k">await</span> cache.SetStringAsync(key, value.ToString(), <span class="k">new</span>() {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+        }, ct);
+
+        <span class="k">return</span> value;
+    }
+}</code></pre>
+
+          <p>Order matters and is worth thinking about. Caching outside retry means a cache hit never retries,
+            which is what you want. Retry outside caching means you would re-run the cache lookup on every
+            attempt, which is wasted work.</p>
+
+          <h2 id="result">Result: errors that are not exceptions</h2>
+
+          <p>Exceptions are for the unexpected. "This email is already registered" is not unexpected — it is a
+            normal outcome of a normal operation, and modelling it as an exception means the happy path is
+            decided by a <code>catch</code> block somewhere else.</p>
+
+          <pre><code><span class="k">public readonly record struct</span> <span class="f">Result</span>&lt;T&gt;
+{
+    <span class="k">public</span> T      Value   { <span class="k">get</span>; <span class="k">init</span>; }
+    <span class="k">public string</span> Error   { <span class="k">get</span>; <span class="k">init</span>; }  <span class="c">// a stable code, not a sentence</span>
+    <span class="k">public bool</span>   Success =&gt; Error <span class="k">is null</span>;
+}</code></pre>
+
+          <div class="callout good">
+            <b>Return a code, never a sentence</b>
+            <code>"api.user.email_taken"</code> rather than <code>"That email is already registered"</code>. The
+            caller decides the wording, which means the same backend serves two languages without a translation
+            table in the service layer, and a reworded message is not a backend deploy.
+          </div>
+
+          <p>The cost is honest: every caller must check. That is the point — the compiler and the reader can both
+            see that this call can fail, which a thrown exception hides.</p>
+
+          <h2 id="mediator">Mediator: useful and overused</h2>
+
+          <p>Mediator (MediatR, in practice) turns a method call into a message handled elsewhere. It buys two
+            real things: thin controllers, and a pipeline where validation, logging and transactions apply to
+            every request without being written in every handler.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 186" role="img"
+              aria-label="A controller sends a command through validation, logging and transaction behaviours to a single handler.">
+              <rect x="8" y="62" width="112" height="54" rx="9" class="d-box" />
+              <text x="24" y="94" class="d-label">controller</text>
+
+              <path d="M120 89 H156" class="d-arrow" marker-end="url(#a)" />
+
+              <rect x="160" y="30" width="400" height="118" rx="10" class="d-box-accent" />
+              <text x="178" y="52" class="d-sub">PIPELINE BEHAVIOURS — run for every request</text>
+
+              <rect x="180" y="66" width="110" height="46" rx="7" class="d-box" />
+              <text x="196" y="94" class="d-label">validate</text>
+
+              <rect x="304" y="66" width="110" height="46" rx="7" class="d-box" />
+              <text x="320" y="94" class="d-label">log</text>
+
+              <rect x="428" y="66" width="114" height="46" rx="7" class="d-box" />
+              <text x="444" y="94" class="d-label">transaction</text>
+
+              <path d="M290 89 H298" class="d-arrow" marker-end="url(#a)" />
+              <path d="M414 89 H422" class="d-arrow" marker-end="url(#a)" />
+              <path d="M560 89 H596" class="d-arrow-blue" marker-end="url(#ab)" />
+
+              <rect x="600" y="62" width="152" height="54" rx="9" class="d-box-good" />
+              <text x="618" y="88" class="d-label">handler</text>
+              <text x="618" y="105" class="d-sub">the actual logic</text>
+            </svg>
+            <figcaption>Cross-cutting concerns live in one place instead of at the top of every handler.
+            </figcaption>
+          </figure>
+
+          <p>Where it goes wrong is when every call becomes a message. A handler that does nothing but call one
+            service method has added a type, a registration and a layer of indirection in exchange for nothing.
+            Jumping to the definition no longer works; you are grepping for a type name.</p>
+
+          <div class="callout warn">
+            <b>My line</b>
+            Use it at the edge — one command or query per endpoint, where the pipeline earns its keep. Do not use
+            it between services inside the same process. In-process messages that nothing else subscribes to are
+            a method call wearing a costume.
+          </div>
+
+          <h2 id="repository">Repository: the argument</h2>
+
+          <p>The case against: Entity Framework's <code>DbContext</code> is already a unit of work and
+            <code>DbSet&lt;T&gt;</code> is already a repository. Wrapping them produces a class whose methods are
+            one-line passthroughs, and the abstraction leaks the moment someone needs
+            <code>Include</code> or projection.</p>
+
+          <p>The case for, which I find more convincing in a large codebase: a repository is where you stop query
+            shapes from spreading. Without one, the same five-table join is written slightly differently in
+            eleven places, and when it becomes slow you fix it eleven times.</p>
+
+          <div class="callout">
+            <b>A real trap, from EF</b>
+            If your interface declares <code>GetAll(bool tracked = false)</code> and the implementation declares
+            <code>tracked = true</code>, a call through the interface silently uses the interface default. You get
+            <code>AsNoTracking</code>, your edit is never persisted, and <code>SaveChanges</code> reports zero rows
+            affected with no error. Default values are resolved at the call site against the static type — put
+            them in one place, or pass the argument explicitly.
+          </div>
+
+          <h2 id="rules">How I decide</h2>
+
+          <ul>
+            <li><strong>Does the language already do this?</strong> If yes, use the language.</li>
+            <li><strong>Is there a second implementation today?</strong> One implementation behind an interface
+              is a guess about the future that is usually wrong, and it makes every read one hop longer.</li>
+            <li><strong>Does it make the common change easier?</strong> If adding a provider means one new file,
+              the pattern is working. If it means edits in four, it is not.</li>
+            <li><strong>Can a newcomer follow it?</strong> A pattern that needs a diagram to navigate is a cost
+              paid by everyone who touches the code afterwards.</li>
+          </ul>
+
+          <p>The patterns that survive are the ones that answer a question you already had. The ones that go bad
+            are the ones applied before the question was asked.</p>
+
+          <p style="margin-top:34px"><a class="back-link" href="index.html">← More posts</a></p>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a href="../index.html"><img class="foot-logo" src="../assets/logo-full.png" width="520" height="314"
+          alt="coderabhi"></a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Blog</a>
+        <a href="../index.html#opensource">Open source</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../page.js"></script>
+  <script src="../enhance.js"></script>
+</body>
+
+</html>
