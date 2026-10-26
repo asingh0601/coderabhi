@@ -36,37 +36,23 @@ def tile(size):
 
     d.rounded_rectangle([0, 0, n - 1, n - 1], radius=15 * s, fill=BLUE)
 
-    w = 6 * s                    # stroke width
+    w = 5.5 * s                  # stroke width
     r = w / 2.0                  # cap radius
 
-    def line(x1, y1, x2, y2):
-        d.line([x1 * s, y1 * s, x2 * s, y2 * s], fill=INK, width=int(round(w)))
+    def poly(points):
+        """One continuous stroke with round joins, drawn segment by segment."""
+        for i in range(len(points) - 1):
+            x1, y1 = points[i]
+            x2, y2 = points[i + 1]
+            d.line([x1 * s, y1 * s, x2 * s, y2 * s], fill=INK, width=int(round(w)))
+        for x, y in points:
+            d.ellipse([x * s - r, y * s - r, x * s + r, y * s + r], fill=INK)
 
-    def arc(cx, cy, rad, start, end):
-        # Pillow lays the stroke inward from the bounding box, so a box of
-        # radius `rad` puts the centreline at rad - w/2. Grow the box by half
-        # the stroke to land the centreline where the SVG puts it.
-        out = rad + w / (2.0 * s)
-        box = [(cx - out) * s, (cy - out) * s, (cx + out) * s, (cy + out) * s]
-        d.arc(box, start, end, fill=INK, width=int(round(w)))
+    # the trace, same vertices as logo-tile.svg
+    poly([(12, 36), (20, 36), (25, 22), (31, 46), (35, 28), (38, 36), (43, 36)])
 
-    def cap(x, y):
-        d.ellipse([x * s - r, y * s - r, x * s + r, y * s + r], fill=INK)
-
-    # C: one arc, open to the right
-    arc(24.765, 32.2, 13.5, 60.1, 299.9)
-    cap(31.5, 20.5)
-    cap(31.5, 43.9)
-
-    # R: stem, bowl, leg
-    line(37.5, 19.5, 37.5, 44.5)
-    line(37.5, 19.5, 44, 19.5)
-    arc(44, 26.25, 6.75, 270, 90)
-    line(44, 33, 37.5, 33)
-    line(42, 33, 49.5, 44.5)
-    for p in [(37.5, 19.5), (37.5, 44.5), (44, 19.5), (44, 33), (37.5, 33),
-              (42, 33), (49.5, 44.5)]:
-        cap(*p)
+    # the cursor
+    d.rounded_rectangle([47 * s, 26 * s, 54 * s, 42 * s], radius=2.5 * s, fill=INK)
 
     return img.resize((size, size), Image.LANCZOS)
 
