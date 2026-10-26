@@ -40,7 +40,7 @@
   <header class="site" id="siteHeader">
     <div class="container head-inner">
       <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.svg" width="34" height="24"
-          alt="coderabhi logo"> Abhishek Singh</a>
+          alt="coderabhi logo"> <span class="bname">code<i>rabhi</i></span></a>
       <div class="head-right">
         <nav class="menu" id="menu">
           <a href="../index.html#about">About</a>
@@ -65,89 +65,91 @@
 
     <section>
       <div class="container">
-        <div class="post-list">
-          <a class="post-card reveal" href="microservices.html">
-            <div class="post-meta">
-              <span>Backend</span>
-              <span class="dot"></span>
-              <time datetime="2026-10-25">25 October 2026</time>
-              <span class="dot"></span>
-              <span>18 min read</span>
-            </div>
-            <h3>Microservices that don't fall over</h3>
-            <p>Splitting a system into services is the easy part. The hard part is the gaps between them. Service boundaries, the outbox and inbox patterns, the saga pattern in detail, cache stampedes, circuit breakers and the failure modes that only show up under real traffic.</p>
-            <div class="c-foot"><span>Microservices</span><span>Saga</span><span>Caching</span><span>Event-driven</span></div>
-          </a>
+        <div class="post-filters reveal" id="postFilters">
+          <button type="button" class="on" data-filter="all">All<b>6</b></button>
+          <button type="button" data-filter="backend">Backend<b>1</b></button>
+          <button type="button" data-filter="ai">AI<b>1</b></button>
+          <button type="button" data-filter="reliability">Reliability<b>1</b></button>
+          <button type="button" data-filter="cloud">Cloud<b>1</b></button>
+          <button type="button" data-filter="csharp">C#<b>1</b></button>
+          <button type="button" data-filter="frontend">Frontend<b>1</b></button>
+        </div>
 
-          <a class="post-card reveal" href="csharp-design-patterns.html">
-            <div class="post-meta">
-              <span>C#</span>
-              <span class="dot"></span>
-              <time datetime="2026-10-25">25 October 2026</time>
-              <span class="dot"></span>
-              <span>12 min read</span>
-            </div>
-            <h3>C# design patterns that still earn their place</h3>
-            <p>Half the Gang of Four catalogue is now a language feature. Which patterns survived, which ones records and pattern matching quietly replaced, and how to apply the survivors with dependency injection without building a maze.</p>
-            <div class="c-foot"><span>C#</span><span>Patterns</span><span>DI</span><span>Architecture</span></div>
-          </a>
+        <div class="post-list" id="postList">
+        <a class="lead-post reveal" href="microservices.html" data-topic="backend">
+          <div class="post-meta">
+            <span class="pc-topic">Backend</span>
+            <span class="dot"></span>
+            <time datetime="2026-10-25">25 Oct 2026</time>
+            <span class="dot"></span>
+            <span>18 min read</span>
+          </div>
+          <h2>Microservices that don't fall over</h2>
+          <p>Splitting a system into services is the easy part. The hard part is the gaps between them — service boundaries, the outbox and inbox patterns, the saga pattern in detail, cache stampedes, circuit breakers, and the failure modes that only show up under real traffic.</p>
+          <div class="c-foot"><span>Microservices</span><span>Saga</span><span>Caching</span><span>Event-driven</span></div>
+          <span class="pc-go">Read the piece<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
+        </a>
 
-          <a class="post-card reveal" href="agentic-ai-development.html">
-            <div class="post-meta">
-              <span>AI</span>
-              <span class="dot"></span>
-              <time datetime="2026-10-25">25 October 2026</time>
-              <span class="dot"></span>
-              <span>14 min read</span>
-            </div>
-            <h3>Agentic AI for development, from someone who built one</h3>
-            <p>I built a coding assistant into Visual Studio. The tool-use loop, why context is the real constraint, how prompt caching silently breaks, the permission model that makes it safe, and where agents genuinely help versus where they waste your time.</p>
-            <div class="c-foot"><span>Agents</span><span>LLM</span><span>Tooling</span><span>Context</span></div>
-          </a>
+          <div class="idx-head reveal"><span>More posts</span></div>
 
-          <a class="post-card reveal" href="microfrontends.html">
-            <div class="post-meta">
-              <span>Frontend</span>
-              <span class="dot"></span>
-              <time datetime="2026-10-25">25 October 2026</time>
-              <span class="dot"></span>
-              <span>13 min read</span>
-            </div>
-            <h3>Microfrontends: when splitting the UI is worth it</h3>
-            <p>Shell and remotes, build-time versus run-time composition, shared dependencies and version skew, who owns the URL, keeping four teams looking like one product, and the costs nobody puts in the pitch.</p>
-            <div class="c-foot"><span>Microfrontends</span><span>Angular</span><span>Architecture</span></div>
+          <a class="idx-row reveal" href="agentic-ai-development.html" data-topic="ai">
+            <span class="ir-n">02</span>
+            <span class="ir-main">
+              <b>Agentic AI for development, from someone who built one</b>
+              <em>The tool-use loop, why context is the real constraint, how prompt caching silently breaks, and where agents genuinely help.</em>
+            </span>
+            <span class="ir-meta">
+              <span class="pc-topic">AI</span>
+              <span class="ir-read">14 min</span>
+            </span>
           </a>
-
-          <a class="post-card reveal" href="cloud-azure-kubernetes-docker.html">
-            <div class="post-meta">
-              <span>Cloud</span>
-              <span class="dot"></span>
-              <time datetime="2026-10-25">25 October 2026</time>
-              <span class="dot"></span>
-              <span>15 min read</span>
-            </div>
-            <h3>Docker, Kubernetes and Azure without the cargo cult</h3>
-            <p>What a container actually is, the five Kubernetes objects you really need, the probe misconfiguration that turns a blip into a crash loop, graceful shutdown, and picking the smallest Azure service that does the job.</p>
-            <div class="c-foot"><span>Docker</span><span>Kubernetes</span><span>Azure</span><span>DevOps</span></div>
+          <a class="idx-row reveal" href="observability-reliability.html" data-topic="reliability">
+            <span class="ir-n">03</span>
+            <span class="ir-main">
+              <b>Knowing before your users do</b>
+              <em>Why averages hide your worst users, correlation ids across the broker, SLOs and error budgets, and alerts a team will not learn to ignore.</em>
+            </span>
+            <span class="ir-meta">
+              <span class="pc-topic">Reliability</span>
+              <span class="ir-read">14 min</span>
+            </span>
           </a>
-
-          <a class="post-card reveal" href="observability-reliability.html">
-            <div class="post-meta">
-              <span>Reliability</span>
-              <span class="dot"></span>
-              <time datetime="2026-10-25">25 October 2026</time>
-              <span class="dot"></span>
-              <span>14 min read</span>
-            </div>
-            <h3>Observability and reliability: knowing before your users do</h3>
-            <p>Logs, metrics and traces and what each is for, why averages hide your worst users, correlation ids across the broker, SLOs and error budgets, and alert design that stops a team ignoring its pager.</p>
-            <div class="c-foot"><span>Observability</span><span>SLO</span><span>Tracing</span><span>Alerting</span></div>
+          <a class="idx-row reveal" href="cloud-azure-kubernetes-docker.html" data-topic="cloud">
+            <span class="ir-n">04</span>
+            <span class="ir-main">
+              <b>Docker, Kubernetes and Azure without the cargo cult</b>
+              <em>The five Kubernetes objects you really need, the probe misconfiguration that turns a blip into a crash loop, and picking the smallest service that does the job.</em>
+            </span>
+            <span class="ir-meta">
+              <span class="pc-topic">Cloud</span>
+              <span class="ir-read">15 min</span>
+            </span>
+          </a>
+          <a class="idx-row reveal" href="csharp-design-patterns.html" data-topic="csharp">
+            <span class="ir-n">05</span>
+            <span class="ir-main">
+              <b>C# design patterns that still earn their place</b>
+              <em>Half the Gang of Four catalogue is now a language feature. Which ones survived, and which ones records and pattern matching quietly replaced.</em>
+            </span>
+            <span class="ir-meta">
+              <span class="pc-topic">C#</span>
+              <span class="ir-read">12 min</span>
+            </span>
+          </a>
+          <a class="idx-row reveal" href="microfrontends.html" data-topic="frontend">
+            <span class="ir-n">06</span>
+            <span class="ir-main">
+              <b>Microfrontends: when splitting the UI is worth it</b>
+              <em>Build-time versus run-time composition, shared dependencies and version skew, who owns the URL, and the costs nobody puts in the pitch.</em>
+            </span>
+            <span class="ir-meta">
+              <span class="pc-topic">Frontend</span>
+              <span class="ir-read">13 min</span>
+            </span>
           </a>
         </div>
 
-        <p class="demo-note reveal" style="max-width:760px;margin-top:26px">Six so far. If you want to argue
-          with any of it, <a style="color:var(--blue)" href="https://github.com/asingh0601" target="_blank"
-            rel="noopener">GitHub</a> is the place.</p>
+        <p class="demo-note reveal" id="postEmpty" style="max-width:760px;margin-top:26px">Six so far, and more when something is worth writing down. If you want to argue with any of it, <a style="color:var(--blue)" href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a> is the place.</p>
       </div>
     </section>
   </main>
@@ -171,6 +173,7 @@
   </footer>
 
   <script src="../page.js"></script>
+  <script src="blog.js"></script>
   <script src="../enhance.js"></script>
 </body>
 

@@ -100,6 +100,75 @@ header.site.stuck {
   letter-spacing: -.01em;
 }
 
+/* the header is the site's name, set like the footer lockup; the person's
+   name belongs in the page, not in the furniture */
+.bname {
+  font-family: var(--mono);
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -.045em;
+}
+
+.bname i {
+  font-style: normal;
+  color: var(--blue);
+}
+
+/* the name, above the headline it belongs to */
+.hero-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-family: var(--mono);
+  font-size: clamp(19px, 3vw, 25px);
+  font-weight: 700;
+  letter-spacing: -.035em;
+  color: var(--text);
+}
+
+/* the mark's own two colours, so the name reads as part of the brand */
+.hero-name::before {
+  content: "";
+  width: 4px;
+  align-self: stretch;
+  min-height: 1.1em;
+  border-radius: 999px;
+  background: var(--blue);
+}
+
+.hero-name::after {
+  content: "";
+  width: 10px;
+  height: .95em;
+  border-radius: 2px;
+  background: var(--green);
+  animation: name-blink 1.15s steps(1, end) infinite;
+}
+
+@keyframes name-blink {
+
+  0%,
+  45% {
+    opacity: 1;
+  }
+
+  50%,
+  95% {
+    opacity: .18;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-name::after {
+    animation: none;
+  }
+}
+
 .brand .logo {
   /* the mark is a trace, not a square: fix the height and let the width
      follow, or it comes out squashed */
@@ -1940,6 +2009,14 @@ h1,
   letter-spacing: -.02em;
 }
 
+/* an article is the one place on the site that is writing rather than
+   interface, so it is set to be read rather than to look like a terminal */
+.post-hero h1 {
+  font-family: var(--sans);
+  font-weight: 800;
+  letter-spacing: -.032em;
+}
+
 h1 {
   font-weight: 700;
 }
@@ -2018,16 +2095,22 @@ nav.menu a.ghost {
 
 /* contents rail */
 .toc {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-  padding: 18px 20px;
-  margin: 0 0 34px;
-  max-width: 760px;
+  /* hairlines rather than a raised card, so it sits in the article instead
+     of on top of it */
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  padding: 22px 0;
+  margin: 34px 0 10px;
+  columns: 2;
+  column-gap: 34px;
 }
 
 .toc h2 {
-  margin: 0 0 11px;
+  column-span: all;
+  margin: 0 0 14px;
   font-family: var(--mono);
   font-size: 12px;
   letter-spacing: .05em;
@@ -2228,13 +2311,7 @@ nav.menu a.ghost {
   transform: translateY(-3px);
 }
 
-.post-card h3 {
-  margin: 8px 0 8px;
-  font-family: var(--mono);
-  font-size: 19px;
-  color: var(--text);
-  letter-spacing: -.015em;
-}
+
 
 .post-card p {
   margin: 0 0 14px;
@@ -3387,6 +3464,669 @@ button.span-row:hover .span-fill,
 
   .keys-overlay {
     display: none;
+  }
+}
+
+/* ---------- blog index: a contents page ----------
+   A grid of six equal boxes says every post matters equally and gives the
+   eye nowhere to land. One feature, then a numbered list on hairlines:
+   faster to scan, and it still works at twenty posts. */
+.post-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 0 0 34px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.post-filters button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--dim);
+  cursor: pointer;
+  transition: color .18s;
+}
+
+.post-filters button b {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: .5;
+}
+
+.post-filters button:hover {
+  color: var(--text);
+}
+
+.post-filters button.on {
+  color: var(--blue);
+}
+
+.post-filters button.on b {
+  opacity: .8;
+}
+
+.post-list {
+  --accent: var(--blue);
+}
+
+[data-topic="backend"] {
+  --accent: #6c9bff;
+}
+
+[data-topic="ai"] {
+  --accent: #56c8d8;
+}
+
+[data-topic="reliability"] {
+  --accent: #f7768e;
+}
+
+[data-topic="cloud"] {
+  --accent: #57cf9a;
+}
+
+[data-topic="csharp"] {
+  --accent: #b18cf0;
+}
+
+[data-topic="frontend"] {
+  --accent: #e0af68;
+}
+
+.pc-topic {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---- the feature ---- */
+.lead-post {
+  display: block;
+  padding: 0 0 36px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+}
+
+.lead-post[hidden] {
+  display: none;
+}
+
+.lead-post .post-meta {
+  font-family: var(--mono);
+  font-size: 12.2px;
+}
+
+.lead-post h2 {
+  margin: 14px 0 14px;
+  font-family: var(--sans);
+  font-size: clamp(27px, 4.6vw, 42px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -.035em;
+  color: var(--text);
+  max-width: 17ch;
+  transition: color .2s;
+}
+
+.lead-post:hover h2 {
+  color: var(--accent);
+}
+
+.lead-post p {
+  margin: 0 0 18px;
+  max-width: 62ch;
+  font-size: 17px;
+  line-height: 1.66;
+  color: var(--muted);
+}
+
+.pc-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--accent);
+}
+
+.pc-go svg {
+  width: 15px;
+  height: 15px;
+  transition: transform .2s;
+}
+
+.lead-post:hover .pc-go svg,
+.idx-row:hover .pc-go svg {
+  transform: translateX(3px);
+}
+
+/* ---- the list ---- */
+.idx-head {
+  margin: 36px 0 2px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.idx-row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 22px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  transition: padding-left .22s;
+}
+
+.idx-row[hidden] {
+  display: none;
+}
+
+/* a hairline that grows into the accent on hover, instead of a box */
+.idx-row::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 0;
+  bottom: -1px;
+  width: 2px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform .24s ease;
+}
+
+.idx-row:hover::before,
+.idx-row:focus-visible::before {
+  transform: scaleY(1);
+}
+
+.idx-row:hover,
+.idx-row:focus-visible {
+  padding-left: 10px;
+  outline: none;
+}
+
+.ir-n {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--line-2);
+  padding-top: 4px;
+  transition: color .22s;
+}
+
+.idx-row:hover .ir-n {
+  color: var(--accent);
+}
+
+.ir-main b {
+  display: block;
+  font-family: var(--sans);
+  font-size: clamp(18px, 2.4vw, 21px);
+  font-weight: 700;
+  line-height: 1.26;
+  letter-spacing: -.024em;
+  color: var(--text);
+  transition: color .2s;
+}
+
+.idx-row:hover .ir-main b {
+  color: var(--accent);
+}
+
+.ir-main em {
+  display: block;
+  margin-top: 7px;
+  font-style: normal;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 66ch;
+}
+
+.ir-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  white-space: nowrap;
+  padding-top: 3px;
+}
+
+.ir-read {
+  color: var(--dim);
+}
+
+@media (max-width: 700px) {
+  .idx-row {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 0 14px;
+    padding: 18px 0;
+  }
+
+  .ir-meta {
+    grid-column: 2;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 9px;
+  }
+
+  .lead-post h2 {
+    max-width: none;
+  }
+}
+
+/* ---------- article: contents pinned beside the text ---------- */
+.toc-rail {
+  position: fixed;
+  top: 50%;
+  left: 24px;
+  transform: translateY(-50%);
+  z-index: 35;
+  width: 196px;
+  max-height: 72vh;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+}
+
+.tr-head {
+  margin: 0 0 9px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.toc-rail a {
+  display: flex;
+  gap: 9px;
+  padding: 4px 0;
+  font-size: 12.4px;
+  line-height: 1.42;
+  color: var(--dim);
+  text-decoration: none;
+  border-left: 2px solid var(--line);
+  padding-left: 11px;
+  transition: color .18s, border-color .18s;
+}
+
+.toc-rail a b {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 10.5px;
+  padding-top: 1px;
+  opacity: .65;
+}
+
+.toc-rail a:hover {
+  color: var(--text);
+  border-color: var(--line-2);
+}
+
+.toc-rail a.on {
+  color: var(--blue);
+  border-color: var(--blue);
+}
+
+/* under 1340px there is no room beside the text, so the inline list does
+   the job it was always doing */
+@media (max-width: 1340px) {
+  .toc-rail {
+    display: none;
+  }
+}
+
+@media (min-width: 1341px) {
+  .toc {
+    display: none;
+  }
+}
+
+/* ---------- a link on every heading ---------- */
+.post-body h2 {
+  position: relative;
+}
+
+.h-anchor {
+  margin-left: 10px;
+  font-family: var(--mono);
+  font-size: .62em;
+  color: var(--line-2);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity .18s, color .18s;
+}
+
+.post-body h2:hover .h-anchor,
+.h-anchor:focus-visible {
+  opacity: 1;
+}
+
+.h-anchor:hover {
+  color: var(--blue);
+}
+
+.h-anchor.copied {
+  opacity: 1;
+  color: var(--green);
+}
+
+.h-anchor.copied::after {
+  content: " copied";
+  font-size: .8em;
+}
+
+/* ---------- what to read next ---------- */
+.post-next {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 44px 0 30px;
+  padding-top: 30px;
+  border-top: 1px solid var(--line);
+}
+
+.pn-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .2s, transform .2s;
+}
+
+.pn-card:hover {
+  border-color: var(--line-2);
+  transform: translateY(-2px);
+}
+
+.pn-r {
+  text-align: right;
+}
+
+.pn-k {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--blue);
+}
+
+.pn-card b {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -.015em;
+}
+
+.pn-card em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+@media (max-width: 680px) {
+  .post-next {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pn-r {
+    text-align: left;
+  }
+}
+
+/* ---------- article typography ----------
+   One column, one measure, hairlines instead of boxes. The numbers below
+   are the whole design: 19px at 1.78 over 68 characters is a comfortable
+   twenty minutes; 16.4px at 760px was a comfortable three. */
+/* One measure for the whole article. The hero is itself a .container, so
+   it centres; the body is a child of one, so it needs telling. They were
+   never aligned before: hero centred, body hard left. */
+.post-hero {
+  /* ch resolves against each element's own font-size, so the hero at 16px
+     and the body at 19px were two different measures. One number, in px. */
+  --measure: 730px;
+  max-width: calc(var(--measure) + 44px);
+  padding-top: 64px;
+  padding-bottom: 0;
+}
+
+.post-body,
+.toc,
+.post-next {
+  --measure: 730px;
+  max-width: var(--measure);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.post-hero .post-meta {
+  font-family: var(--mono);
+  font-size: 12.2px;
+  letter-spacing: .02em;
+}
+
+.post-hero .post-meta>span:first-child {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.post-hero h1 {
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.1;
+  margin: 14px 0 18px;
+}
+
+/* the standfirst is the promise the article makes; it should look like one */
+.post-standfirst {
+  font-size: clamp(17px, 2.2vw, 20px);
+  line-height: 1.6;
+  font-weight: 400;
+  color: var(--muted);
+  max-width: 62ch;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--line);
+}
+
+.post-body {
+  font-size: 19px;
+  line-height: 1.78;
+  color: #c3ccdd;
+  letter-spacing: -.003em;
+}
+
+.post-body>p:first-of-type {
+  font-size: 20px;
+  color: var(--text);
+}
+
+.post-body p {
+  margin: 0 0 1.35em;
+}
+
+/* a number above the heading, the heading in the reading face: hierarchy
+   without a second typeface shouting */
+.post-body h2 {
+  counter-increment: sec2;
+  font-family: var(--sans);
+  font-size: clamp(23px, 3.2vw, 29px);
+  font-weight: 700;
+  letter-spacing: -.028em;
+  line-height: 1.22;
+  color: var(--text);
+  margin: 2.1em 0 .7em;
+  padding-top: 1.1em;
+  border-top: 1px solid var(--line);
+}
+
+.post-body {
+  counter-reset: sec2;
+}
+
+.post-body h2::before {
+  content: counter(sec2, decimal-leading-zero);
+  display: block;
+  margin-bottom: .55em;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  color: var(--blue);
+}
+
+.post-body h3 {
+  font-family: var(--sans);
+  font-size: 18.5px;
+  font-weight: 700;
+  letter-spacing: -.015em;
+  color: var(--text);
+  margin: 2em 0 .5em;
+}
+
+.post-body li {
+  margin-bottom: .5em;
+}
+
+.post-body>ul,
+.post-body>ol {
+  margin-bottom: 1.5em;
+}
+
+/* a quiet aside, set against the measure rather than boxed inside it */
+.post-body blockquote {
+  margin: 1.8em 0;
+  padding: 2px 0 2px 22px;
+  border-left: 2px solid var(--blue);
+  font-size: 20px;
+  line-height: 1.55;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.post-body blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* the panels lighten up: a hairline and a tint, not a raised card */
+.callout {
+  border-radius: 0;
+  border: 0;
+  border-left: 2px solid var(--blue);
+  background: none;
+  padding: 2px 0 2px 22px;
+  font-size: 17.5px;
+  line-height: 1.68;
+}
+
+.callout.warn {
+  border-left-color: #e0af68;
+}
+
+.callout.good {
+  border-left-color: var(--green);
+}
+
+.callout b {
+  display: block;
+  margin-bottom: .25em;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* figures get a caption and a number, like figures */
+.diagram {
+  counter-increment: fig;
+  border-radius: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: none;
+  padding: 26px 0 20px;
+  margin: 2.2em 0;
+}
+
+.post-body {
+  counter-reset: sec2 fig;
+}
+
+.diagram figcaption,
+.d-cap {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--dim);
+}
+
+.diagram figcaption::before,
+.d-cap::before {
+  content: "Fig. " counter(fig) " \2014 ";
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--blue);
+}
+
+.post-body table {
+  font-size: 16px;
+}
+
+/* code keeps the mono, because there it means something */
+.post-body pre {
+  font-size: 14.2px;
+  line-height: 1.7;
+  border-radius: 0;
+  border: 0;
+  border-left: 2px solid var(--line-2);
+  background: none;
+  padding: 4px 0 4px 22px;
+}
+
+.post-body code {
+  font-size: .88em;
+}
+
+.post-body>p>a,
+.post-body li>a {
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .post-body {
+    font-size: 17.2px;
+    line-height: 1.72;
+  }
+
+  .post-body>p:first-of-type {
+    font-size: 18px;
+  }
+
+  .post-body blockquote,
+  .callout {
+    font-size: 16.5px;
   }
 }
 
