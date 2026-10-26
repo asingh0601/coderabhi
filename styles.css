@@ -109,12 +109,31 @@ header.site.stuck {
 
 /* full lockup in the footer */
 .foot-logo {
-  display: block;
-  width: 168px;
-  height: auto;
-  margin-bottom: 14px;
-  opacity: .85;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: clamp(24px, 5vw, 34px);
+  font-weight: 700;
+  letter-spacing: -.035em;
+  color: var(--text);
+  text-decoration: none;
   transition: opacity .2s;
+}
+
+.foot-logo img {
+  display: block;
+  width: clamp(30px, 6vw, 40px);
+  height: auto;
+}
+
+.foot-logo i {
+  font-style: normal;
+  color: var(--blue);
+}
+
+.foot-logo:hover {
+  opacity: .82;
 }
 
 .foot-logo:hover {

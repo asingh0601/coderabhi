@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="coderabhi">
+  <title>coderabhi</title>
+  <!-- The same mark, set solid in a tile. A monoline disappears at favicon
+       size; a filled tile keeps its shape in a crowded row of browser tabs. -->
+  <rect width="64" height="64" rx="15" fill="#6c9bff"/>
+  <g fill="none" stroke="#0b0e14" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M31.5 20.5a13.5 13.5 0 1 0 0 23.4"/>
+    <path d="M37.5 19.5v25"/>
+    <path d="M37.5 19.5h6.5a6.75 6.75 0 0 1 0 13.5h-6.5"/>
+    <path d="M42 33l7.5 11.5"/>
+  </g>
+</svg>
