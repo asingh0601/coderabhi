@@ -39,6 +39,23 @@
     return res.ok ? res.json() : Promise.reject(new Error("HTTP " + res.status));
   }
 
+  /* npm registry: the version currently published. Scoped names have to be
+     encoded, because the slash in @scope/name is a path separator otherwise. */
+  var npmVer = groupBy("data-npm-version");
+  Object.keys(npmVer).forEach(function (pkg) {
+    fetch("https://registry.npmjs.org/" + pkg.replace("/", "%2F") + "/latest")
+      .then(asJson)
+      .then(function (data) {
+        if (!data || !data.version) return;
+        show(
+          npmVer[pkg],
+          "● v" + data.version,
+          "Version " + data.version + ", live from the npm registry"
+        );
+      })
+      .catch(function () { /* leave the badge hidden */ });
+  });
+
   /* npm registry: one request per distinct package, however many badges use it. */
   var npm = groupBy("data-npm");
   Object.keys(npm).forEach(function (pkg) {
@@ -58,6 +75,11 @@
   /* Visual Studio Marketplace: filterType 7 is "extension id", flags 914 asks
      for the statistics block alongside the latest version. */
   var vsx = groupBy("data-vsx");
+  var vsxVer = groupBy("data-vsx-version");
+  Object.keys(vsxVer).forEach(function (id) {
+    if (!vsx[id]) vsx[id] = [];   // make sure the one request below is made
+  });
+
   Object.keys(vsx).forEach(function (id) {
     fetch("https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery", {
       method: "POST",
@@ -74,7 +96,18 @@
       .then(function (data) {
         var results = data && data.results && data.results[0];
         var ext = results && results.extensions && results.extensions[0];
-        if (!ext || !ext.statistics) return;
+        if (!ext) return;
+
+        var version = ext.versions && ext.versions[0] && ext.versions[0].version;
+        if (version && vsxVer[id]) {
+          show(
+            vsxVer[id],
+            "v" + version,
+            "Version " + version + ", live from the Visual Studio Marketplace"
+          );
+        }
+
+        if (!ext.statistics) return;
 
         var installs = null;
         ext.statistics.forEach(function (stat) {

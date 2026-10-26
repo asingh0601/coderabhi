@@ -74,6 +74,7 @@
       { label: 'Docker, Kubernetes and Azure without the cargo cult', href: 'blog/cloud-azure-kubernetes-docker.html', kind: 'Post' },
       { label: 'Observability and reliability: knowing before your users do', href: 'blog/observability-reliability.html', kind: 'Post' },
       { label: 'Forge Pilot', href: 'forge-pilot.html', kind: 'Page' },
+      { label: 'ng-typed-routes', href: 'ng-typed-routes.html', kind: 'Page' },
       { label: 'ngx-circle-chart', href: 'ngx-circle-chart.html', kind: 'Page' },
       { label: 'ngx-modern-calendar', href: 'ngx-modern-calendar.html', kind: 'Page' },
       { label: 'ngx-easy-captcha', href: 'ngx-easy-captcha.html', kind: 'Page' }

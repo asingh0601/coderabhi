@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ng-typed-routes — type-safe Angular routing · Abhishek Singh</title>
+  <meta name="description"
+    content="Type-safe routing for Angular, generated from your existing app.routes.ts. Rename a route and every stale link becomes a compile error instead of a 404. Free and open source.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ng-typed-routes — type-safe Angular routing">
+  <meta property="og:description"
+    content="Rename a route, and every stale link turns red in your editor instead of 404-ing in production.">
+  <meta property="og:url" content="https://coderabhi.in/ng-typed-routes.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/ng-typed-routes.html">
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="index.html" class="brand"><img class="logo" src="assets/logo-mark.png" width="30" height="30"
+          alt="coderabhi logo"> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="index.html#about">About</a>
+          <a href="index.html#skills">Skills</a>
+          <a href="index.html#experience">Experience</a>
+          <a href="index.html#opensource">Open source</a>
+          <a href="blog/index.html">Blog</a>
+          <a class="ghost" href="index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container pkg-hero" id="top">
+      <h1 class="reveal">ng-typed-routes</h1>
+
+      <p class="pkg-sub reveal">Angular routes are strings, and the compiler has never once checked one. Rename a
+        route and every <code>routerLink</code> pointing at the old name keeps building, keeps deploying, and fails
+        in front of whoever clicks it first. This generates a typed tree from the <code>app.routes.ts</code> you
+        already have, so those links turn red in your editor instead.</p>
+
+      <div class="pkg-badges reveal">
+        <span class="ok live-stat" data-npm-version="ng-typed-routes" hidden></span>
+        <span>MIT</span>
+        <span>Angular 22 · TypeScript 6</span>
+        <span>Node 22.22+</span>
+        <span class="live-stat" data-npm="ng-typed-routes" hidden></span>
+      </div>
+
+      <div class="btn-row reveal">
+        <a class="btn primary" href="#demo">Break a route and see</a>
+        <a class="btn" href="https://www.npmjs.com/package/ng-typed-routes" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M0 8h24v8H12v-6H8v6H0V8zm2 2v4h2v-4H2zm12 0v4h2v-4h-2zm4 0v4h4v-4h-4z" />
+          </svg>
+          npm
+        </a>
+        <a class="btn" href="https://github.com/abhisheksingh0601/ng-typed-routes" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.2 18.3 5.5 18.3 5.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z" />
+          </svg>
+          Source
+        </a>
+      </div>
+    </div>
+
+    <!-- INTERACTIVE DEMO -->
+    <section id="demo">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Try it</span>
+          <h2>Rename a route. See who notices.</h2>
+          <p>A routing library has nothing to show in a running app — the whole point happens in your editor, before
+            the app runs at all. So here is the editor. Rename the route, then switch between the two approaches.</p>
+        </div>
+
+        <div class="tr-demo reveal" id="trDemo">
+          <div class="tr-controls">
+            <div class="tr-seg" role="tablist" aria-label="Approach">
+              <button type="button" role="tab" data-mode="typed" class="on" aria-selected="true">ng-typed-routes</button>
+              <button type="button" role="tab" data-mode="strings" aria-selected="false">plain routerLink</button>
+            </div>
+            <button type="button" class="tr-rename" id="trRename">Rename the route</button>
+          </div>
+
+          <div class="tr-panes">
+            <div class="tr-file">
+              <div class="tr-file-bar">app.routes.ts</div>
+              <pre class="tr-code" id="trRoutes"></pre>
+            </div>
+            <div class="tr-file">
+              <div class="tr-file-bar" id="trUsageBar">user-list.component.ts</div>
+              <pre class="tr-code" id="trUsage"></pre>
+            </div>
+          </div>
+
+          <div class="tr-out ok" id="trOut"></div>
+          <p class="tr-note" id="trNote"></p>
+        </div>
+
+        <p class="demo-note reveal">The error text, codes and line numbers are the real ones — TS2339 from the
+          TypeScript compiler, NG04002 from the Angular router.</p>
+      </div>
+    </section>
+
+    <!-- WHAT IT GENERATES -->
+    <section id="generated">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">How it works</span>
+          <h2>It reads the routes you already wrote</h2>
+          <p>No new routing config, no second source of truth. The generator walks your route tree with the
+            TypeScript compiler API — through children, spreads, identifiers and every
+            <code>loadChildren: () =&gt; import(...)</code> form — and writes one file.</p>
+        </div>
+
+        <div class="about-grid">
+          <div class="reveal">
+            <div class="code-block" style="margin-bottom:16px">
+              <div class="cb-bar">src/app/routes.gen.ts — generated</div>
+              <pre>routes.users.detail
+<span class="c">// RouteDef&lt;'/users/:id'&gt;</span>
+
+routes.users.detail.orders.path({ id })
+<span class="c">// '/users/1/orders'</span></pre>
+            </div>
+
+            <div class="code-block">
+              <div class="cb-bar">at runtime</div>
+              <pre><span class="b">const</span> router = inject(TypedRouter);
+
+router.navigate(routes.users.detail.orders, {
+  id,
+  query: { status: <span class="g">'open'</span> },
+});
+
+<span class="b">const</span> { id } = injectParams(routes.users.detail);
+<span class="c">// Signal&lt;string&gt;</span>
+
+<span class="b">const</span> { status } = injectQuery(
+  routes.users.detail.orders
+);</pre>
+            </div>
+          </div>
+
+          <div class="panel reveal">
+            <p>Everything is a <strong>key on a generated tree</strong> rather than a string in an array, which is
+              the entire trick: TypeScript already knows how to tell you a property does not exist.</p>
+            <p>Params are <strong>signals</strong>, read straight from the route definition, so the type of
+              <code style="color:var(--blue)">id</code> comes from the same place the URL does.</p>
+            <p>The generated file is <strong>committed</strong>, so a reviewer can see routing change in the diff.
+              <code style="color:var(--blue)">npm run routes:check</code> exits 1 when it is stale, which is the one
+              line you add to CI.</p>
+            <p>Small apps without lazy routes can skip the codegen entirely —
+              <code style="color:var(--blue)">typedRoutes(defineRoutes([...]))</code> builds the same tree from
+              literal types at compile time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section id="usage">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Install</span>
+          <h2>One command, then one script in CI</h2>
+        </div>
+
+        <div class="about-grid">
+          <div class="reveal">
+            <div class="code-block" style="margin-bottom:16px">
+              <div class="cb-bar">install</div>
+              <pre><span class="g">ng</span> add ng-typed-routes</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="cb-bar">cli</div>
+              <pre><span class="c"># write the tree</span>
+ng-typed-routes generate
+
+<span class="c"># regenerate as you edit routes</span>
+ng-typed-routes watch
+
+<span class="c"># exits 1 when routes.gen.ts is stale</span>
+ng-typed-routes check</pre>
+            </div>
+          </div>
+
+          <div class="panel reveal">
+            <p><code style="color:var(--blue)">ng add</code> adds the three scripts, writes
+              <code style="color:var(--blue)">src/app/routes.gen.ts</code> and leaves the rest of your app alone.</p>
+            <p>Paths, the output file, the tsconfig and the export name are all flags, or they can live in
+              <code style="color:var(--blue)">ng-typed-routes.config.json</code> if you would rather not repeat
+              them.</p>
+            <p>Routes that are not navigation targets — <code style="color:var(--blue)">**</code> and
+              <code style="color:var(--blue)">redirectTo</code> — are skipped. Custom matchers and non-literal
+              paths are skipped too, with a warning rather than in silence.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NAMING -->
+    <section id="naming">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Naming</span>
+          <h2>What your paths become</h2>
+          <p>Predictable enough that you can guess a key without opening the generated file.</p>
+        </div>
+
+        <div class="api-scroll reveal">
+          <table class="api-table">
+            <thead>
+              <tr>
+                <th>Angular path</th>
+                <th>Generated key</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>users</code></td>
+                <td><code>routes.users</code></td>
+              </tr>
+              <tr>
+                <td><code>user-settings</code></td>
+                <td><code>routes.userSettings</code></td>
+              </tr>
+              <tr>
+                <td><code>:id</code> <span class="muted-cell">child of users</span></td>
+                <td><code>routes.users.$id</code></td>
+              </tr>
+              <tr>
+                <td><code>''</code> <span class="muted-cell">at the root</span></td>
+                <td><code>routes.index</code></td>
+              </tr>
+              <tr>
+                <td><code>''</code> <span class="muted-cell">with children, a layout route</span></td>
+                <td>transparent — children are hoisted</td>
+              </tr>
+              <tr>
+                <td><code>admin/reports</code></td>
+                <td><code>routes.admin.reports</code></td>
+              </tr>
+              <tr>
+                <td><code>{ path: 'chat', outlet: 'aux' }</code></td>
+                <td><code>routes.aux.chat</code></td>
+              </tr>
+              <tr>
+                <td><code>**</code>, <code>redirectTo</code></td>
+                <td>skipped — not navigation targets</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="reveal" style="margin-top:22px">
+          <div class="code-block">
+            <div class="cb-bar">overriding a name, and typing the query</div>
+            <pre>{ path: <span class="g">':id'</span>, component: UserDetail }
+  <span class="b">satisfies</span> TypedRoute&lt;{
+    name: <span class="g">'detail'</span>;
+    query: { tab?: <span class="g">'open'</span> | <span class="g">'closed'</span> };
+  }&gt;</pre>
+          </div>
+          <p class="sec-note">A type-only <code>satisfies</code>, so it disappears at build time and the route object
+            stays an ordinary route object.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- HONEST BIT -->
+    <section id="gaps">
+      <div class="container">
+        <div class="sec-head reveal">
+          <span class="kicker">Known gaps</span>
+          <h2>What doesn't work yet</h2>
+          <p>It is young, and I would rather you read this here than find it on a Tuesday afternoon.</p>
+        </div>
+
+        <div class="cards reveal">
+          <div class="card plain">
+            <h3>Template <code>[params]</code> is not checked</h3>
+            <p class="desc"><code>path()</code>, <code>TypedRouter.navigate()</code>, <code>injectParams</code> and
+              route-name typos are all compile errors today, and verified as such. The
+              <code>[typedLink]</code>/<code>[params]</code> pair checks correctly at the TypeScript level, but
+              Angular's template compiler currently accepts a missing or wrong <code>[params]</code>. Being worked
+              on.</p>
+          </div>
+          <div class="card plain">
+            <h3>Query values are strings</h3>
+            <p class="desc">You can declare the shape, and the keys are checked. There is no runtime validation and
+              no coercion — a number comes back as the string it was in the URL.</p>
+          </div>
+          <div class="card plain">
+            <h3>Named outlets stop at the top</h3>
+            <p class="desc">Children of a named outlet are not generated, and <code>path()</code> falls back to
+              Angular's own <code>(outlet:segment)</code> URL syntax.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="get">
+      <div class="container">
+        <div class="contact reveal">
+          <h2>Free to use, MIT licensed</h2>
+          <p>Early days, so issues and pull requests are especially welcome — particularly if you have a route
+            shape the generator trips over.</p>
+          <div class="btn-row">
+            <a class="btn primary" href="https://www.npmjs.com/package/ng-typed-routes" target="_blank"
+              rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M0 8h24v8H12v-6H8v6H0V8zm2 2v4h2v-4H2zm12 0v4h2v-4h-2zm4 0v4h4v-4h-4z" />
+              </svg>
+              Install from npm
+            </a>
+            <a class="btn" href="https://github.com/abhisheksingh0601/ng-typed-routes" target="_blank"
+              rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 5.2 18.3 5.5 18.3 5.5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z" />
+              </svg>
+              Source
+            </a>
+          </div>
+          <p style="margin:26px 0 0"><a class="back-link" href="index.html#opensource">← All my open source work</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a href="index.html"><img class="foot-logo" src="assets/logo-full.png" width="520" height="314"
+          alt="coderabhi"></a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="index.html">Home</a>
+        <a href="index.html#opensource">Open source</a>
+        <a href="https://www.npmjs.com/package/ng-typed-routes" target="_blank" rel="noopener">npm</a>
+        <a href="https://github.com/abhisheksingh0601/ng-typed-routes" target="_blank" rel="noopener">Repository</a>
+        <a href="blog/index.html">Blog</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="page.js"></script>
+  <script src="stats.js"></script>
+  <script src="typed-routes-demo.js"></script>
+  <script src="enhance.js"></script>
+</body>
+
+</html>
