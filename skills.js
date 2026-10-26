@@ -1,20 +1,21 @@
-/* Skills, counted rather than claimed.
+/* Skills, measured rather than asserted.
 
-   A skills section is normally a wall of pills, and a pill is only an
-   assertion. The timeline right below it already holds the evidence: each
-   role carries its dates and the stack it was built on. So this script reads
-   the timeline and uses it twice —
+   Two sources, in this order:
 
-     1. a span chart: one row per skill, one cell per calendar year, filled
-        where a role using that skill was running. Gaps are left visible,
-        because a gap is information too.
-     2. a duration on every chip, and the chips sorted longest-first, so the
-        six group cards rank themselves.
+     1. data-years on a chip — Abhishek's own figure for how long he has
+        worked with that thing. Only he knows it, so it is written on the
+        page as data rather than guessed at here.
+     2. the timeline below, for everything else: each role carries its dates
+        and its stack, so a skill tagged on a role can be measured from the
+        dates already on the page.
 
-   Clicking either a chip or a chart row highlights the roles behind it.
+   What the script does with that: ranks every chip, prints the duration on
+   it, draws the bar chart above the cards, and wires both the chips and the
+   bars to filter the timeline down to the roles behind them.
 
-   Nothing is hardcoded: the numbers come from the dates on the page, so
-   editing a role updates the chart. */
+   Nothing is hardcoded here. Change a figure in the HTML or a role's dates
+   and everything follows. A skill with neither a figure nor a role gets no
+   number and no click, rather than an invented one. */
 (function () {
   var chips = document.querySelectorAll('#skills .chip');
   var jobs = document.querySelectorAll('.timeline .job');
@@ -26,13 +27,13 @@
     jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
   };
 
-  /* Genuine synonyms only — two names for one thing. Anything that would
-     stretch a skill into a role that did not use it stays out. */
+  /* Genuine synonyms only — two names for one thing. Nothing that would
+     stretch a skill into a role that did not use it. */
   var ALIASES = {
-    'kubernetes': ['aks'],                    // AKS is Azure's Kubernetes service
+    'kubernetes': ['aks'],                          // AKS is Azure's Kubernetes
     'system design': ['architecture'],
-    'c#': ['.net', '.net core', 'asp.net core'],   // a .NET role is a C# role
-    'typescript': ['angular']                 // and an Angular role is a TypeScript one
+    'c#': ['.net', '.net core', 'asp.net core'],    // a .NET role is a C# role
+    'typescript': ['angular']                       // an Angular role is a TypeScript one
   };
 
   /* ---------- read the timeline ---------- */
@@ -63,9 +64,11 @@
     if (!to) to = nowPoint;
 
     // A role that started this month is one month of work, not zero.
-    var months = Math.max(1, (to.y - from.y) * 12 + (to.m - from.m));
-
-    roles.push({ el: job, tags: tags, from: from, to: to, months: months });
+    roles.push({
+      el: job,
+      tags: tags,
+      months: Math.max(1, (to.y - from.y) * 12 + (to.m - from.m))
+    });
   });
   if (!roles.length) return;
 
@@ -86,20 +89,13 @@
     return (months < 24 ? years.toFixed(1).replace('.0', '') : Math.round(years)) + 'y';
   }
 
-  /* ---------- what each skill adds up to ---------- */
-  var first = roles.reduce(function (a, r) { return Math.min(a, r.from.y); }, 9999);
-  var last = roles.reduce(function (a, r) { return Math.max(a, r.to.y); }, 0);
-  var span = [];
-  for (var y = first; y <= last; y++) span.push(y);
-
-  function profile(skill) {
+  // The stated figure wins where there is one; otherwise the roles answer.
+  function profile(skill, declared) {
     var hits = roles.filter(function (r) { return matches(skill, r.tags); });
-    var months = hits.reduce(function (a, r) { return a + r.months; }, 0);
-    var years = {};
-    hits.forEach(function (r) {
-      for (var y = r.from.y; y <= r.to.y; y++) years[y] = true;
-    });
-    return { roles: hits, months: months, years: years };
+    var months = declared
+      ? declared * 12
+      : hits.reduce(function (a, r) { return a + r.months; }, 0);
+    return { roles: hits, months: months, stated: !!declared };
   }
 
   /* ---------- filtering ---------- */
@@ -117,35 +113,36 @@
     Array.prototype.forEach.call(jobs, function (j) {
       j.classList.remove('dim', 'match');
     });
-    document.querySelectorAll('#skills .chip.on, .span-row.on').forEach(function (n) {
-      n.classList.remove('on');
-      if (n.classList.contains('span-row')) n.setAttribute('aria-pressed', 'false');
-    });
+    Array.prototype.forEach.call(
+      document.querySelectorAll('#skills .chip.on, .span-row.on'),
+      function (n) {
+        n.classList.remove('on');
+        if (n.classList.contains('span-row')) n.setAttribute('aria-pressed', 'false');
+      });
   }
 
-  function apply(skill, trigger) {
+  function apply(skill, from) {
     if (current === skill) { clear(); return; }
     clear();
     current = skill;
 
-    document.querySelectorAll('[data-skill]').forEach(function (n) {
-      if (n.getAttribute('data-skill') === skill) {
-        n.classList.add('on');
-        if (n.classList.contains('span-row')) n.setAttribute('aria-pressed', 'true');
-      }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-skill]'), function (n) {
+      if (n.getAttribute('data-skill') !== skill) return;
+      n.classList.add('on');
+      if (n.classList.contains('span-row')) n.setAttribute('aria-pressed', 'true');
     });
 
-    var p = profile(skill);
+    var hits = roles.filter(function (r) { return matches(skill, r.tags); });
     roles.forEach(function (r) {
-      if (p.roles.indexOf(r) !== -1) r.el.classList.add('match');
-      else r.el.classList.add('dim');
+      r.el.classList.add(hits.indexOf(r) !== -1 ? 'match' : 'dim');
     });
 
     banner.hidden = false;
     banner.innerHTML = '';
+    // Deliberately a count, not a sum: the roles listed on this page are the
+    // ones that tag the skill, which need not add up to the years above.
     var text = document.createElement('span');
-    text.textContent = p.roles.length + (p.roles.length === 1 ? ' role used ' : ' roles used ')
-      + skill + ' · ' + duration(p.months);
+    text.textContent = hits.length + (hits.length === 1 ? ' role used ' : ' roles used ') + skill;
     var clearBtn = document.createElement('button');
     clearBtn.type = 'button';
     clearBtn.className = 'skill-filter-clear';
@@ -155,7 +152,7 @@
     banner.appendChild(clearBtn);
 
     var anchor = document.getElementById('experience');
-    if (anchor && trigger !== 'row') anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (anchor && from !== 'row') anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   /* ---------- chips: duration, ranking, click ---------- */
@@ -166,17 +163,13 @@
 
     list.forEach(function (chip) {
       var skill = chip.textContent.trim();
-      var p = profile(skill);
+      var p = profile(skill, +chip.dataset.years || 0);
       chip.dataset.months = p.months;
 
-      if (!p.roles.length) return;   // no evidence, so no claim and no click
+      if (!p.months) return;   // nothing behind it, so no number and no click
 
       chip.classList.add('linked');
       chip.dataset.skill = skill;
-      chip.setAttribute('role', 'button');
-      chip.setAttribute('tabindex', '0');
-      chip.setAttribute('title', duration(p.months) + ' across '
-        + p.roles.length + (p.roles.length === 1 ? ' role' : ' roles') + ' — click to see which');
 
       var badge = document.createElement('b');
       badge.className = 'chip-yrs';
@@ -184,13 +177,21 @@
       chip.appendChild(document.createTextNode(' '));
       chip.appendChild(badge);
 
-      chip.addEventListener('click', function () { apply(skill, 'chip'); });
-      chip.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); apply(skill, 'chip'); }
-      });
+      if (p.roles.length) {
+        chip.setAttribute('role', 'button');
+        chip.setAttribute('tabindex', '0');
+        chip.setAttribute('title', duration(p.months) + ' — click for the '
+          + p.roles.length + (p.roles.length === 1 ? ' role' : ' roles') + ' behind it');
+        chip.addEventListener('click', function () { apply(skill, 'chip'); });
+        chip.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); apply(skill, 'chip'); }
+        });
+      } else {
+        chip.classList.add('static');
+      }
 
       if (!tracked.some(function (t) { return t.skill === skill; })) {
-        tracked.push({ skill: skill, months: p.months, years: p.years, roles: p.roles.length });
+        tracked.push({ skill: skill, months: p.months, roles: p.roles.length });
       }
     });
 
@@ -201,52 +202,51 @@
     }).forEach(function (chip) { group.appendChild(chip); });
   });
 
-  /* ---------- the span chart ---------- */
-  (function spanChart() {
+  /* ---------- the bar chart ---------- */
+  (function barChart() {
     var fig = document.getElementById('skillSpans');
     var grid = document.getElementById('skillSpanGrid');
     if (!fig || !grid || !tracked.length) return;
 
-    grid.style.setProperty('--years', span.length);
+    tracked.sort(function (a, b) { return b.months - a.months; });
+    var longest = tracked[0].months;
 
-    var axis = document.createElement('div');
-    axis.className = 'span-axis';
-    axis.appendChild(cell('span-name', ''));
-    span.forEach(function (y) {
-      axis.appendChild(cell('span-yr', String(y).slice(2)));
-    });
-    axis.appendChild(cell('span-total', ''));
-    grid.appendChild(axis);
-
-    tracked.sort(function (a, b) { return b.months - a.months; }).forEach(function (t) {
-      var row = document.createElement('button');
-      row.type = 'button';
-      row.className = 'span-row';
+    tracked.forEach(function (t) {
+      var row = document.createElement(t.roles ? 'button' : 'div');
+      row.className = 'span-row' + (t.roles ? '' : ' static');
       row.dataset.skill = t.skill;
-      row.setAttribute('aria-pressed', 'false');
-      row.setAttribute('title', 'Show the ' + t.roles
-        + (t.roles === 1 ? ' role' : ' roles') + ' that used ' + t.skill);
 
-      row.appendChild(cell('span-name', t.skill));
-      span.forEach(function (y) {
-        var c = cell('span-cell' + (t.years[y] ? ' on' : ''), '');
-        c.setAttribute('title', t.skill + ' · ' + y + (t.years[y] ? '' : ' · not in a role'));
-        row.appendChild(c);
-      });
-      row.appendChild(cell('span-total', duration(t.months)));
+      var name = document.createElement('span');
+      name.className = 'span-name';
+      name.textContent = t.skill;
 
-      row.addEventListener('click', function () { apply(t.skill, 'row'); });
+      var track = document.createElement('span');
+      track.className = 'span-track';
+      var fill = document.createElement('span');
+      fill.className = 'span-fill';
+      fill.style.setProperty('--pct', (t.months / longest * 100).toFixed(1) + '%');
+      track.appendChild(fill);
+
+      var total = document.createElement('span');
+      total.className = 'span-total';
+      total.textContent = duration(t.months);
+
+      row.appendChild(name);
+      row.appendChild(track);
+      row.appendChild(total);
+
+      if (t.roles) {
+        row.type = 'button';
+        row.setAttribute('aria-pressed', 'false');
+        row.setAttribute('title', 'Show the ' + t.roles
+          + (t.roles === 1 ? ' role' : ' roles') + ' that used ' + t.skill);
+        row.addEventListener('click', function () { apply(t.skill, 'row'); });
+      }
+
       grid.appendChild(row);
     });
 
     fig.hidden = false;
-
-    function cell(cls, text) {
-      var el = document.createElement('span');
-      el.className = cls;
-      if (text) el.textContent = text;
-      return el;
-    }
   })();
 
   addEventListener('keydown', function (e) {

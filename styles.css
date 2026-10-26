@@ -2308,13 +2308,13 @@ nav.menu a.ghost {
   color: var(--text);
 }
 
-/* ---------- skills: the span chart ----------
-   One grid shared by the year axis and every row, so the cells always line
-   up no matter how long a skill name is. --years is set by skills.js from
-   the dates on the page. */
+/* ---------- skills: the years bar ----------
+   One grid shared by every row, so the bars start at the same x whatever
+   the skill is called. The figures come from data-years in the HTML, or
+   from the role dates when a skill has no figure. */
 .spans {
   margin: 0 0 20px;
-  padding: 16px 18px 12px;
+  padding: 16px 18px 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
@@ -2329,7 +2329,7 @@ nav.menu a.ghost {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 10px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   font-size: 13px;
   color: var(--dim);
 }
@@ -2341,54 +2341,35 @@ nav.menu a.ghost {
 }
 
 .span-grid {
-  --years: 12;
-  --name: 132px;
+  --name: 150px;
 }
 
-.span-axis,
 .span-row {
   display: grid;
-  grid-template-columns: var(--name) repeat(var(--years), 1fr) 40px;
+  grid-template-columns: var(--name) 1fr 42px;
   align-items: center;
-  /* a small gap so the years stay countable, small enough that a run of
-     them still reads as one band */
-  gap: 2px;
+  gap: 12px;
   width: 100%;
-}
-
-.span-axis {
-  margin-bottom: 5px;
-}
-
-.span-yr {
-  font-family: var(--mono);
-  font-size: 9.5px;
-  color: var(--dim);
-  text-align: center;
-  letter-spacing: -.02em;
-}
-
-.span-yr::before {
-  content: "\2019";
-}
-
-.span-row {
   border: 0;
   background: none;
-  padding: 3px 0;
+  padding: 4px 6px;
+  margin-left: -6px;
   text-align: left;
   font: inherit;
   color: inherit;
-  cursor: pointer;
   border-radius: 6px;
 }
 
-.span-row:hover,
-.span-row:focus-visible {
+button.span-row {
+  cursor: pointer;
+}
+
+button.span-row:hover,
+button.span-row:focus-visible {
   background: rgba(108, 155, 255, .07);
 }
 
-.span-row:focus-visible {
+button.span-row:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 1px;
 }
@@ -2399,32 +2380,42 @@ nav.menu a.ghost {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-right: 8px;
   transition: color .18s;
 }
 
-.span-row:hover .span-name,
+button.span-row:hover .span-name,
 .span-row.on .span-name {
   color: var(--text);
 }
 
-.span-cell {
-  height: 14px;
-  border-radius: 2px;
+.span-track {
+  height: 9px;
+  border-radius: 999px;
   background: var(--bg-2);
   box-shadow: inset 0 0 0 1px var(--line);
-  transition: background .2s, box-shadow .2s;
+  overflow: hidden;
 }
 
-.span-cell.on {
-  background: color-mix(in srgb, var(--blue) 58%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--blue) 72%, transparent);
+/* --pct is set per row; the width transition makes the bars grow in once
+   the card scrolls into view rather than appearing finished. */
+.span-fill {
+  display: block;
+  height: 100%;
+  width: var(--pct, 0%);
+  border-radius: inherit;
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--blue) 55%, transparent),
+      var(--blue));
+  transition: width .9s cubic-bezier(.22, .61, .36, 1), background .2s;
 }
 
-.span-row:hover .span-cell.on,
-.span-row.on .span-cell.on {
+.reveal:not(.in) .span-fill {
+  width: 0;
+}
+
+button.span-row:hover .span-fill,
+.span-row.on .span-fill {
   background: var(--blue);
-  box-shadow: inset 0 0 0 1px var(--blue);
 }
 
 .span-total {
@@ -2436,6 +2427,13 @@ nav.menu a.ghost {
 
 .span-row.on .span-total {
   color: var(--blue);
+}
+
+/* a row with no role tagged behind it still shows its years, but there is
+   nothing for a click to reveal, so it does not pretend to be a button */
+.span-row.static .span-name,
+.chip.static {
+  cursor: default;
 }
 
 /* the duration counted onto each chip */
@@ -2462,13 +2460,25 @@ nav.menu a.ghost {
   border-style: solid;
 }
 
+.chip.static:hover {
+  border-color: var(--line-2);
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .span-fill {
+    transition: none;
+  }
+}
+
 @media (max-width: 760px) {
   .span-grid {
-    --name: 92px;
+    --name: 112px;
   }
 
-  .span-yr:nth-child(even) {
-    visibility: hidden;
+  .span-row {
+    gap: 9px;
+    font-size: 11.5px;
   }
 
   .span-name {
