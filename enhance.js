@@ -119,17 +119,17 @@
     var here = location.pathname.split('/').pop() || 'index.html';
     [
       { label: 'Home', href: 'index.html', kind: 'Page' },
-      { label: 'Articles', href: 'blog/index.html', kind: 'Page' },
-      { label: 'Spending less on AI tokens without getting worse answers', href: 'blog/ai-token-budget.html', kind: 'Post' },
-      { label: 'Sessions done properly', href: 'blog/auth-sessions.html', kind: 'Post' },
-      { label: 'EF Core and SQL Server: the queries that kill you', href: 'blog/ef-core-sql-server.html', kind: 'Post' },
-      { label: 'Distributed systems: the parts that bite after the diagram', href: 'blog/distributed-systems.html', kind: 'Post' },
-      { label: 'Microservices that dont fall over', href: 'blog/microservices.html', kind: 'Post' },
-      { label: 'C# design patterns that still earn their place', href: 'blog/csharp-design-patterns.html', kind: 'Post' },
-      { label: 'Agentic AI for development, from someone who built one', href: 'blog/agentic-ai-development.html', kind: 'Post' },
-      { label: 'Microfrontends: when splitting the UI is worth it', href: 'blog/microfrontends.html', kind: 'Post' },
-      { label: 'Docker, Kubernetes and Azure without the cargo cult', href: 'blog/cloud-azure-kubernetes-docker.html', kind: 'Post' },
-      { label: 'Observability and reliability: knowing before your users do', href: 'blog/observability-reliability.html', kind: 'Post' },
+      { label: 'Articles', href: 'articles/index.html', kind: 'Page' },
+      { label: 'Spending less on AI tokens without getting worse answers', href: 'articles/ai-token-budget.html', kind: 'Post' },
+      { label: 'Sessions done properly', href: 'articles/auth-sessions.html', kind: 'Post' },
+      { label: 'EF Core and SQL Server: the queries that kill you', href: 'articles/ef-core-sql-server.html', kind: 'Post' },
+      { label: 'Distributed systems: the parts that bite after the diagram', href: 'articles/distributed-systems.html', kind: 'Post' },
+      { label: 'Microservices that dont fall over', href: 'articles/microservices.html', kind: 'Post' },
+      { label: 'C# design patterns that still earn their place', href: 'articles/csharp-design-patterns.html', kind: 'Post' },
+      { label: 'Agentic AI for development, from someone who built one', href: 'articles/agentic-ai-development.html', kind: 'Post' },
+      { label: 'Microfrontends: when splitting the UI is worth it', href: 'articles/microfrontends.html', kind: 'Post' },
+      { label: 'Docker, Kubernetes and Azure without the cargo cult', href: 'articles/cloud-azure-kubernetes-docker.html', kind: 'Post' },
+      { label: 'Observability and reliability: knowing before your users do', href: 'articles/observability-reliability.html', kind: 'Post' },
       { label: 'Forge Pilot', href: 'forge-pilot.html', kind: 'Page' },
       { label: 'ng-typed-routes', href: 'ng-typed-routes.html', kind: 'Page' },
       { label: 'ngx-circle-chart', href: 'ngx-circle-chart.html', kind: 'Page' },
@@ -275,7 +275,7 @@
   (function keys() {
     var CHORDS = {
       h: { label: 'Home', href: 'index.html' },
-      b: { label: 'Articles', href: 'blog/index.html' },
+      b: { label: 'Articles', href: 'articles/index.html' },
       a: { label: 'About', hash: 'about' },
       s: { label: 'Skills', hash: 'skills' },
       e: { label: 'Experience', hash: 'experience' },
@@ -336,7 +336,7 @@
 
     // blog posts live one directory down
     function pathToRoot() {
-      return /\/blog\//.test(location.pathname) ? '../' : '';
+      return /\/articles\//.test(location.pathname) ? '../' : '';
     }
 
     addEventListener('keydown', function (e) {

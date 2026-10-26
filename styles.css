@@ -3739,64 +3739,158 @@ button.span-row:hover .span-fill,
   }
 }
 
-/* ---------- article: contents pinned beside the text ---------- */
-.toc-rail {
+/* ---------- the reading spine ----------
+   Not a list of links: a line that fills as you read, with a node per
+   section that fills behind you and stays hollow ahead. Same motif as the
+   timeline on the home page and the trace in the mark. */
+.spine {
   position: fixed;
   top: 50%;
-  left: 24px;
+  left: 26px;
   transform: translateY(-50%);
   z-index: 35;
-  width: 196px;
-  max-height: 72vh;
-  overflow-y: auto;
-  padding-right: 6px;
-  scrollbar-width: thin;
+  width: 212px;
+  max-height: 78vh;
+  display: grid;
+  grid-template-columns: 2px 1fr;
+  grid-template-areas:
+    "head head"
+    "track list";
+  column-gap: 14px;
 }
 
-.tr-head {
-  margin: 0 0 9px;
+.sp-head {
+  grid-area: head;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
   font-family: var(--mono);
   font-size: 10.5px;
-  letter-spacing: .14em;
+  letter-spacing: .1em;
   text-transform: uppercase;
+}
+
+.sp-pct {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  text-transform: none;
+  color: var(--accent, var(--blue));
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-left {
   color: var(--dim);
 }
 
-.toc-rail a {
-  display: flex;
-  gap: 9px;
-  padding: 4px 0;
-  font-size: 12.4px;
-  line-height: 1.42;
+/* the spine itself */
+.sp-track {
+  grid-area: track;
+  position: relative;
+  width: 2px;
+  background: var(--line-2);
+  border-radius: 2px;
+}
+
+.sp-fill {
+  position: absolute;
+  inset: 0 0 auto 0;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg,
+      var(--accent, var(--blue)),
+      color-mix(in srgb, var(--accent, var(--blue)) 35%, transparent));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent, var(--blue)) 55%, transparent);
+  transition: height .12s linear;
+}
+
+.sp-list {
+  grid-area: list;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.sp-list::-webkit-scrollbar {
+  display: none;
+}
+
+.spine a {
+  position: relative;
+  display: block;
+  padding: 7px 0 7px 2px;
+  font-size: 12.3px;
+  line-height: 1.35;
   color: var(--dim);
   text-decoration: none;
-  border-left: 2px solid var(--line);
-  padding-left: 11px;
-  transition: color .18s, border-color .18s;
+  transition: color .18s;
 }
 
-.toc-rail a b {
-  font-family: var(--mono);
+/* the node sits on the spine, in the gutter the grid leaves for it */
+.sp-node {
+  position: absolute;
+  /* the grid leaves a 2px track and a 14px gutter, so the node is pulled
+     back far enough to sit centred on the line */
+  left: -18px;
+  top: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-2);
+  background: var(--panel);
+  transition: background .2s, border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.sp-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: -webkit-line-clamp .2s;
+}
+
+.spine a:hover {
+  color: var(--muted);
+}
+
+.spine a:hover .sp-node {
+  border-color: var(--muted);
+}
+
+/* read */
+.spine a.done .sp-node {
+  background: color-mix(in srgb, var(--accent, var(--blue)) 60%, transparent);
+  border-color: transparent;
+}
+
+.spine a.done {
+  color: color-mix(in srgb, var(--dim) 80%, transparent);
+}
+
+/* reading now: the title opens up and the node gets a ring */
+.spine a.on {
+  color: var(--accent, var(--blue));
   font-weight: 500;
-  font-size: 10.5px;
-  padding-top: 1px;
-  opacity: .65;
 }
 
-.toc-rail a:hover {
-  color: var(--text);
-  border-color: var(--line-2);
+.spine a.on .sp-text {
+  -webkit-line-clamp: 3;
 }
 
-.toc-rail a.on {
-  color: var(--blue);
-  border-color: var(--blue);
+.spine a.on .sp-node {
+  background: var(--accent, var(--blue));
+  border-color: transparent;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent, var(--blue)) 16%, transparent),
+    0 0 12px color-mix(in srgb, var(--accent, var(--blue)) 60%, transparent);
 }
 
-/* under 1340px there is no room beside the text, so the inline list does
-   the job it was always doing */
+/* no room beside the text, so the inline contents does its job instead */
 @media (max-width: 1340px) {
-  .toc-rail {
+  .spine {
     display: none;
   }
 }
@@ -4950,6 +5044,34 @@ article[data-topic] .post-body h2::before {
   .toc ol {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ---------- you are here ----------
+   The home page has a scroll-spy that marks the section you are in; the
+   sub-pages had nothing, so the header never said where you were. */
+nav.menu a.here {
+  color: var(--text);
+}
+
+nav.menu a.here::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: -5px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent, var(--blue));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent, var(--blue)) 65%, transparent);
+}
+
+nav.menu a {
+  position: relative;
+}
+
+/* the ghost button already looks active; it never marks a page */
+nav.menu a.ghost.here::after {
+  display: none;
 }
 
 /* ---------- article diagrams ---------- */

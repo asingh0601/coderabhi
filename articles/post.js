@@ -16,57 +16,73 @@
 
   var heads = Array.prototype.slice.call(body.querySelectorAll('h2[id]'));
 
-  /* ---------- 1. the pinned contents ---------- */
-  (function pinned() {
+  /* ---------- 1. the reading spine ---------- */
+  (function spine() {
     var inline = document.querySelector('.toc');
     if (!inline || heads.length < 3) return;
 
     var rail = document.createElement('nav');
-    rail.className = 'toc-rail';
+    rail.className = 'spine';
     rail.setAttribute('aria-label', 'Sections of this article');
 
-    var head = document.createElement('p');
-    head.className = 'tr-head';
-    head.textContent = 'Contents';
-    rail.appendChild(head);
+    // how long is left, from the read time the article already states
+    var stated = (document.querySelector('.post-meta') || {}).textContent || '';
+    var minutes = parseInt((stated.match(/(\d+)\s*min/) || [])[1], 10) || 0;
 
+    rail.innerHTML =
+      '<div class="sp-head">'
+      + '<span class="sp-pct">0%</span>'
+      + '<span class="sp-left"></span>'
+      + '</div>'
+      + '<div class="sp-track"><span class="sp-fill"></span></div>'
+      + '<ol class="sp-list"></ol>';
+
+    var list = rail.querySelector('.sp-list');
     var links = heads.map(function (h, i) {
+      var li = document.createElement('li');
       var a = document.createElement('a');
       a.href = '#' + h.id;
-      a.innerHTML = '<b>' + String(i + 1).padStart(2, '0') + '</b>'
-        + '<span></span>';
-      a.querySelector('span').textContent = h.textContent.trim();
-      rail.appendChild(a);
+      a.innerHTML = '<i class="sp-node"></i><span class="sp-text"></span>';
+      a.querySelector('.sp-text').textContent = h.textContent.trim();
+      a.setAttribute('title', h.textContent.trim());
+      li.appendChild(a);
+      list.appendChild(li);
       return a;
     });
 
     document.body.appendChild(rail);
 
-    if (!('IntersectionObserver' in window)) return;
+    var pct = rail.querySelector('.sp-pct');
+    var left = rail.querySelector('.sp-left');
+    var fill = rail.querySelector('.sp-fill');
 
-    // The heading nearest the top of the viewport wins, so the marker
-    // follows what is being read rather than whatever crossed a line last.
-    var seen = {};
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { seen[e.target.id] = e.isIntersecting; });
+    function update() {
+      var body = document.querySelector('.post-body');
+      var top = body.getBoundingClientRect().top + scrollY;
+      var span = body.offsetHeight - innerHeight * 0.6;
+      var read = Math.max(0, Math.min(1, (scrollY - top + innerHeight * 0.4) / Math.max(1, span)));
 
-      var current = null;
-      heads.forEach(function (h) {
-        if (!current && seen[h.id]) current = h.id;
-      });
-      // past the last heading nothing intersects; keep the last one lit
-      if (!current) {
-        for (var i = heads.length - 1; i >= 0; i--) {
-          if (heads[i].getBoundingClientRect().top < 160) { current = heads[i].id; break; }
-        }
+      pct.textContent = Math.round(read * 100) + '%';
+      fill.style.height = (read * 100) + '%';
+      if (minutes) {
+        var rem = Math.max(0, Math.ceil(minutes * (1 - read)));
+        left.textContent = rem ? rem + ' min left' : 'done';
       }
 
-      links.forEach(function (a) {
-        a.classList.toggle('on', a.getAttribute('href') === '#' + current);
+      // the node you are in, and everything behind it
+      var current = -1;
+      heads.forEach(function (h, i) {
+        if (h.getBoundingClientRect().top < innerHeight * 0.34) current = i;
       });
-    }, { rootMargin: '-80px 0px -70% 0px' });
+      links.forEach(function (a, i) {
+        a.classList.toggle('done', i < current);
+        a.classList.toggle('on', i === current);
+      });
+    }
 
-    heads.forEach(function (h) { io.observe(h); });
+    addEventListener('scroll', update, { passive: true });
+    addEventListener('resize', update);
+    update();
   })();
 
   /* ---------- 2. a link per heading ---------- */

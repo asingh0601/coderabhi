@@ -106,8 +106,8 @@
   };
 
   var PAGES = {
-    blog: 'blog/index.html',
-    articles: 'blog/index.html',
+    blog: 'articles/index.html',
+    articles: 'articles/index.html',
     'forge-pilot': 'forge-pilot.html',
     'ng-typed-routes': 'ng-typed-routes.html',
     'ngx-circle-chart': 'ngx-circle-chart.html',

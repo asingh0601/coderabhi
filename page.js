@@ -29,6 +29,33 @@
     });
   }
 
+  // --- which nav item are we on? -------------------------------------------
+  // The sub-pages have no scroll-spy, so nothing in the header ever said
+  // where you were. An article highlights Articles; a package page
+  // highlights Open source.
+  (function current() {
+    if (!menu) return;
+
+    var path = location.pathname;
+    var file = path.split('/').pop();
+    var section = /\/articles\//.test(path)
+      ? 'articles'
+      : /^(forge-pilot|ng-typed-routes|ngx-[a-z-]+)\.html$/.test(file)
+        ? 'opensource'
+        : null;
+    if (!section) return;
+
+    Array.prototype.forEach.call(menu.querySelectorAll('a'), function (a) {
+      var href = a.getAttribute('href') || '';
+      var hit = section === 'articles'
+        ? /articles\/index\.html$/.test(href) || href === 'index.html'
+        : /#opensource$/.test(href);
+      if (!hit) return;
+      a.classList.add('here');
+      a.setAttribute('aria-current', 'page');
+    });
+  })();
+
   // --- copy button on every code block -------------------------------------
   // Injected rather than written into each page's markup, so the three library
   // pages can't drift apart.
