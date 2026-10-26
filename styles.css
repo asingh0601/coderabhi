@@ -2308,6 +2308,174 @@ nav.menu a.ghost {
   color: var(--text);
 }
 
+/* ---------- skills: the span chart ----------
+   One grid shared by the year axis and every row, so the cells always line
+   up no matter how long a skill name is. --years is set by skills.js from
+   the dates on the page. */
+.spans {
+  margin: 0 0 20px;
+  padding: 16px 18px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.spans[hidden] {
+  display: none;
+}
+
+.spans figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--dim);
+}
+
+.spans figcaption strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.span-grid {
+  --years: 12;
+  --name: 132px;
+}
+
+.span-axis,
+.span-row {
+  display: grid;
+  grid-template-columns: var(--name) repeat(var(--years), 1fr) 40px;
+  align-items: center;
+  /* a small gap so the years stay countable, small enough that a run of
+     them still reads as one band */
+  gap: 2px;
+  width: 100%;
+}
+
+.span-axis {
+  margin-bottom: 5px;
+}
+
+.span-yr {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--dim);
+  text-align: center;
+  letter-spacing: -.02em;
+}
+
+.span-yr::before {
+  content: "\2019";
+}
+
+.span-row {
+  border: 0;
+  background: none;
+  padding: 3px 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.span-row:hover,
+.span-row:focus-visible {
+  background: rgba(108, 155, 255, .07);
+}
+
+.span-row:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+
+.span-name {
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 8px;
+  transition: color .18s;
+}
+
+.span-row:hover .span-name,
+.span-row.on .span-name {
+  color: var(--text);
+}
+
+.span-cell {
+  height: 14px;
+  border-radius: 2px;
+  background: var(--bg-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: background .2s, box-shadow .2s;
+}
+
+.span-cell.on {
+  background: color-mix(in srgb, var(--blue) 58%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--blue) 72%, transparent);
+}
+
+.span-row:hover .span-cell.on,
+.span-row.on .span-cell.on {
+  background: var(--blue);
+  box-shadow: inset 0 0 0 1px var(--blue);
+}
+
+.span-total {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+  text-align: right;
+}
+
+.span-row.on .span-total {
+  color: var(--blue);
+}
+
+/* the duration counted onto each chip */
+.chip-yrs {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--dim);
+  letter-spacing: -.01em;
+}
+
+.chip.linked:hover .chip-yrs,
+.chip.linked:focus-visible .chip-yrs {
+  color: var(--blue);
+}
+
+.chip.on .chip-yrs {
+  color: rgba(8, 16, 31, .65);
+}
+
+/* a chip carries its own duration now, so it no longer needs a dashed
+   border to announce that it is clickable */
+.chip.linked {
+  border-style: solid;
+}
+
+@media (max-width: 760px) {
+  .span-grid {
+    --name: 92px;
+  }
+
+  .span-yr:nth-child(even) {
+    visibility: hidden;
+  }
+
+  .span-name {
+    font-size: 11.5px;
+  }
+}
+
 /* ---------- article diagrams ---------- */
 .diagram {
   margin: 0 0 24px;
