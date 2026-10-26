@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Distributed systems: the parts that bite after the diagram — Abhishek Singh</title>
+  <meta name="description"
+    content="Partial failure, clocks that lie, why exactly-once delivery does not exist, idempotency keys, consistency in plain English, retry storms and why your distributed lock is probably wrong.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Distributed systems: the parts that bite after the diagram">
+  <meta property="og:description"
+    content="The architecture diagram is the easy part. These are the properties underneath it that decide whether the system is correct.">
+  <meta property="og:url" content="https://coderabhi.in/blog/distributed-systems.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/blog/distributed-systems.html">
+  <link rel="icon" href="../assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.svg" width="34" height="24"
+          alt="coderabhi logo"> <span class="bname">code<i>rabhi</i></span></a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="../index.html#about">About</a>
+          <a href="../index.html#skills">Skills</a>
+          <a href="../index.html#experience">Experience</a>
+          <a href="../index.html#opensource">Open source</a>
+          <a href="index.html">Blog</a>
+          <a class="ghost" href="../index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <article data-topic="backend">
+      <div class="container post-hero" id="top">
+        <div class="post-meta reveal">
+          <span>Backend</span>
+          <span class="dot"></span>
+          <time datetime="2026-10-25">25 October 2026</time>
+          <span class="dot"></span>
+          <span>16 min read</span>
+        </div>
+
+        <h1 class="reveal">Distributed systems: the parts that bite after the diagram</h1>
+
+        <p class="post-standfirst reveal">Drawing the boxes is the easy part. The hard part is that the network
+          between them can lose a message, deliver it twice, deliver it late, or deliver it and lose the
+          acknowledgement — and your code cannot tell those apart. Everything below follows from that.</p>
+      </div>
+
+      <div class="container">
+        <nav class="toc reveal">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#partial">The one property that makes it distributed</a></li>
+            <li><a href="#time">Time is a lie</a></li>
+            <li><a href="#once">Exactly-once delivery does not exist</a></li>
+            <li><a href="#idem">Idempotency keys, properly</a></li>
+            <li><a href="#consistency">Consistency, in plain English</a></li>
+            <li><a href="#retries">The retry that took the system down</a></li>
+            <li><a href="#locks">Your distributed lock is probably wrong</a></li>
+            <li><a href="#practice">What I actually do</a></li>
+          </ol>
+        </nav>
+
+        <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+          <defs>
+            <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head" /></marker>
+            <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-blue" /></marker>
+            <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-warn" /></marker>
+          </defs>
+        </svg>
+
+        <div class="post-body">
+
+          <h2 id="partial">The one property that makes it distributed</h2>
+
+          <p>A single process has two outcomes: it worked, or it threw. Add a network and you get a third, and the
+            third one is the whole subject.</p>
+
+          <p>When a call times out, you do not know what happened. The request may never have arrived. It may have
+            arrived, done the work, and the reply got lost. It may still be running right now, about to do the work
+            after you have given up. A timeout is not a failure. <strong>A timeout is an absence of
+              information.</strong></p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 232" role="img"
+              aria-label="A timeout has three possible underlying outcomes: the request never arrived, it arrived and succeeded but the reply was lost, or it is still running.">
+              <rect x="8" y="78" width="120" height="54" rx="9" class="d-box-accent" />
+              <text x="26" y="100" class="d-label">caller</text>
+              <text x="26" y="117" class="d-sub">times out</text>
+
+              <path d="M128 92 H286" class="d-arrow-warn" marker-end="url(#aw)" />
+              <text x="150" y="82" class="d-note">request</text>
+
+              <rect x="300" y="18" width="190" height="48" rx="8" class="d-box" />
+              <text x="318" y="40" class="d-label">never arrived</text>
+              <text x="318" y="56" class="d-sub">nothing happened</text>
+
+              <rect x="300" y="82" width="190" height="48" rx="8" class="d-box-warn" />
+              <text x="318" y="104" class="d-label">done, reply lost</text>
+              <text x="318" y="120" class="d-sub">it already happened</text>
+
+              <rect x="300" y="146" width="190" height="48" rx="8" class="d-box-warn" />
+              <text x="318" y="168" class="d-label">still running</text>
+              <text x="318" y="184" class="d-sub">about to happen</text>
+
+              <path d="M286 92 V42 H296" class="d-arrow" marker-end="url(#a)" />
+              <path d="M286 92 H296" class="d-arrow" marker-end="url(#a)" />
+              <path d="M286 92 V170 H296" class="d-arrow" marker-end="url(#a)" />
+
+              <rect x="546" y="82" width="200" height="48" rx="8" class="d-box" />
+              <text x="564" y="104" class="d-label">the caller sees</text>
+              <text x="564" y="120" class="d-sub">one timeout, three truths</text>
+              <path d="M490 106 H542" class="d-arrow" marker-end="url(#a)" />
+
+              <text x="300" y="218" class="d-note">If retrying is safe in all three rows, you can retry. That is the
+                whole test.</text>
+            </svg>
+            <figcaption>Every design decision below is downstream of this picture. You cannot remove the ambiguity,
+              so you build things that do not care which row you are in.</figcaption>
+          </figure>
+
+          <p>This is why "just add a retry" is a correctness decision rather than a resilience tweak. Retrying a
+            read is free. Retrying <code>POST /payments</code> can charge a card twice. The rest of this post is
+            mostly about making the second one as safe as the first.</p>
+
+          <h2 id="time">Time is a lie</h2>
+
+          <p>Two machines never agree on the time. NTP keeps them within tens of milliseconds on a good day,
+            seconds on a bad one, and clocks can jump backwards when it corrects. If your logic compares a
+            timestamp from one machine with a timestamp from another, your logic has a bug you have not hit yet.</p>
+
+          <h3>Last-write-wins quietly eats data</h3>
+
+          <p>The most common place this bites is the most innocent-looking line in the codebase:</p>
+
+          <pre><code><span class="c">// Two services update the same row. Newest timestamp wins.</span>
+<span class="k">if</span> (incoming.UpdatedAt &gt; existing.UpdatedAt)
+    existing.Apply(incoming);</code></pre>
+
+          <p>Service A's clock is 40 ms ahead. A writes at a true 10:00:00.000 and stamps it 10:00:00.040. B writes
+            at a true 10:00:00.020 — genuinely later — and stamps it 10:00:00.020. B's write is correct and more
+            recent, and your comparison throws it away. No error, no log line. A field silently reverts, and
+            someone reports it three weeks later as "the system forgot my change".</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 196" role="img"
+              aria-label="Service A's clock runs ahead, so its earlier write carries a later timestamp and overwrites service B's genuinely newer write.">
+              <text x="8" y="28" class="d-sub">TRUE ORDER OF EVENTS</text>
+
+              <path d="M120 54 H740" class="d-arrow" marker-end="url(#a)" />
+              <text x="700" y="44" class="d-note">time</text>
+
+              <circle cx="220" cy="54" r="6" class="d-box-accent" />
+              <text x="196" y="80" class="d-label">A writes</text>
+              <text x="186" y="96" class="d-sub">true 10:00:00.000</text>
+              <text x="186" y="112" class="d-note">stamped .040 (clock +40 ms)</text>
+
+              <circle cx="430" cy="54" r="6" class="d-box-good" />
+              <text x="406" y="80" class="d-label">B writes</text>
+              <text x="396" y="96" class="d-sub">true 10:00:00.020</text>
+              <text x="396" y="112" class="d-note">stamped .020 (clock correct)</text>
+
+              <rect x="500" y="132" width="252" height="50" rx="8" class="d-box-warn" />
+              <text x="518" y="154" class="d-label">B's write is discarded</text>
+              <text x="518" y="170" class="d-sub">.020 is not &gt; .040</text>
+              <path d="M430 118 V157 H496" class="d-arrow-warn" marker-end="url(#aw)" />
+
+              <text x="8" y="170" class="d-note">The later write loses because the earlier</text>
+              <text x="8" y="186" class="d-note">machine was more confident about the time.</text>
+            </svg>
+            <figcaption>Wall-clock comparison across machines is a coin toss weighted by clock drift. It is
+              correct exactly as often as the clocks happen to agree.</figcaption>
+          </figure>
+
+          <h3>What to use instead</h3>
+
+          <p>Order things by something the system controls rather than something the machine reports.</p>
+
+          <ul>
+            <li><strong>A version number per row.</strong> The writer sends the version it read; the update is
+              <code>WHERE Id = @id AND Version = @v</code> and bumps it. Zero rows affected means somebody else got
+              there first, and now you know, instead of guessing.</li>
+            <li><strong>A database-assigned sequence.</strong> One clock, one authority. SQL Server's
+              <code>rowversion</code> is exactly this and costs nothing to add.</li>
+            <li><strong>A logical clock</strong> when there is genuinely no single authority — a counter per node
+              that travels with the message. More machinery than most systems need, but it is the honest answer
+              when you have multiple writable regions.</li>
+          </ul>
+
+          <div class="callout">
+            <b>Rule</b>
+            Timestamps are for humans reading logs. They are not for deciding which write wins.
+          </div>
+
+          <h2 id="once">Exactly-once delivery does not exist</h2>
+
+          <p>Brokers advertise it, and the advertisement is true in a narrow sense that does not survive contact
+            with your handler. The impossibility is the same one as above: the consumer processes a message, then
+            acknowledges it. If it dies in between, the broker has no way to know whether the work happened, so it
+            redelivers. If it acknowledged first instead, a crash loses the message entirely.</p>
+
+          <p>You get to choose which failure you prefer:</p>
+
+          <ul>
+            <li><strong>At-most-once</strong> — acknowledge, then work. Messages can vanish. Almost never what you
+              want.</li>
+            <li><strong>At-least-once</strong> — work, then acknowledge. Messages can repeat. This is what you
+              want.</li>
+          </ul>
+
+          <p>"Exactly-once processing" is real, but it is not a delivery guarantee you buy. It is at-least-once
+            delivery plus a handler that does not care how many times it runs. The broker gives you the first half.
+            The second half is your job, every time.</p>
+
+          <h2 id="idem">Idempotency keys, properly</h2>
+
+          <p>An idempotent handler produces the same end state whether it runs once or five times. Some operations
+            are naturally idempotent — setting a status, writing a value by primary key, adding to a set. Most of
+            the interesting ones are not: charging a card, sending an email, incrementing a balance.</p>
+
+          <p>For those, the caller supplies a key that identifies the <em>intent</em>, not the attempt, and you
+            store it.</p>
+
+          <pre><code><span class="k">public async</span> Task&lt;Result&gt; <span class="f">ChargeAsync</span>(
+    <span class="k">string</span> idempotencyKey, Charge charge)
+{
+    <span class="c">// The unique index is the lock. Two concurrent attempts race</span>
+    <span class="c">// to insert; exactly one wins, and it is the database that</span>
+    <span class="c">// decides, not a timestamp or a cache.</span>
+    <span class="k">try</span>
+    {
+        _db.Attempts.Add(<span class="k">new</span> Attempt {
+            Key    = idempotencyKey,
+            Status = AttemptStatus.InFlight
+        });
+        <span class="k">await</span> _db.SaveChangesAsync();
+    }
+    <span class="k">catch</span> (DbUpdateException e) <span class="k">when</span> (e.IsUniqueViolation())
+    {
+        <span class="c">// Seen before. Return what we returned last time —</span>
+        <span class="c">// never re-run, never make the caller guess.</span>
+        <span class="k">var</span> prior = <span class="k">await</span> _db.Attempts.FindAsync(idempotencyKey);
+        <span class="k">return</span> prior.Status <span class="k">switch</span> {
+            AttemptStatus.Succeeded =&gt; Result.From(prior.Response),
+            AttemptStatus.Failed    =&gt; Result.Fail(prior.Error),
+            _                       =&gt; Result.Retry(<span class="s">"still in flight"</span>)
+        };
+    }
+
+    <span class="k">var</span> result = <span class="k">await</span> _gateway.ChargeAsync(charge);
+
+    <span class="c">// Store the outcome before replying, or a crash here puts</span>
+    <span class="c">// the key in InFlight forever.</span>
+    <span class="k">await</span> _db.RecordOutcomeAsync(idempotencyKey, result);
+    <span class="k">return</span> result;
+}</code></pre>
+
+          <p>Three details decide whether this works in practice, and all three are usually missed.</p>
+
+          <ul>
+            <li><strong>The key belongs to the caller, not to you.</strong> If you generate it, a retry generates a
+              new one and you have learned nothing. The client creates it once, before the first attempt, and
+              reuses it for every retry of that same intent.</li>
+            <li><strong>The uniqueness must be enforced by the database.</strong> A <code>SELECT</code> then an
+              <code>INSERT</code> is a race with a window wide enough to drive a double charge through. Put a
+              unique index on the key and let the insert fail.</li>
+            <li><strong>Store the response, not just the fact.</strong> A retry should get the same answer as the
+              original, not a bare "already done" the caller has no idea what to do with.</li>
+          </ul>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 212" role="img"
+              aria-label="The first attempt inserts the key and charges. The retry hits the unique index, finds the stored outcome and returns the same response without charging again.">
+              <rect x="8" y="20" width="150" height="54" rx="9" class="d-box-accent" />
+              <text x="26" y="42" class="d-label">attempt 1</text>
+              <text x="26" y="59" class="d-sub">key: ord-91f</text>
+
+              <rect x="8" y="128" width="150" height="54" rx="9" class="d-box-accent" />
+              <text x="26" y="150" class="d-label">attempt 2</text>
+              <text x="26" y="167" class="d-sub">same key</text>
+
+              <rect x="214" y="68" width="170" height="62" rx="9" class="d-box" />
+              <text x="232" y="92" class="d-label">attempts table</text>
+              <text x="232" y="110" class="d-sub">unique index on key</text>
+
+              <path d="M158 47 H200 V84" class="d-arrow-blue" marker-end="url(#ab)" />
+              <path d="M158 155 H200 V114" class="d-arrow-warn" marker-end="url(#aw)" />
+              <text x="166" y="196" class="d-note">insert rejected</text>
+
+              <rect x="440" y="20" width="150" height="54" rx="9" class="d-box-good" />
+              <text x="458" y="42" class="d-label">gateway</text>
+              <text x="458" y="59" class="d-sub">charged once</text>
+              <path d="M384 72 H434" class="d-arrow-blue" marker-end="url(#ab)" />
+
+              <rect x="440" y="128" width="150" height="54" rx="9" class="d-box" />
+              <text x="458" y="150" class="d-label">stored outcome</text>
+              <text x="458" y="167" class="d-sub">replayed verbatim</text>
+              <path d="M384 126 H434" class="d-arrow" marker-end="url(#a)" />
+
+              <rect x="632" y="68" width="120" height="62" rx="9" class="d-box" />
+              <text x="650" y="92" class="d-label">caller</text>
+              <text x="650" y="110" class="d-sub">one answer</text>
+              <path d="M590 47 H612 V92 H628" class="d-arrow" marker-end="url(#a)" />
+              <path d="M590 155 H612 V110 H628" class="d-arrow" marker-end="url(#a)" />
+            </svg>
+            <figcaption>The unique index does the hard work. Everything else is bookkeeping around a constraint
+              the database was always going to enforce correctly.</figcaption>
+          </figure>
+
+          <h2 id="consistency">Consistency, in plain English</h2>
+
+          <p>The literature is full of words that sound interchangeable and are not. Here is the version that
+            matters when someone asks why the page is wrong.</p>
+
+          <table>
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>What a user experiences</th>
+                  <th>What it costs</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Strong</strong></td>
+                  <td>Every read sees the latest write. No surprises.</td>
+                  <td>Every read pays coordination. Latency, and unavailability during a partition.</td>
+                </tr>
+                <tr>
+                  <td><strong>Read-your-writes</strong></td>
+                  <td>You always see your own changes. Other people's may lag.</td>
+                  <td>Route a user's reads to where their writes went. Usually cheap. Usually enough.</td>
+                </tr>
+                <tr>
+                  <td><strong>Eventual</strong></td>
+                  <td>Everyone converges, in an unspecified amount of time.</td>
+                  <td>Nothing, until a user refreshes and their own edit is missing.</td>
+                </tr>
+              </tbody>
+          </table>
+
+          <p>The failure mode nobody plans for is the second row. A user edits their profile, you write to the
+            primary, the page reloads from a read replica that is 300 ms behind, and the old name comes back. They
+            edit it again. Now you have a support ticket and possibly two conflicting writes.</p>
+
+          <p>You almost never need strong consistency everywhere. You very often need read-your-writes for the
+            thing the user just touched. Pin that user's reads to the primary for a few seconds after a write and
+            the entire class of complaint disappears, at close to zero cost.</p>
+
+          <div class="callout good">
+            <b>The useful question</b>
+            Not "is this eventually consistent?" but "who sees stale data, for how long, and what do they do about
+            it?" If the answer is "the person who just made the change, for 300 ms, and they change it again",
+            that is a bug, not a trade-off.
+          </div>
+
+          <h2 id="retries">The retry that took the system down</h2>
+
+          <p>A service gets slow. Every caller times out and retries. The retries triple the load on a service that
+            was already struggling, so it gets slower, so more calls time out, so more retries. The outage is now
+            caused by the clients, and it will not recover on its own even after the original problem goes away.</p>
+
+          <p>Three things turn retries from a hazard into a safety net.</p>
+
+          <h3>1. Backoff, with jitter</h3>
+
+          <p>Exponential backoff spreads the retries out. Jitter is the part people skip, and it is the part that
+            matters: without it, every client that failed at the same instant retries at the same instant, forever,
+            in waves.</p>
+
+          <pre><code><span class="c">// Without jitter: 1s, 2s, 4s — for everyone, simultaneously.</span>
+<span class="k">var</span> delay = TimeSpan.FromSeconds(Math.Pow(<span class="s">2</span>, attempt));
+
+<span class="c">// With full jitter: the same ceiling, spread evenly underneath it.</span>
+<span class="k">var</span> ceiling = TimeSpan.FromSeconds(Math.Pow(<span class="s">2</span>, attempt));
+<span class="k">var</span> delay   = ceiling * Random.Shared.NextDouble();</code></pre>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 206" role="img"
+              aria-label="Without jitter, retries arrive in synchronised spikes. With jitter, the same number of retries spread evenly across the window.">
+              <text x="8" y="24" class="d-sub">NO JITTER — SYNCHRONISED WAVES</text>
+              <path d="M8 86 H752" class="d-arrow" />
+              <rect x="70" y="40" width="14" height="46" class="d-box-warn" />
+              <rect x="86" y="46" width="14" height="40" class="d-box-warn" />
+              <rect x="102" y="52" width="14" height="34" class="d-box-warn" />
+              <rect x="266" y="40" width="14" height="46" class="d-box-warn" />
+              <rect x="282" y="46" width="14" height="40" class="d-box-warn" />
+              <rect x="298" y="52" width="14" height="34" class="d-box-warn" />
+              <rect x="558" y="40" width="14" height="46" class="d-box-warn" />
+              <rect x="574" y="46" width="14" height="40" class="d-box-warn" />
+              <rect x="590" y="52" width="14" height="34" class="d-box-warn" />
+              <text x="640" y="70" class="d-note">each spike re-breaks it</text>
+
+              <text x="8" y="134" class="d-sub">FULL JITTER — THE SAME RETRIES, SPREAD</text>
+              <path d="M8 190 H752" class="d-arrow" />
+              <rect x="52" y="172" width="12" height="18" class="d-box-good" />
+              <rect x="128" y="176" width="12" height="14" class="d-box-good" />
+              <rect x="196" y="170" width="12" height="20" class="d-box-good" />
+              <rect x="268" y="174" width="12" height="16" class="d-box-good" />
+              <rect x="344" y="172" width="12" height="18" class="d-box-good" />
+              <rect x="412" y="176" width="12" height="14" class="d-box-good" />
+              <rect x="490" y="170" width="12" height="20" class="d-box-good" />
+              <rect x="566" y="174" width="12" height="16" class="d-box-good" />
+              <rect x="648" y="172" width="12" height="18" class="d-box-good" />
+            </svg>
+            <figcaption>Same retry count, same backoff ceiling. The only difference is a random multiplier, and it
+              is the difference between a recovering service and a standing wave.</figcaption>
+          </figure>
+
+          <figure class="lab" id="retryLab">
+            <figcaption class="lab-cap">
+              <span>Cause the storm yourself</span>
+              <span class="lab-ctl">
+                <button type="button" class="lab-t on" data-rl="backoff" aria-pressed="true">backoff</button>
+                <button type="button" class="lab-t on" data-rl="jitter" aria-pressed="true">jitter</button>
+                <button type="button" class="lab-run" id="rlRun">Run again</button>
+              </span>
+            </figcaption>
+
+            <div class="lab-stage">
+              <canvas id="rlCanvas" height="200"
+                aria-label="A chart of requests per tick. Bars above the capacity line are load the service cannot absorb."></canvas>
+            </div>
+
+            <div class="rl-out good" id="rlOut" aria-live="polite"></div>
+
+            <p class="lab-note">120 clients, one service, and a fault that clears partway through. Turn
+              <strong>jitter</strong> off and the clients synchronise: every wave arrives together, exceeds
+              capacity together, and re-breaks a service that had started to recover. Turn <strong>backoff</strong>
+              off as well and they never stop. The simulation is a model, not a benchmark — but the shape is
+              the one you will see in a real incident.</p>
+          </figure>
+
+          <h3>2. A budget, not a count</h3>
+
+          <p>"Retry three times" is per-call. Under a broad failure, every call in the system retries three times
+            and you have tripled total load exactly when you could least afford it. A retry budget caps retries as
+            a fraction of overall traffic — say 10% — so a localised blip retries freely and a system-wide failure
+            does not become a self-inflicted denial of service.</p>
+
+          <h3>3. Stop retrying something that is down</h3>
+
+          <p>This is what a circuit breaker is for, and the detail that makes it useful is what counts as a fault.
+            A 500, a timeout, a connection refused: the provider's problem, trip the breaker. A 400 or a 422: your
+            request is wrong, and retrying it a thousand times will not make it right. Counting both together
+            means one malformed payload can open a circuit for everybody.</p>
+
+          <h2 id="locks">Your distributed lock is probably wrong</h2>
+
+          <p>The usual implementation looks fine:</p>
+
+          <pre><code><span class="c">// Acquire with an expiry so a dead holder cannot block forever.</span>
+<span class="k">var</span> ok = <span class="k">await</span> _redis.StringSetAsync(
+    <span class="s">"lock:invoice:42"</span>, token,
+    TimeSpan.FromSeconds(<span class="s">30</span>), When.NotExists);
+
+<span class="k">if</span> (ok) { <span class="k">await</span> DoTheWorkAsync(); <span class="k">await</span> ReleaseAsync(); }</code></pre>
+
+          <p>The expiry is there so a crashed holder does not block the resource forever. That expiry is also the
+            bug. Process A takes the lock, then stalls — a long garbage collection pause, a hypervisor freeze, a
+            network hiccup. The lock expires. Process B takes it and starts working. Process A wakes up with no
+            idea any time has passed, still believing it holds the lock, and writes.</p>
+
+          <p>Two writers, one lock, no error anywhere. You cannot fix this by making the timeout longer; you can
+            only make it rarer and harder to reproduce.</p>
+
+          <div class="callout warn">
+            <b>The honest fix</b>
+            Pass a <strong>fencing token</strong> — a number that increases every time the lock is granted — down
+            to the resource being protected, and have the resource reject any write carrying a token lower than the
+            highest it has seen. A stalled holder's write is then refused by the thing it is writing to, which is
+            the only place that can possibly know.
+          </div>
+
+          <p>That requires the storage layer to cooperate, and often it will not. So before building any of it,
+            ask whether you need mutual exclusion at all. Most of the time you do not:</p>
+
+          <ul>
+            <li><strong>A unique constraint</strong> — if the point is "only one of these may exist", say that in
+              the schema and let the second insert fail.</li>
+            <li><strong>Optimistic concurrency</strong> — if the point is "do not clobber a concurrent edit", use a
+              version column and handle the zero-rows-affected case.</li>
+            <li><strong>A single consumer</strong> — if the point is "only one worker at a time", partition the
+              queue by key so the same entity always lands on the same consumer, and the exclusion comes free.</li>
+            <li><strong>A real lock manager</strong> — if you genuinely need distributed mutual exclusion, use
+              something built for it. A lock on a cache is a lock on something explicitly allowed to lose data.</li>
+          </ul>
+
+          <h2 id="practice">What I actually do</h2>
+
+          <p>None of this requires a research background. It requires a short list of habits applied
+            unglamorously.</p>
+
+          <ul>
+            <li><strong>Every write endpoint takes an idempotency key</strong>, enforced by a unique index. Added
+              on day one it is a field. Added after the first double charge it is a migration, a backfill and an
+              apology.</li>
+            <li><strong>No cross-machine timestamp comparisons.</strong> Versions or sequences, enforced in the
+              <code>WHERE</code> clause.</li>
+            <li><strong>Every retry has jitter and a cap</strong>, and a dead-letter queue at the end of it so a
+              poison message parks instead of looping.</li>
+            <li><strong>Breakers distinguish a provider fault from a bad request.</strong> One trips the circuit;
+              the other fails the one message and nothing else.</li>
+            <li><strong>Read-your-writes for the thing just edited</strong>, eventual for everything else.</li>
+            <li><strong>Correlation ids on everything</strong>, so the three-service version of "what happened" is
+              one query rather than an afternoon.</li>
+          </ul>
+
+          <div class="callout good">
+            <b>If you take one thing</b>
+            Assume every message arrives twice and every reply may be lost. Design the handler so both are
+            boring. Almost everything else in distributed systems is a variation on that sentence.
+          </div>
+
+          <p style="margin-top:34px"><a class="back-link" href="index.html">← More posts</a></p>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a class="foot-logo" href="../index.html">
+        <img src="../assets/logo-mark.svg" width="46" height="33" alt="">
+        <span>code<i>rabhi</i></span>
+      </a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Blog</a>
+        <a href="../index.html#opensource">Open source</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../page.js"></script>
+  <script src="post.js"></script>
+  <script src="retry-lab.js"></script>
+  <script src="../enhance.js"></script>
+</body>
+
+</html>

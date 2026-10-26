@@ -78,7 +78,10 @@
     var s = skill.toLowerCase();
     var extra = ALIASES[s] || [];
     return tags.some(function (t) {
-      if (t === s || t.indexOf(s) !== -1 || s.indexOf(t) !== -1) return true;
+      // a tag may be more specific than the chip ("ASP.NET Core" satisfies
+      // ".NET Core") but not less: a bare ".NET" tag must not light up the
+      // ".NET Core" chip, because .NET Core is the narrower claim
+      if (t === s || t.indexOf(s) !== -1) return true;
       return extra.indexOf(t) !== -1;
     });
   }

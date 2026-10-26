@@ -21,6 +21,7 @@
   --maxw: 1060px;
   --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --serif: 'Source Serif 4', ui-serif, Georgia, 'Times New Roman', serif;
 }
 
 * {
@@ -3995,6 +3996,19 @@ button.span-row:hover .span-fill,
   color: var(--blue);
 }
 
+/* with room to spare, the number moves into the margin and the heading
+   starts at the measure like every other line */
+@media (min-width: 1060px) {
+  .post-body h2::before {
+    position: absolute;
+    left: -68px;
+    top: 1.5em;
+    margin: 0;
+    text-align: right;
+    width: 44px;
+  }
+}
+
 .post-body h3 {
   font-family: var(--sans);
   font-size: 18.5px;
@@ -4094,15 +4108,33 @@ button.span-row:hover .span-fill,
   font-size: 16px;
 }
 
-/* code keeps the mono, because there it means something */
+/* Code keeps the mono, because there it means something, and it keeps a
+   surface, because a block of indented text on a dark page is not a code
+   block — it is a paragraph that lost its way. */
 .post-body pre {
   font-size: 14.2px;
-  line-height: 1.7;
-  border-radius: 0;
-  border: 0;
-  border-left: 2px solid var(--line-2);
-  background: none;
-  padding: 4px 0 4px 22px;
+  line-height: 1.72;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0d1119;
+  padding: 18px 20px;
+  margin: 1.6em 0;
+  overflow-x: auto;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .02);
+}
+
+/* a hairline down the gutter, so a long block still has an edge to follow */
+.post-body pre::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--line-2);
+  border-radius: 10px 0 0 10px;
+}
+
+.post-body pre {
+  position: relative;
 }
 
 .post-body code {
@@ -4128,6 +4160,409 @@ button.span-row:hover .span-fill,
   .callout {
     font-size: 16.5px;
   }
+}
+
+/* ---------- article, second pass ---------- */
+/* inline code should read as a token, not as a highlight */
+.post-body code {
+  padding: .12em .38em;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  background: #0d1119;
+  color: #b9c6e4;
+}
+
+.post-body pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+/* lists: a marker that is part of the type, not a bullet from 1998 */
+.post-body>ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.post-body>ul>li {
+  position: relative;
+  padding-left: 26px;
+}
+
+.post-body>ul>li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: .72em;
+  width: 7px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--blue);
+  opacity: .75;
+}
+
+.post-body>ol {
+  padding-left: 24px;
+}
+
+.post-body>ol>li::marker {
+  font-family: var(--mono);
+  font-size: .84em;
+  color: var(--blue);
+}
+
+/* tables sit on hairlines and breathe */
+.post-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.7em 0;
+}
+
+.post-body thead th {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-2);
+  text-align: left;
+}
+
+.post-body tbody td {
+  padding: 14px 16px 14px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.post-body tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* a figure is a figure: let it use the gutter it has earned */
+.diagram {
+  margin-left: calc(var(--bleed, 0px) * -1);
+  margin-right: calc(var(--bleed, 0px) * -1);
+}
+
+@media (min-width: 1060px) {
+  .post-body {
+    --bleed: 40px;
+  }
+}
+
+.diagram svg {
+  width: 100%;
+  height: auto;
+}
+
+/* the end of the article should feel like an end */
+.post-body .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+/* ---------- the blog reads in a serif ----------
+   Inter is a good interface face and a tiring reading face at 4,000 words.
+   Prose moves to a serif; the sans keeps the chrome, the mono keeps the
+   code, and the three stay out of each other's way. */
+.post-body,
+.post-standfirst,
+.lead-post p,
+.ir-main em {
+  font-family: var(--serif);
+}
+
+.post-body {
+  font-size: 20px;
+  line-height: 1.72;
+  color: #cbd4e4;
+  letter-spacing: 0;
+}
+
+.post-body>p:first-of-type {
+  font-size: 21.5px;
+  color: #dde4f0;
+}
+
+.post-standfirst {
+  font-size: clamp(18px, 2.3vw, 21.5px);
+  line-height: 1.55;
+  color: #b7c1d4;
+}
+
+/* Headings in the sans against prose in the serif. Setting both in the
+   same face made every heading look like a bolder paragraph; two different
+   skeletons separate them before weight or size has to do any work. */
+.post-hero h1,
+.post-body h2,
+.post-body h3,
+.lead-post h2,
+.ir-main b {
+  font-family: var(--sans);
+  font-weight: 800;
+}
+
+.post-body h3 {
+  font-weight: 700;
+}
+
+.post-hero h1 {
+  font-size: clamp(32px, 5.2vw, 50px);
+  line-height: 1.04;
+  letter-spacing: -.04em;
+}
+
+.post-body h2 {
+  font-size: clamp(26px, 3.5vw, 34px);
+  letter-spacing: -.034em;
+  line-height: 1.14;
+}
+
+.post-body h3 {
+  font-size: 19.5px;
+  letter-spacing: -.022em;
+  color: var(--text);
+  margin-top: 2.2em;
+}
+
+.lead-post h2 {
+  font-size: clamp(29px, 4.8vw, 46px);
+  letter-spacing: -.025em;
+}
+
+.ir-main b {
+  font-size: clamp(19px, 2.5vw, 23px);
+  letter-spacing: -.014em;
+}
+
+.post-body em,
+.post-body i {
+  font-style: italic;
+}
+
+.post-body blockquote {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.callout {
+  font-family: var(--serif);
+  font-size: 18.5px;
+}
+
+/* ---------- each post wears its topic's colour ---------- */
+article[data-topic] {
+  --accent: var(--blue);
+}
+
+article[data-topic="backend"] {
+  --accent: #6c9bff;
+}
+
+article[data-topic="ai"] {
+  --accent: #56c8d8;
+}
+
+article[data-topic="reliability"] {
+  --accent: #f7768e;
+}
+
+article[data-topic="cloud"] {
+  --accent: #57cf9a;
+}
+
+article[data-topic="csharp"] {
+  --accent: #b18cf0;
+}
+
+article[data-topic="frontend"] {
+  --accent: #e0af68;
+}
+
+article[data-topic] .post-hero .post-meta>span:first-child,
+article[data-topic] .post-body h2::before,
+article[data-topic] .toc h2,
+article[data-topic] .diagram figcaption::before,
+article[data-topic] .post-body>ol>li::marker,
+article[data-topic] .pn-k {
+  color: var(--accent);
+}
+
+article[data-topic] .post-body a {
+  color: var(--accent);
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+article[data-topic] .post-body>ul>li::before,
+article[data-topic] .post-body blockquote,
+article[data-topic] .callout:not(.warn):not(.good) {
+  border-color: var(--accent);
+}
+
+article[data-topic] .post-body>ul>li::before {
+  background: var(--accent);
+}
+
+/* the pinned contents follows it too */
+.toc-rail a.on {
+  color: var(--accent, var(--blue));
+  border-color: var(--accent, var(--blue));
+}
+
+@media (max-width: 760px) {
+  .post-body {
+    font-size: 18.5px;
+    line-height: 1.68;
+  }
+
+  .post-body>p:first-of-type {
+    font-size: 19.5px;
+  }
+
+  .post-body blockquote {
+    font-size: 19px;
+  }
+
+  .callout {
+    font-size: 17px;
+  }
+}
+
+/* ---------- an interactive figure inside an article ---------- */
+.lab {
+  margin: 2.4em calc(var(--bleed, 0px) * -1);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.lab-cap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--dim);
+}
+
+.lab-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.lab-t {
+  border: 1px solid var(--line-2);
+  background: var(--bg);
+  color: var(--dim);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: color .18s, border-color .18s, background .18s;
+}
+
+.lab-t::before {
+  content: "\2715\00a0\00a0";
+  opacity: .7;
+}
+
+.lab-t.on {
+  color: var(--accent, var(--blue));
+  border-color: color-mix(in srgb, var(--accent, var(--blue)) 50%, transparent);
+  background: color-mix(in srgb, var(--accent, var(--blue)) 10%, transparent);
+}
+
+.lab-t.on::before {
+  content: "\2713\00a0\00a0";
+}
+
+.lab-run {
+  border: 1px solid rgba(87, 207, 154, .45);
+  background: rgba(87, 207, 154, .1);
+  color: var(--green);
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: background .18s;
+}
+
+.lab-run:hover {
+  background: rgba(87, 207, 154, .2);
+}
+
+.lab-stage {
+  padding: 16px 16px 10px;
+}
+
+#rlCanvas {
+  display: block;
+  width: 100%;
+  height: 200px;
+}
+
+.rl-out {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+.rl-k {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.rl-out.good .rl-k {
+  color: var(--green);
+}
+
+.rl-out.bad .rl-k {
+  color: #f7768e;
+}
+
+.rl-l {
+  color: var(--dim);
+  margin-right: 10px;
+}
+
+.rl-n {
+  flex: 1 1 100%;
+  margin-top: 6px;
+  color: var(--dim);
+}
+
+.lab-note {
+  margin: 0;
+  padding: 0 16px 16px;
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--dim);
 }
 
 /* ---------- article diagrams ---------- */
