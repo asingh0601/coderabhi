@@ -2845,8 +2845,390 @@ button.span-row:hover .span-fill,
 }
 
 .numbered .kicker::before {
-  content: counter(sec, decimal-leading-zero) " \2014 ";
+  /* a space after a CSS escape terminates it and is swallowed, so the
+     separator carries a non-breaking space of its own */
+  content: counter(sec, decimal-leading-zero) " \2014\00a0";
   color: var(--dim);
+}
+
+/* ---------- the hero card, as a shell ----------
+   The card always looked like a terminal; now it answers like one. The
+   glance rows stay put until the first command, then step aside — so a
+   reader who never types sees exactly what they saw before. */
+.profile .bar {
+  cursor: text;
+}
+
+.profile.typing #glance {
+  display: none;
+}
+
+.term-out {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px 6px;
+  max-height: 290px;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 12.4px;
+  line-height: 1.75;
+  color: var(--muted);
+  scrollbar-width: thin;
+}
+
+.profile.typing .term-out {
+  display: flex;
+}
+
+.term-out .tl {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.term-out .tin {
+  color: var(--text);
+  margin-top: 8px;
+}
+
+.term-out .tl:first-child {
+  margin-top: 0;
+}
+
+/* a key column wide enough for "distributed systems" to still line up */
+.term-out .tk {
+  display: inline-block;
+  min-width: 112px;
+  padding-right: 10px;
+  color: var(--dim);
+  vertical-align: top;
+}
+
+/* a value that wraps stays in its own column instead of running back to
+   the left margin under the key */
+.term-out .tv {
+  display: inline-block;
+  vertical-align: top;
+  max-width: calc(100% - 124px);
+}
+
+.term-out .tk2 {
+  color: var(--blue);
+}
+
+.term-out .tc {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.term-out .tm {
+  color: var(--dim);
+}
+
+.term-out .te {
+  color: #f7768e;
+}
+
+.tp {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.term-form {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 12.8px;
+}
+
+.profile.typing .term-form {
+  border-top: 0;
+  padding-top: 2px;
+}
+
+.term-prompt {
+  flex: none;
+  cursor: text;
+}
+
+#termIn {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 12.8px;
+  color: var(--text);
+  caret-color: var(--green);
+}
+
+#termIn::placeholder {
+  color: var(--dim);
+}
+
+#termIn:focus {
+  outline: none;
+}
+
+/* ---------- section rail ----------
+   A dot per section down the right edge: where you are on a long page, and
+   one click to anywhere else. Hidden on narrow screens, where the page is
+   one column and the header menu is enough. */
+.rail {
+  position: fixed;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rail a {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 5px 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: transparent;
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.rail a::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--line-2);
+  transition: background .2s, transform .2s, box-shadow .2s;
+}
+
+.rail a:hover {
+  color: var(--muted);
+}
+
+.rail a:focus-visible {
+  color: var(--text);
+  outline: none;
+}
+
+.rail a:hover::after,
+.rail a:focus-visible::after {
+  background: var(--muted);
+  transform: scale(1.25);
+}
+
+.rail a.on {
+  color: var(--blue);
+}
+
+.rail a.on::after {
+  background: var(--blue);
+  transform: scale(1.3);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 18%, transparent);
+}
+
+@media (max-width: 1180px) {
+  .rail {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .term-out {
+    max-height: 220px;
+    font-size: 11.8px;
+  }
+
+  .term-out .tk {
+    min-width: 92px;
+  }
+}
+
+/* ---------- the request flow, running ---------- */
+.flow-cap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.flow-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-left: auto;
+}
+
+.flow-seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--bg);
+}
+
+.flow-seg button {
+  border: 0;
+  background: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--dim);
+  cursor: pointer;
+  transition: color .18s, background .18s;
+}
+
+.flow-seg button:hover {
+  color: var(--text);
+}
+
+.flow-seg button.on {
+  background: var(--blue);
+  color: #08101f;
+}
+
+.flow-run {
+  border: 1px solid rgba(87, 207, 154, .45);
+  background: rgba(87, 207, 154, .1);
+  color: var(--green);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: background .18s, opacity .18s;
+}
+
+.flow-run:hover:not(:disabled) {
+  background: rgba(87, 207, 154, .2);
+}
+
+.flow-run:disabled {
+  opacity: .55;
+  cursor: default;
+}
+
+/* a node the request is in right now */
+.flow-node {
+  position: relative;
+  transition: border-color .2s, background .2s, transform .2s, opacity .2s;
+}
+
+.flow-node.lit {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green) 11%, transparent);
+  transform: translateY(-2px);
+}
+
+.flow-node.done {
+  border-color: color-mix(in srgb, var(--green) 45%, var(--line));
+}
+
+.flow-node.skipped {
+  opacity: .4;
+}
+
+/* the cost, printed under the box once the request has left it */
+.fn-ms {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--green);
+  animation: fn-in .25s ease-out;
+}
+
+.fn-ms.slow {
+  color: #e0af68;
+}
+
+.flow-node.skipped .fn-ms {
+  color: var(--dim);
+}
+
+@keyframes fn-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* the wire between two boxes, as the request crosses it */
+.flow-link {
+  transition: background .2s;
+}
+
+.flow-link.lit {
+  background: var(--green);
+}
+
+.flow-link.done {
+  background: color-mix(in srgb, var(--green) 50%, transparent);
+}
+
+/* the total */
+.flow-out {
+  display: none;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  margin-top: 14px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+.flow-out.fast,
+.flow-out.slow {
+  display: flex;
+}
+
+.fo-k {
+  color: var(--dim);
+}
+
+.fo-v {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.flow-out.fast .fo-v {
+  color: var(--green);
+}
+
+.flow-out.slow .fo-v {
+  color: #e0af68;
+}
+
+.fo-n {
+  color: var(--dim);
+  flex: 1 1 260px;
+}
+
+@media (max-width: 680px) {
+  .flow-ctl {
+    margin-left: 0;
+  }
 }
 
 /* ---------- article diagrams ---------- */

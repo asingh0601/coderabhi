@@ -51,6 +51,59 @@
     update();
   })();
 
+  /* ---------- section rail ----------
+     A dot per section down the right edge. Built from the sections that are
+     actually on the page, and only where the page numbers them, so the
+     library pages are untouched. */
+  (function rail() {
+    var main = document.querySelector('main.numbered');
+    if (!main) return;
+
+    var sections = main.querySelectorAll(':scope > section[id]');
+    if (sections.length < 3) return;
+
+    var nav = document.createElement('nav');
+    nav.className = 'rail';
+    nav.setAttribute('aria-label', 'Sections');
+
+    var links = {};
+    Array.prototype.forEach.call(sections, function (sec) {
+      var head = sec.querySelector('.kicker');
+      var a = document.createElement('a');
+      a.href = '#' + sec.id;
+      // the kicker is the section's own label; contact has none, and its
+      // heading is a sentence, so the id reads better there
+      a.textContent = head
+        ? head.textContent.trim()
+        : sec.id.charAt(0).toUpperCase() + sec.id.slice(1);
+      a.setAttribute('title', a.textContent);
+      nav.appendChild(a);
+      links[sec.id] = a;
+    });
+
+    document.body.appendChild(nav);
+
+    if (!('IntersectionObserver' in window)) return;
+
+    // The topmost section still on screen wins, so the dot matches what you
+    // are reading rather than whatever crossed the line last.
+    var visible = {};
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        visible[en.target.id] = en.isIntersecting;
+      });
+      var current = null;
+      Array.prototype.forEach.call(sections, function (sec) {
+        if (!current && visible[sec.id]) current = sec.id;
+      });
+      Object.keys(links).forEach(function (id) {
+        links[id].classList.toggle('on', id === current);
+      });
+    }, { rootMargin: '-45% 0px -45% 0px' });
+
+    Array.prototype.forEach.call(sections, function (sec) { io.observe(sec); });
+  })();
+
   /* ---------- command palette ---------- */
   (function palette() {
     // Section links are read from the page itself, so every page offers its
