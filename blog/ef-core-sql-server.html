@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EF Core and SQL Server: the queries that kill you in production — Abhishek Singh</title>
+  <meta name="description"
+    content="The EF Core traps that pass code review and fail under load: tracking defaults that silently save nothing, Count versus Count(), N+1, Include chains that time out, and how to read an execution plan.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="EF Core and SQL Server: the queries that kill you in production">
+  <meta property="og:description"
+    content="Bugs that pass review, work on your machine, and fall over on real data.">
+  <meta property="og:url" content="https://coderabhi.in/blog/ef-core-sql-server.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/blog/ef-core-sql-server.html">
+  <link rel="icon" href="../assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.svg" width="34" height="24"
+          alt="coderabhi logo"> <span class="bname">code<i>rabhi</i></span></a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="../index.html#about">About</a>
+          <a href="../index.html#skills">Skills</a>
+          <a href="../index.html#experience">Experience</a>
+          <a href="../index.html#opensource">Open source</a>
+          <a href="index.html">Articles</a>
+          <a class="ghost" href="../index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <article data-topic="data">
+      <div class="container post-hero" id="top">
+        <div class="post-meta reveal">
+          <span>Data</span>
+          <span class="dot"></span>
+          <time datetime="2026-10-25">25 October 2026</time>
+          <span class="dot"></span>
+          <span>17 min read</span>
+        </div>
+
+        <h1 class="reveal">EF Core and SQL Server: the queries that kill you in production</h1>
+
+        <p class="post-standfirst reveal">None of these are exotic. They pass code review, they work on your
+          machine, and they fail on real data — usually at the worst possible moment, and usually without
+          throwing anything you can search for.</p>
+      </div>
+
+      <div class="container">
+        <nav class="toc reveal">
+          <h2 data-count="8 sections">Contents</h2>
+          <ol>
+            <li><a href="#tracking">The save that affects zero rows</a></li>
+            <li><a href="#count">Count and Count(), which are not the same</a></li>
+            <li><a href="#nplusone">N+1, and the fix that is worse</a></li>
+            <li><a href="#projection">Project, do not load</a></li>
+            <li><a href="#paging">Paging that gets slower as you page</a></li>
+            <li><a href="#plans">Reading a plan without becoming a DBA</a></li>
+            <li><a href="#sniffing">Parameter sniffing</a></li>
+            <li><a href="#checklist">The checklist</a></li>
+          </ol>
+        </nav>
+
+        <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+          <defs>
+            <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head" /></marker>
+            <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-blue" /></marker>
+            <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-warn" /></marker>
+          </defs>
+        </svg>
+
+        <div class="post-body">
+
+          <h2 id="tracking">The save that affects zero rows</h2>
+
+          <p>This is my favourite bug in the entire stack, because it is invisible. The code is correct. The test
+            passes. Nothing throws. The row simply does not change.</p>
+
+          <pre><code><span class="k">var</span> order = <span class="k">await</span> _repo.GetAll(o =&gt; o.Id == id)
+                        .FirstOrDefaultAsync();
+
+order.Status = OrderStatus.Shipped;
+<span class="k">await</span> _uow.SaveChangesAsync();   <span class="c">// returns 0. no exception.</span></code></pre>
+
+          <p>The cause is a default that disagrees with itself. An interface declares a default value for an
+            optional parameter; the implementation declares a different one; and <strong>C# binds optional
+              parameter defaults at the call site, from the compile-time type of the reference.</strong> Call
+            through the interface and you get the interface's default. Call through the concrete class and you get
+            the other one.</p>
+
+          <pre><code><span class="k">public interface</span> IRepository&lt;T&gt;
+{
+    IQueryable&lt;T&gt; <span class="f">GetAll</span>(
+        Expression&lt;Func&lt;T, <span class="k">bool</span>&gt;&gt; filter = <span class="k">null</span>,
+        <span class="k">bool</span> tracked = <span class="k">false</span>);   <span class="c">// &lt;- the one you get</span>
+}
+
+<span class="k">public class</span> Repository&lt;T&gt; : IRepository&lt;T&gt;
+{
+    <span class="k">public</span> IQueryable&lt;T&gt; <span class="f">GetAll</span>(
+        Expression&lt;Func&lt;T, <span class="k">bool</span>&gt;&gt; filter = <span class="k">null</span>,
+        <span class="k">bool</span> tracked = <span class="k">true</span>)    <span class="c">// &lt;- the one you read</span>
+    { ... }
+}</code></pre>
+
+          <p>So the entity comes back from a <code>AsNoTracking()</code> query, the change tracker has never heard
+            of it, and <code>SaveChanges</code> correctly does nothing at all. You read the implementation, you
+            see <code>true</code>, and you spend an hour wondering why the database disagrees with you.</p>
+
+          <div class="callout warn">
+            <b>The tell</b>
+            <code>SaveChangesAsync()</code> returning 0 when you expected 1 is almost always this. Check it before
+            you check anything else — it costs five seconds and it is right most of the time.
+          </div>
+
+          <p>Two fixes, and you want both. Make the defaults agree, and be explicit at every call site that intends
+            to write:</p>
+
+          <pre><code><span class="k">var</span> order = <span class="k">await</span> _repo
+    .GetAll(o =&gt; o.Id == id, tracked: <span class="k">true</span>)
+    .FirstOrDefaultAsync();</code></pre>
+
+          <p>The deeper lesson is that optional parameters are part of the signature in a way that feels like it
+            should be part of the implementation, and is not. If a default matters for correctness, do not make it
+            optional.</p>
+
+          <h2 id="count">Count and Count(), which are not the same</h2>
+
+          <p>Two characters, and one of them silently returns zero.</p>
+
+          <pre><code><span class="c">// Property: the in-memory count of a loaded collection.</span>
+CommentCount = thread.Comments.Count
+
+<span class="c">// Method: translated to a correlated subquery in SQL.</span>
+CommentCount = thread.Comments.Count()</code></pre>
+
+          <p>Inside a <code>Select</code> projection, the method is translated by the provider into
+            <code>(SELECT COUNT(*) FROM Comments WHERE ...)</code> and the database answers it. The property is a
+            plain CLR member on <code>ICollection&lt;T&gt;</code>. If the navigation was never
+            <code>Include</code>d, the collection is empty, and the property cheerfully reports <strong>0</strong>
+            — no error, no warning, no query.</p>
+
+          <p>The result is a dashboard where every thread has zero comments, which gets reported as "comments are
+            broken" long after the deploy that caused it.</p>
+
+          <div class="callout">
+            <b>Rule</b>
+            Inside a projection, always call it. <code>.Count()</code>, <code>.Any()</code>, <code>.Sum()</code> —
+            the methods translate. The properties lie quietly.
+          </div>
+
+          <h2 id="nplusone">N+1, and the fix that is worse</h2>
+
+          <p>Everyone knows the N+1: one query for the list, then one more per row as a lazy navigation is touched
+            in a loop. Fifty rows, fifty-one round trips, each one carrying network latency that your local machine
+            — where the database is on localhost — does not have.</p>
+
+          <p>The textbook fix is <code>Include</code>. The textbook fix, applied to a page that needs four
+            collections, is how you get a different and more interesting outage.</p>
+
+          <pre><code><span class="c">// Looks thorough. Produces a cartesian product.</span>
+<span class="k">var</span> cases = <span class="k">await</span> _db.Cases
+    .Include(c =&gt; c.Parties)
+    .Include(c =&gt; c.Payments)
+    .Include(c =&gt; c.Documents)
+    .Include(c =&gt; c.Notes)
+    .Where(c =&gt; c.BusinessId == businessId)
+    .Skip(skip).Take(<span class="s">25</span>)
+    .ToListAsync();</code></pre>
+
+          <p>Each <code>Include</code> of a <em>collection</em> is a join, and joins multiply. A case with 4
+            parties, 10 payments, 6 documents and 5 notes does not return 25 rows. It returns 4 × 10 × 6 × 5 =
+            <strong>1,200 rows for that one case</strong>, with the case's own columns repeated in every one of
+            them. EF then de-duplicates it all in memory, which it is good at, and which does not help the eight
+            seconds you just spent moving the data across the wire.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 236" role="img"
+              aria-label="One case joined to four collections produces the product of their sizes in rows, where loading each collection separately produces their sum.">
+              <text x="8" y="24" class="d-sub">ONE QUERY, FOUR COLLECTION JOINS</text>
+
+              <rect x="8" y="40" width="96" height="48" rx="8" class="d-box" />
+              <text x="26" y="62" class="d-label">case</text>
+              <text x="26" y="78" class="d-sub">1 row</text>
+
+              <rect x="140" y="36" width="78" height="26" rx="6" class="d-box" />
+              <text x="156" y="53" class="d-sub">parties 4</text>
+              <rect x="140" y="68" width="78" height="26" rx="6" class="d-box" />
+              <text x="156" y="85" class="d-sub">payments 10</text>
+              <rect x="226" y="36" width="78" height="26" rx="6" class="d-box" />
+              <text x="242" y="53" class="d-sub">docs 6</text>
+              <rect x="226" y="68" width="78" height="26" rx="6" class="d-box" />
+              <text x="242" y="85" class="d-sub">notes 5</text>
+
+              <path d="M104 64 H134" class="d-arrow" marker-end="url(#a)" />
+
+              <rect x="350" y="36" width="210" height="58" rx="9" class="d-box-warn" />
+              <text x="368" y="60" class="d-label">1,200 rows</text>
+              <text x="368" y="78" class="d-sub">4 × 10 × 6 × 5, per case</text>
+              <path d="M304 64 H344" class="d-arrow-warn" marker-end="url(#aw)" />
+
+              <text x="596" y="58" class="d-note">× 25 cases on the page</text>
+              <text x="596" y="78" class="d-note">= 30,000 rows across the wire</text>
+
+              <text x="8" y="140" class="d-sub">FOUR QUERIES, ONE PER COLLECTION</text>
+
+              <rect x="8" y="156" width="96" height="48" rx="8" class="d-box" />
+              <text x="26" y="178" class="d-label">case page</text>
+              <text x="26" y="194" class="d-sub">25 rows</text>
+
+              <rect x="140" y="152" width="164" height="26" rx="6" class="d-box-good" />
+              <text x="156" y="169" class="d-sub">payment sums by case id</text>
+              <rect x="140" y="184" width="164" height="26" rx="6" class="d-box-good" />
+              <text x="156" y="201" class="d-sub">counts by case id</text>
+
+              <path d="M104 180 H134" class="d-arrow-blue" marker-end="url(#ab)" />
+
+              <rect x="350" y="152" width="210" height="58" rx="9" class="d-box-good" />
+              <text x="368" y="176" class="d-label">25 + 25 + 25 rows</text>
+              <text x="368" y="194" class="d-sub">joined in a dictionary</text>
+              <path d="M304 180 H344" class="d-arrow-blue" marker-end="url(#ab)" />
+
+              <text x="596" y="184" class="d-note">a sum, not a product</text>
+            </svg>
+            <figcaption>The same page, the same data. The difference is whether the collections multiply or add,
+              and that is decided by how many round trips you are willing to make.</figcaption>
+          </figure>
+
+          <h3>AsSplitQuery is not the answer either</h3>
+
+          <p><code>AsSplitQuery()</code> turns one cartesian query into one query per collection, which removes the
+            multiplication. It also removes the single-statement consistency, and on a paginated list it still
+            drags every column of every related row into memory to build objects you are about to throw away.</p>
+
+          <p>What actually worked, on a page that was timing out: run the paginated query for the parent rows
+            only, then issue one <strong>batch aggregate query per collection</strong> keyed by the ids you just
+            got, and stitch them together in a dictionary.</p>
+
+          <pre><code><span class="c">// 1. the page itself — no collection Includes at all</span>
+<span class="k">var</span> cases = <span class="k">await</span> query
+    .OrderByDescending(c =&gt; c.CreatedOn)
+    .Skip(skip).Take(take)
+    .ToListAsync();
+
+<span class="k">var</span> ids = cases.Select(c =&gt; c.Id).ToList();
+
+<span class="c">// 2. one query per aggregate, scoped to those ids</span>
+<span class="k">var</span> paidByCase = <span class="k">await</span> _db.Payments
+    .Where(p =&gt; ids.Contains(p.CaseId) &amp;&amp; p.IsPaid)
+    .GroupBy(p =&gt; p.CaseId)
+    .Select(g =&gt; <span class="k">new</span> { g.Key, Total = g.Sum(x =&gt; x.Amount) })
+    .ToDictionaryAsync(x =&gt; x.Key, x =&gt; x.Total);
+
+<span class="k">var</span> fileCount = <span class="k">await</span> _db.Files
+    .Where(f =&gt; ids.Contains(f.CaseId))
+    .GroupBy(f =&gt; f.CaseId)
+    .Select(g =&gt; <span class="k">new</span> { g.Key, Count = g.Count() })
+    .ToDictionaryAsync(x =&gt; x.Key, x =&gt; x.Count);
+
+<span class="c">// 3. map, with the dictionaries passed in</span>
+<span class="k">return</span> cases.Select(c =&gt; MapSummary(c, paidByCase, fileCount));</code></pre>
+
+          <p>Four small round trips instead of one enormous one, a bounded result set regardless of how many
+            payments a case has accumulated, and a page that renders in under a second on data that used to time
+            out.</p>
+
+          <div class="callout good">
+            <b>The shape to remember</b>
+            For a list view you almost never want the related <em>rows</em>. You want a number about them. Ask the
+            database for the number.
+          </div>
+
+          <h2 id="projection">Project, do not load</h2>
+
+          <p>The entity has 40 columns. The grid shows 6 of them. <code>ToListAsync()</code> on the entity reads
+            all 40, materialises objects, and registers every one with the change tracker so it can watch for
+            edits you are never going to make.</p>
+
+          <pre><code><span class="c">// Reads 40 columns, tracks 500 objects, uses 6 fields.</span>
+<span class="k">var</span> rows = <span class="k">await</span> _db.Cases.Where(filter).ToListAsync();
+
+<span class="c">// Reads 6 columns, tracks nothing, allocates almost nothing.</span>
+<span class="k">var</span> rows = <span class="k">await</span> _db.Cases.Where(filter)
+    .Select(c =&gt; <span class="k">new</span> CaseRow {
+        Id       = c.Id,
+        Name     = c.Name,
+        Status   = c.Status,
+        Parties  = c.Parties.Count(),
+        LastNote = c.Notes
+                    .OrderByDescending(n =&gt; n.CreatedOn)
+                    .Select(n =&gt; n.Text)
+                    .FirstOrDefault()
+    })
+    .ToListAsync();</code></pre>
+
+          <p>A projection is implicitly no-tracking, so you get that fix for free. And note the last field: a
+            correlated subquery for "the most recent note", resolved by the database, with no
+            <code>Include</code> and no extra round trip.</p>
+
+          <p>One trap if your project has nullable reference types enabled. A projection like
+            <code>.FirstOrDefault()</code> over a string is <code>string?</code>, so a dictionary built from it
+            is <code>Dictionary&lt;int, string?&gt;</code> and will not assign to
+            <code>Dictionary&lt;int, string&gt;</code>. Declare it as nullable and cast in the selector rather
+            than fighting it:</p>
+
+          <pre><code>.ToDictionaryAsync(g =&gt; g.Key, g =&gt; (<span class="k">string</span>?)g.FileName)</code></pre>
+
+          <h2 id="paging">Paging that gets slower as you page</h2>
+
+          <p><code>Skip(n).Take(25)</code> compiles to <code>OFFSET n ROWS FETCH NEXT 25</code>, and
+            <code>OFFSET</code> does exactly what it says: the database produces the first <code>n</code> rows in
+            order and throws them away. Page 2 is fast. Page 400 reads ten thousand rows to return twenty-five.</p>
+
+          <p>For a UI with numbered pages this is usually fine, because nobody clicks page 400. For an export,
+            a sync job, or an API that someone will iterate to the end, it is quadratic work, and it gets worse as
+            the table grows.</p>
+
+          <p>Use a keyset instead — remember the last row you saw and ask for what comes after it:</p>
+
+          <pre><code><span class="c">// Page 1</span>
+<span class="k">var</span> page = <span class="k">await</span> _db.Cases
+    .OrderByDescending(c =&gt; c.CreatedOn).ThenByDescending(c =&gt; c.Id)
+    .Take(<span class="s">25</span>).ToListAsync();
+
+<span class="c">// Page n+1: seek, do not count</span>
+<span class="k">var</span> page = <span class="k">await</span> _db.Cases
+    .Where(c =&gt; c.CreatedOn &lt; lastOn
+             || (c.CreatedOn == lastOn &amp;&amp; c.Id &lt; lastId))
+    .OrderByDescending(c =&gt; c.CreatedOn).ThenByDescending(c =&gt; c.Id)
+    .Take(<span class="s">25</span>).ToListAsync();</code></pre>
+
+          <p>With an index on <code>(CreatedOn DESC, Id DESC)</code> every page costs the same, whether it is the
+            first or the ten-thousandth. The tiebreaker on <code>Id</code> is not optional: without it, two rows
+            sharing a timestamp can be skipped or repeated across the boundary.</p>
+
+          <h2 id="plans">Reading a plan without becoming a DBA</h2>
+
+          <p>You do not need to understand every operator. You need to find four things, and they account for most
+            of what goes wrong.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>What you see</th>
+                <th>What it means</th>
+                <th>Usually fixed by</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Clustered Index Scan</strong> on a big table</td>
+                <td>Reading the whole table to find a few rows.</td>
+                <td>An index on the columns you filter by.</td>
+              </tr>
+              <tr>
+                <td><strong>Key Lookup</strong> next to an Index Seek</td>
+                <td>The index found the row but not all the columns, so it goes back to the table for each one.</td>
+                <td><code>INCLUDE</code> the missing columns in the index.</td>
+              </tr>
+              <tr>
+                <td>Estimated rows 1, actual rows 400,000</td>
+                <td>Stale statistics, or a plan built for different parameters.</td>
+                <td>Update statistics; see parameter sniffing below.</td>
+              </tr>
+              <tr>
+                <td>A fat arrow into a <strong>Sort</strong> or <strong>Hash Match</strong></td>
+                <td>Sorting or hashing more rows than fit in memory, spilling to tempdb.</td>
+                <td>Filter earlier, or index in the order you sort.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>Two practical notes. Get the <strong>actual</strong> plan, not the estimated one — the gap between
+            estimate and actual is the single most useful number on the screen. And read the arrows, not the
+            operators: the thickness is row count, and the fattest arrow is where your time went.</p>
+
+          <h2 id="sniffing">Parameter sniffing</h2>
+
+          <p>A stored procedure or parameterised query is compiled once, using whatever parameter values happened
+            to be supplied on the first execution, and that plan is cached and reused.</p>
+
+          <p>This is almost always a good thing. It is a disaster when your data is skewed. The first caller asks
+            for <code>BusinessId = 4071</code>, which has 12 rows, so SQL Server picks a plan with nested loops
+            and a key lookup — perfect for 12 rows. The next caller asks for the business with 4 million rows, and
+            gets the same plan, executed four million times.</p>
+
+          <p>The symptom is distinctive and confusing: <strong>the same query is fast for some users and
+              catastrophic for others</strong>, and it swaps over after a restart or a statistics update.</p>
+
+          <div class="callout">
+            <b>What to reach for, in order</b>
+            Make sure statistics are current. Then <code>OPTIMIZE FOR UNKNOWN</code>, which asks for an average
+            plan instead of a plan tailored to one outlier. Then <code>RECOMPILE</code> on the specific query if
+            the skew is genuinely extreme and the query is not run thousands of times a second. Rewriting the
+            query comes before all of these if the skew is a design problem.
+          </div>
+
+          <h2 id="checklist">The checklist</h2>
+
+          <p>What I actually check, in the order I check it, when something is slow or wrong.</p>
+
+          <ul>
+            <li><strong>Did the save affect zero rows?</strong> Tracking. Almost always tracking.</li>
+            <li><strong>Is there a <code>.Count</code> without parentheses in a projection?</strong> It is
+              returning 0 and nobody has noticed.</li>
+            <li><strong>How many collection <code>Include</code>s are on the list query?</strong> More than one is
+              a multiplication; replace them with batch aggregates.</li>
+            <li><strong>Is the query selecting entities where a projection would do?</strong> Forty columns for a
+              six-column grid is forty columns of bandwidth and a change tracker full of nothing.</li>
+            <li><strong>Is anything iterating to the end with <code>Skip</code>?</strong> Keyset it.</li>
+            <li><strong>Turn on query logging in development.</strong> Most of these are obvious the moment you
+              can see the SQL, and invisible for months when you cannot.</li>
+          </ul>
+
+          <pre><code><span class="c">// Worth its weight. Development only.</span>
+options.UseSqlServer(cs)
+       .LogTo(Console.WriteLine, LogLevel.Information)
+       .EnableSensitiveDataLogging();</code></pre>
+
+          <div class="callout good">
+            <b>The habit that catches most of it</b>
+            Look at the generated SQL for every list endpoint you write, once, before it ships. Not the plan, not
+            a profiler — just the statement. Nearly every bug above is visible in it immediately, and none of them
+            is visible in the C#.
+          </div>
+
+          <p style="margin-top:34px"><a class="back-link" href="index.html">← All articles</a></p>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a class="foot-logo" href="../index.html">
+        <img src="../assets/logo-mark.svg" width="46" height="33" alt="">
+        <span>code<i>rabhi</i></span>
+      </a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Articles</a>
+        <a href="../index.html#opensource">Open source</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../page.js"></script>
+  <script src="post.js"></script>
+  <script src="../enhance.js"></script>
+</body>
+
+</html>

@@ -120,6 +120,9 @@
     [
       { label: 'Home', href: 'index.html', kind: 'Page' },
       { label: 'Articles', href: 'blog/index.html', kind: 'Page' },
+      { label: 'Spending less on AI tokens without getting worse answers', href: 'blog/ai-token-budget.html', kind: 'Post' },
+      { label: 'Sessions done properly', href: 'blog/auth-sessions.html', kind: 'Post' },
+      { label: 'EF Core and SQL Server: the queries that kill you', href: 'blog/ef-core-sql-server.html', kind: 'Post' },
       { label: 'Distributed systems: the parts that bite after the diagram', href: 'blog/distributed-systems.html', kind: 'Post' },
       { label: 'Microservices that dont fall over', href: 'blog/microservices.html', kind: 'Post' },
       { label: 'C# design patterns that still earn their place', href: 'blog/csharp-design-patterns.html', kind: 'Post' },

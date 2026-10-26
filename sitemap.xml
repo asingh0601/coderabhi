@@ -36,6 +36,21 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://coderabhi.in/blog/ai-token-budget.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coderabhi.in/blog/auth-sessions.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coderabhi.in/blog/ef-core-sql-server.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://coderabhi.in/blog/distributed-systems.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

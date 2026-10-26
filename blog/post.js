@@ -94,10 +94,13 @@
   /* ---------- 3. what to read next ---------- */
   (function next() {
     var POSTS = [
-      ['distributed-systems.html', 'Distributed systems: the parts that bite', 'Backend'],
+      ['ai-token-budget.html', 'Spending less on AI tokens without getting worse answers', 'AI'],
+      ['auth-sessions.html', 'Sessions done properly', 'Security'],
+      ['ef-core-sql-server.html', 'EF Core and SQL Server: the queries that kill you in production', 'Data'],
+      ['distributed-systems.html', 'Distributed systems: the parts that bite after the diagram', 'Backend'],
       ['microservices.html', "Microservices that don't fall over", 'Backend'],
       ['agentic-ai-development.html', 'Agentic AI for development, from someone who built one', 'AI'],
-      ['observability-reliability.html', 'Observability and reliability', 'Reliability'],
+      ['observability-reliability.html', 'Knowing before your users do', 'Reliability'],
       ['cloud-azure-kubernetes-docker.html', 'Docker, Kubernetes and Azure without the cargo cult', 'Cloud'],
       ['csharp-design-patterns.html', 'C# design patterns that still earn their place', 'C#'],
       ['microfrontends.html', 'Microfrontends: when splitting the UI is worth it', 'Frontend']

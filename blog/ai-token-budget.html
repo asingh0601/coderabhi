@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spending less on AI tokens without getting worse answers — Abhishek Singh</title>
+  <meta name="description"
+    content="Where the tokens actually go in an agentic app, how prompt caching works and how it silently breaks, why a code knowledge graph beats a bigger context window, and routing cheap work to cheap models.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Spending less on AI tokens without getting worse answers">
+  <meta property="og:description"
+    content="Caching, retrieval, routing and measurement — the four things that actually move the bill.">
+  <meta property="og:url" content="https://coderabhi.in/blog/ai-token-budget.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/blog/ai-token-budget.html">
+  <link rel="icon" href="../assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.svg" width="34" height="24"
+          alt="coderabhi logo"> <span class="bname">code<i>rabhi</i></span></a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="../index.html#about">About</a>
+          <a href="../index.html#skills">Skills</a>
+          <a href="../index.html#experience">Experience</a>
+          <a href="../index.html#opensource">Open source</a>
+          <a href="index.html">Articles</a>
+          <a class="ghost" href="../index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <article data-topic="ai">
+      <div class="container post-hero" id="top">
+        <div class="post-meta reveal">
+          <span>AI</span>
+          <span class="dot"></span>
+          <time datetime="2026-10-25">25 October 2026</time>
+          <span class="dot"></span>
+          <span>14 min read</span>
+        </div>
+
+        <h1 class="reveal">Spending less on AI tokens without getting worse answers</h1>
+
+        <p class="post-standfirst reveal">Most teams try to cut the bill by shortening prompts, which is the one
+          lever that trades quality for money. The four that do not are caching, retrieval, routing and
+          measurement — and the first one is usually broken without anybody noticing.</p>
+      </div>
+
+      <div class="container">
+        <nav class="toc reveal">
+          <h2 data-count="8 sections">Contents</h2>
+          <ol>
+            <li><a href="#where">Where the tokens actually go</a></li>
+            <li><a href="#caching">Prompt caching, and how it silently breaks</a></li>
+            <li><a href="#order">Order the prompt by how often it changes</a></li>
+            <li><a href="#graph">Stop pasting the codebase</a></li>
+            <li><a href="#routing">Cheap work belongs on a cheap model</a></li>
+            <li><a href="#effort">Let the task decide the effort</a></li>
+            <li><a href="#measure">Measure, or you are guessing</a></li>
+            <li><a href="#checklist">The checklist</a></li>
+          </ol>
+        </nav>
+
+        <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+          <defs>
+            <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head" /></marker>
+            <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-blue" /></marker>
+            <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-warn" /></marker>
+          </defs>
+        </svg>
+
+        <div class="post-body">
+
+          <h2 id="where">Where the tokens actually go</h2>
+
+          <p>The intuition is that the model's answers cost the money. In a long-running agent the opposite is
+            true, and it is not close.</p>
+
+          <p>Every turn resends the entire conversation. Turn one sends a system prompt, some context and a
+            question. Turn twenty sends the system prompt, the context, and nineteen previous exchanges including
+            every tool result the model has ever seen. Input grows linearly with turn count, and you pay for all
+            of it, every time.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 212" role="img"
+              aria-label="Input tokens per turn grow with conversation length because the whole history is resent, while output per turn stays roughly flat.">
+              <text x="8" y="22" class="d-sub">TOKENS BILLED PER TURN</text>
+              <path d="M44 176 H740" class="d-arrow" />
+              <path d="M44 176 V34" class="d-arrow" />
+              <text x="700" y="196" class="d-note">turn</text>
+
+              <rect x="70" y="150" width="26" height="26" class="d-box-accent" />
+              <rect x="70" y="140" width="26" height="10" class="d-box-good" />
+
+              <rect x="170" y="118" width="26" height="58" class="d-box-accent" />
+              <rect x="170" y="108" width="26" height="10" class="d-box-good" />
+
+              <rect x="270" y="92" width="26" height="84" class="d-box-accent" />
+              <rect x="270" y="82" width="26" height="10" class="d-box-good" />
+
+              <rect x="370" y="70" width="26" height="106" class="d-box-accent" />
+              <rect x="370" y="60" width="26" height="10" class="d-box-good" />
+
+              <rect x="470" y="54" width="26" height="122" class="d-box-accent" />
+              <rect x="470" y="44" width="26" height="10" class="d-box-good" />
+
+              <rect x="570" y="42" width="26" height="134" class="d-box-accent" />
+              <rect x="570" y="32" width="26" height="10" class="d-box-good" />
+
+              <rect x="648" y="48" width="12" height="12" class="d-box-good" />
+              <text x="668" y="58" class="d-note">output</text>
+              <rect x="648" y="72" width="12" height="12" class="d-box-accent" />
+              <text x="668" y="82" class="d-note">input: the whole history, again</text>
+            </svg>
+            <figcaption>Output per turn barely moves. Input is a staircase, because the conversation is resent in
+              full on every request. Optimise the staircase.</figcaption>
+          </figure>
+
+          <p>Which is good news, because input is also the cheapest thing to fix. You are not being asked to make
+            the model terser. You are being asked to stop paying full price for text it has already read.</p>
+
+          <h2 id="caching">Prompt caching, and how it silently breaks</h2>
+
+          <p>Prompt caching lets the provider keep the processed form of a prefix and charge a fraction of the
+            normal input price when the next request starts with exactly the same bytes. The saving is large and
+            the mechanism is brittle, in a specific way worth understanding.</p>
+
+          <p>It is a <strong>prefix</strong> cache. It matches from the beginning of the request and stops at the
+            first byte that differs. Everything after that point is reprocessed at full price.</p>
+
+          <p>So a single dynamic value near the top — a timestamp, a user name, a "today is" line — invalidates
+            the entire rest of the prompt on every request. The cache reports a hit of approximately zero and
+            nobody looks, because nothing fails. The bill just never goes down.</p>
+
+          <div class="callout warn">
+            <b>The number to watch</b>
+            Cache-read tokens near zero from turn two onwards means something near the top of your prompt is
+            changing every request. It is the single most valuable number in the usage response, and almost
+            nobody logs it.
+          </div>
+
+          <h2 id="order">Order the prompt by how often it changes</h2>
+
+          <p>Once you know it is a prefix cache, the design falls out: sort the prompt from most stable to least,
+            and put the breakpoints where the stability changes.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 248" role="img"
+              aria-label="A prompt ordered stable-first keeps most of itself cached. A prompt with a timestamp at the top invalidates everything after it.">
+              <text x="8" y="22" class="d-sub">ORDERED BY HOW OFTEN IT CHANGES</text>
+              <rect x="8" y="34" width="150" height="44" rx="7" class="d-box-good" />
+              <text x="24" y="54" class="d-label">core rules</text>
+              <text x="24" y="70" class="d-sub">never changes</text>
+              <rect x="166" y="34" width="150" height="44" rx="7" class="d-box-good" />
+              <text x="182" y="54" class="d-label">domain pack</text>
+              <text x="182" y="70" class="d-sub">per case type</text>
+              <rect x="324" y="34" width="150" height="44" rx="7" class="d-box-good" />
+              <text x="340" y="54" class="d-label">documents</text>
+              <text x="340" y="70" class="d-sub">per matter</text>
+              <rect x="482" y="34" width="120" height="44" rx="7" class="d-box-accent" />
+              <text x="498" y="54" class="d-label">history</text>
+              <rect x="610" y="34" width="142" height="44" rx="7" class="d-box-warn" />
+              <text x="626" y="54" class="d-label">this message</text>
+              <text x="626" y="70" class="d-sub">the only new bytes</text>
+              <text x="8" y="100" class="d-note">cached →→→ up to here, every turn</text>
+
+              <text x="8" y="146" class="d-sub">ONE TIMESTAMP AT THE TOP</text>
+              <rect x="8" y="158" width="150" height="44" rx="7" class="d-box-warn" />
+              <text x="24" y="178" class="d-label">"today is …"</text>
+              <text x="24" y="194" class="d-sub">changes hourly</text>
+              <rect x="166" y="158" width="150" height="44" rx="7" class="d-box-warn" />
+              <text x="182" y="178" class="d-label">core rules</text>
+              <rect x="324" y="158" width="150" height="44" rx="7" class="d-box-warn" />
+              <text x="340" y="178" class="d-label">domain pack</text>
+              <rect x="482" y="158" width="120" height="44" rx="7" class="d-box-warn" />
+              <text x="498" y="178" class="d-label">history</text>
+              <rect x="610" y="158" width="142" height="44" rx="7" class="d-box-warn" />
+              <text x="626" y="178" class="d-label">this message</text>
+              <text x="8" y="224" class="d-note">nothing cached — the prefix diverges in the first block, so
+                every block after it is full price</text>
+            </svg>
+            <figcaption>The cache matches from the start and stops at the first difference. One volatile line at
+              the top costs you the entire prompt.</figcaption>
+          </figure>
+
+          <p>Three rules follow from the picture, and they are the whole technique:</p>
+
+          <ul>
+            <li><strong>Nothing dynamic goes in the system prompt.</strong> Not the date, not the user, not a
+              counter. Anything that changes per request is prepended to the <em>newest user message</em>, which
+              sits at the end of the prefix where it invalidates nothing.</li>
+            <li><strong>Put a breakpoint on the last stable block.</strong> Static rules, then the domain pack,
+              then retrieved documents, then history. Each boundary is where the cache can resume.</li>
+            <li><strong>Anything that changes the request shape invalidates everything.</strong> Changing the
+              model, or switching a reasoning-effort setting mid-conversation, starts a fresh cache. If effort is
+              going to vary by phase, pin it per phase and change it once, not per turn.</li>
+          </ul>
+
+          <h2 id="graph">Stop pasting the codebase</h2>
+
+          <p>The most expensive habit in agentic coding is answering "where is X handled?" by reading six files
+            into the prompt and hoping the model finds it. You pay for every line, you pay again on the next turn
+            because the whole history is resent, and the answer gets worse as the repository grows — because
+            what you pasted is a sample, not the system.</p>
+
+          <p>The alternative is to compute the structure once, offline, and query it. I use
+            <a href="https://github.com/Graphify-Labs/graphify" target="_blank" rel="noopener">graphify</a>, which
+            parses the repository with tree-sitter and writes a knowledge graph: every symbol a node, every call,
+            import and inheritance an edge. The code pass is local and deterministic — <strong>no model is
+              involved in building it</strong>, so the graph itself costs nothing in tokens.</p>
+
+          <h3>Setting it up</h3>
+
+          <p>Two commands. The PyPI package is <code>graphifyy</code> with two y's; the command it installs is
+            <code>graphify</code>.</p>
+
+          <pre><code><span class="c"># once, globally</span>
+uv tool install graphifyy      <span class="c"># or: pipx install graphifyy</span>
+graphify install               <span class="c"># registers the skill with your assistant</span></code></pre>
+
+          <p><code>graphify install</code> detects which assistant you are running — Claude Code, Cursor,
+            Codex, Gemini CLI and a couple of dozen others — and registers a <code>/graphify</code> skill, so
+            there is no per-assistant configuration. Then, in the repository:</p>
+
+          <pre><code><span class="c"># in your assistant</span>
+/graphify .
+
+<span class="c"># three files, in graphify-out/</span>
+graphify-out/
+├── graph.json        <span class="c"># the graph itself, queried by the CLI</span>
+├── graph.html        <span class="c"># clickable, filterable, searchable</span>
+└── GRAPH_REPORT.md   <span class="c"># god nodes, communities, key paths</span></code></pre>
+
+          <p>For a shared repository, install the skill into the project rather than your user profile, so
+            everyone on the team gets the same behaviour:</p>
+
+          <pre><code>graphify install --project     <span class="c"># writes .claude/skills/graphify/ etc.</span></code></pre>
+
+          <h3>Querying it instead of reading files</h3>
+
+          <p>Three commands cover almost everything I used to burn tokens on:</p>
+
+          <pre><code><span class="c"># what is this, what does it touch, who calls it</span>
+graphify explain <span class="s">"ImmigrationService"</span>
+
+<span class="c"># how do these two things actually connect</span>
+graphify path <span class="s">"ImmigrationController"</span> <span class="s">"AnthropicService"</span>
+
+<span class="c"># a scoped subgraph for a plain-language question</span>
+graphify query <span class="s">"where are refresh tokens rotated"</span></code></pre>
+
+          <p>The output is a few hundred tokens and it is derived from the whole repository rather than from
+            whichever files you guessed at. Each edge is tagged <code>EXTRACTED</code> when it is explicit in the
+            source or <code>INFERRED</code> when resolution worked it out — which matters more than it
+            sounds, because it tells you which parts of the answer are facts and which are deductions.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 196" role="img"
+              aria-label="Reading files into the prompt costs tens of thousands of tokens for a partial view. Querying a precomputed graph costs hundreds for a complete one.">
+              <text x="8" y="22" class="d-sub">READ THE FILES IN</text>
+              <rect x="8" y="34" width="330" height="46" rx="8" class="d-box-warn" />
+              <text x="26" y="56" class="d-label">tens of thousands of tokens</text>
+              <text x="26" y="73" class="d-sub">six files, resent every turn, still partial</text>
+
+              <text x="8" y="118" class="d-sub">QUERY THE GRAPH</text>
+              <rect x="8" y="130" width="120" height="46" rx="8" class="d-box-good" />
+              <text x="26" y="152" class="d-label">hundreds</text>
+              <text x="26" y="169" class="d-sub">one scoped answer</text>
+
+              <rect x="400" y="34" width="150" height="46" rx="8" class="d-box" />
+              <text x="418" y="56" class="d-label">tree-sitter AST</text>
+              <text x="418" y="73" class="d-sub">local, no model</text>
+              <path d="M338 57 H394" class="d-arrow" marker-end="url(#a)" />
+
+              <rect x="400" y="130" width="150" height="46" rx="8" class="d-box-accent" />
+              <text x="418" y="152" class="d-label">graph.json</text>
+              <text x="418" y="169" class="d-sub">nodes and edges</text>
+              <path d="M128 153 H394" class="d-arrow-blue" marker-end="url(#ab)" />
+
+              <rect x="596" y="82" width="156" height="46" rx="8" class="d-box-good" />
+              <text x="614" y="104" class="d-label">derived answer</text>
+              <text x="614" y="121" class="d-sub">whole repo, not a sample</text>
+              <path d="M550 105 H590" class="d-arrow" marker-end="url(#a)" />
+            </svg>
+            <figcaption>The cheaper path is also the more accurate one, because it is computed from the whole
+              repository rather than sampled from the part you happened to open.</figcaption>
+          </figure>
+
+          <h3>Making the assistant prefer it</h3>
+
+          <p>Building the graph is the easy half. The habit is the hard half, because an assistant left alone
+            will grep. One more command writes the configuration that points it at the graph first:</p>
+
+          <pre><code>graphify claude install        <span class="c"># or: graphify codex install, etc.</span></code></pre>
+
+          <p>On assistants that support hooks, that fires before search-style tool calls and before reading
+            source files one at a time, and nudges the assistant toward a scoped
+            <code>graphify query</code>. On the others it writes persistent instructions —
+            <code>AGENTS.md</code>, a Cursor rule — that say the same thing. Graphify Labs put the saving at
+            around 80% of agent token spend; I have not measured that number myself, but the direction is not in
+            doubt once you have watched the two approaches side by side on the same question.</p>
+
+          <div class="callout warn">
+            <b>The one operational gotcha</b>
+            A graph is a cache of the code, so it goes stale the moment you refactor. Rebuild it after a batch of
+            changes, and force a full rebuild rather than an incremental one — deletions otherwise leave
+            orphaned nodes behind, and a confident answer about a class you deleted last week is worse than no
+            answer at all.
+          </div>
+
+          <p>The principle generalises past code. Anything you can compute deterministically, compute
+            deterministically: an index, a schema, a lookup table, a call graph. A model should be asked to
+            reason, not to look things up.</p>
+
+          <h2 id="routing">Cheap work belongs on a cheap model</h2>
+
+          <p>In most AI products, the majority of calls are not the hard ones. Extracting fields from a document,
+            classifying an intent, summarising a page, transcribing a scan — this is high-volume, low-judgement
+            work, and sending it to your best model is the easiest money you will ever save.</p>
+
+          <p>In a document pipeline I work on, extraction runs on a small fast model and the reasoning turns run
+            on a large one. The split is roughly: the small model handles the majority of the calls and a small
+            minority of the cost.</p>
+
+          <p>Two practical notes from doing this:</p>
+
+          <ul>
+            <li><strong>Models do not share a parameter surface.</strong> A setting the large model requires may
+              be rejected outright by the small one — I have had a 400 saying in as many words that the model
+              does not support the parameter. Make model, token limit and any tuning flags per-request rather
+              than global, and leave the ones that do not apply unset.</li>
+            <li><strong>Normalise cost before you compare anything.</strong> Convert every model's input, output,
+              cache-read and cache-write usage into one unit — I use "input-token equivalents on the large
+              model" — weighted by each one's real price. Otherwise "we used 40 million tokens" is a number with
+              no meaning, since a cache-read token and an output token can differ by more than an order of
+              magnitude.</li>
+          </ul>
+
+          <h2 id="effort">Let the task decide the effort</h2>
+
+          <p>Reasoning-effort controls are a genuine lever, and the mistake is treating them as a global setting.
+            A matter being filled in from a form does not need deep reasoning; the same matter being drafted into
+            a legal document does.</p>
+
+          <p>So pin effort to the phase, server-side, and let it change exactly once as the work moves from
+            intake to drafting. Two things make this work: the decision is never the client's to make, and it
+            flips at a point where the cache was going to be invalidated anyway.</p>
+
+          <h2 id="measure">Measure, or you are guessing</h2>
+
+          <p>Every one of these techniques can be applied perfectly and silently stop working. A refactor moves a
+            dynamic value into the system prompt. A new feature sends the big model where the small one would do.
+            Nothing breaks; the bill goes up.</p>
+
+          <p>So record, per turn, one structured line:</p>
+
+          <pre><code><span class="k">var</span> usage = <span class="k">new</span> TurnUsage {
+    InputTokens      = r.Usage.InputTokens,
+    CacheReadTokens  = r.Usage.CacheReadInputTokens,   <span class="c">// the health metric</span>
+    CacheWriteTokens = r.Usage.CacheCreationInputTokens,
+    OutputTokens     = r.Usage.OutputTokens,
+    Model            = r.Model,
+    Effort           = request.Effort,
+    StopReason       = r.StopReason,                   <span class="c">// see below</span>
+    TtftMs           = firstByte.ElapsedMilliseconds,
+    DurationMs       = total.ElapsedMilliseconds
+};</code></pre>
+
+          <p>Two of those fields earn their place immediately. <strong>Cache-read tokens</strong> tell you whether
+            your prefix is still intact — graph it, and a refactor that breaks caching shows up as a cliff on the
+            day it shipped. <strong>Stop reason</strong> tells you when a response was cut off by the token limit
+            rather than finishing, which is how you find the most wasteful failure there is: a long, fully-paid-for
+            response that got truncated, failed to parse, and was thrown away.</p>
+
+          <div class="callout warn">
+            <b>A real one</b>
+            A structured-output call had its output limit set to roughly what the answer needed. The model's own
+            reasoning consumed the budget before it finished writing, every response was truncated, the parser
+            rejected the lot, and the UI swallowed the error and simply stopped. Every one of those calls was
+            paid for in full and produced nothing. The fix was a larger budget and surfacing the stop reason as a
+            distinct error — but what made it findable was logging the stop reason at all.
+          </div>
+
+          <h2 id="checklist">The checklist</h2>
+
+          <ul>
+            <li><strong>Nothing dynamic in the system prompt.</strong> Dates, names and counters go on the newest
+              user message.</li>
+            <li><strong>Order the prefix stable-first</strong> and put cache breakpoints on the boundaries.</li>
+            <li><strong>Log cache-read tokens and watch them.</strong> Near zero from turn two means the prefix is
+              broken.</li>
+            <li><strong>Compute what can be computed.</strong> A code graph, an index, a lookup table — anything
+              deterministic should not be a model's job.</li>
+            <li><strong>Route by difficulty.</strong> Extraction and classification on a small model; judgement on
+              a large one.</li>
+            <li><strong>Normalise usage to one unit by cost</strong> before comparing anything or billing anyone.</li>
+            <li><strong>Set the output limit above the answer you expect</strong>, and treat a length stop as an
+              error rather than a result.</li>
+            <li><strong>Deduplicate repeated inputs.</strong> The same document uploaded twice should be processed
+              once; hash the content and reuse the result.</li>
+          </ul>
+
+          <div class="callout good">
+            <b>The summary</b>
+            Shortening prompts trades quality for money, which is why it is the lever people reach for and the
+            one they should reach for last. Caching, retrieval and routing cost you nothing in answer quality —
+            and in the case of retrieval, they improve it.
+          </div>
+
+          <p style="margin-top:34px"><a class="back-link" href="index.html">← All articles</a></p>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a class="foot-logo" href="../index.html">
+        <img src="../assets/logo-mark.svg" width="46" height="33" alt="">
+        <span>code<i>rabhi</i></span>
+      </a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Articles</a>
+        <a href="../index.html#opensource">Open source</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../page.js"></script>
+  <script src="post.js"></script>
+  <script src="../enhance.js"></script>
+</body>
+
+</html>

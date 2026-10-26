@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sessions done properly: short tokens, rotating refresh, instant revocation — Abhishek Singh</title>
+  <meta name="description"
+    content="A complete session design: fifteen-minute access tokens, refresh tokens stored only as hashes and rotated on every use, reuse detection that revokes a family, and revoking permissions without logging anyone out.">
+  <meta name="author" content="Abhishek Singh">
+  <meta name="theme-color" content="#0b0e14">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Sessions done properly: short tokens, rotating refresh, instant revocation">
+  <meta property="og:description"
+    content="Most write-ups get half of this right. Here is the whole design, including the parts that only hurt later.">
+  <meta property="og:url" content="https://coderabhi.in/blog/auth-sessions.html">
+  <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://coderabhi.in/assets/og-image.png">
+
+  <link rel="canonical" href="https://coderabhi.in/blog/auth-sessions.html">
+  <link rel="icon" href="../assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="../index.html" class="brand"><img class="logo" src="../assets/logo-mark.svg" width="34" height="24"
+          alt="coderabhi logo"> <span class="bname">code<i>rabhi</i></span></a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="../index.html#about">About</a>
+          <a href="../index.html#skills">Skills</a>
+          <a href="../index.html#experience">Experience</a>
+          <a href="../index.html#opensource">Open source</a>
+          <a href="index.html">Articles</a>
+          <a class="ghost" href="../index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <article data-topic="security">
+      <div class="container post-hero" id="top">
+        <div class="post-meta reveal">
+          <span>Security</span>
+          <span class="dot"></span>
+          <time datetime="2026-10-25">25 October 2026</time>
+          <span class="dot"></span>
+          <span>15 min read</span>
+        </div>
+
+        <h1 class="reveal">Sessions done properly</h1>
+
+        <p class="post-standfirst reveal">A JWT with a one-week expiry is not a session, it is a password you
+          cannot change. Here is the whole design — short access tokens, rotating refresh tokens, theft detection,
+          and taking someone's permissions away without logging them out.</p>
+      </div>
+
+      <div class="container">
+        <nav class="toc reveal">
+          <h2 data-count="8 sections">Contents</h2>
+          <ol>
+            <li><a href="#problem">The problem with a long-lived token</a></li>
+            <li><a href="#shape">The shape of the answer</a></li>
+            <li><a href="#refresh">Rotation, and why it has to rotate</a></li>
+            <li><a href="#reuse">Detecting a stolen token</a></li>
+            <li><a href="#storage">Where the tokens live</a></li>
+            <li><a href="#revoke">Taking permissions away, instantly</a></li>
+            <li><a href="#client">The client side nobody writes about</a></li>
+            <li><a href="#checklist">The checklist</a></li>
+          </ol>
+        </nav>
+
+        <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+          <defs>
+            <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head" /></marker>
+            <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-blue" /></marker>
+            <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="d-head-warn" /></marker>
+          </defs>
+        </svg>
+
+        <div class="post-body">
+
+          <h2 id="problem">The problem with a long-lived token</h2>
+
+          <p>A signed token is self-contained by design: the server verifies the signature, reads the claims, and
+            answers. No lookup, no shared state, no database on the hot path. That property is exactly why it
+            scales, and exactly why it is dangerous.</p>
+
+          <p>A stateless token <strong>cannot be revoked</strong>. If it says you are an administrator and it is
+            valid for seven days, then you are an administrator for seven days — after you are fired, after the
+            laptop is stolen, after someone copies it out of local storage. The only thing that ends it is the
+            expiry baked into it when it was signed.</p>
+
+          <p>Teams discover this and reach for a revocation list, which is a database lookup on every request, and
+            now the token is not stateless and you have the costs of both designs. The better answer is to make
+            the stateless part short-lived enough that revocation does not need to reach it.</p>
+
+          <h2 id="shape">The shape of the answer</h2>
+
+          <p>Two tokens, with different jobs.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Access token</th>
+                <th>Refresh token</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Contains</strong></td>
+                <td>Signed claims: who, what role, what permissions</td>
+                <td>Nothing. 256 random bits.</td>
+              </tr>
+              <tr>
+                <td><strong>Lifetime</strong></td>
+                <td>15 minutes</td>
+                <td>30 days, or 1 day without "remember me"</td>
+              </tr>
+              <tr>
+                <td><strong>Verified by</strong></td>
+                <td>A signature check. No database.</td>
+                <td>A database lookup. Every time.</td>
+              </tr>
+              <tr>
+                <td><strong>Revocable</strong></td>
+                <td>No — but it expires in 15 minutes</td>
+                <td>Yes, immediately</td>
+              </tr>
+              <tr>
+                <td><strong>Sent on</strong></td>
+                <td>Every request</td>
+                <td>Only the refresh endpoint</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>The access token keeps the property you wanted: no state on the hot path. The refresh token carries
+            the revocability, and it is presented rarely enough that a database lookup costs nothing. Fifteen
+            minutes is the window of exposure, and fifteen minutes is short enough that "revoke" means "within
+            fifteen minutes" rather than "within a week".</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 228" role="img"
+              aria-label="The access token is checked by signature on every request. The refresh token is checked against the database only at the refresh endpoint, where it is also rotated.">
+              <rect x="8" y="24" width="120" height="54" rx="9" class="d-box-accent" />
+              <text x="26" y="46" class="d-label">browser</text>
+              <text x="26" y="63" class="d-sub">two cookies</text>
+
+              <rect x="230" y="18" width="200" height="60" rx="9" class="d-box" />
+              <text x="248" y="42" class="d-label">every request</text>
+              <text x="248" y="60" class="d-sub">signature check, no I/O</text>
+              <path d="M128 48 H224" class="d-arrow-blue" marker-end="url(#ab)" />
+              <text x="140" y="38" class="d-note">access</text>
+
+              <rect x="230" y="128" width="200" height="60" rx="9" class="d-box-good" />
+              <text x="248" y="152" class="d-label">/user/refresh</text>
+              <text x="248" y="170" class="d-sub">once every 15 minutes</text>
+              <path d="M68 78 V158 H224" class="d-arrow" marker-end="url(#a)" />
+              <text x="86" y="150" class="d-note">refresh</text>
+
+              <rect x="500" y="128" width="170" height="60" rx="9" class="d-box" />
+              <text x="518" y="152" class="d-label">RefreshTokens</text>
+              <text x="518" y="170" class="d-sub">sha-256 hashes only</text>
+              <path d="M430 158 H494" class="d-arrow" marker-end="url(#a)" />
+
+              <text x="500" y="46" class="d-note">nothing to look up — that is the</text>
+              <text x="500" y="64" class="d-note">whole reason the access token is short</text>
+
+              <text x="230" y="214" class="d-note">A revoked session survives at most one access-token lifetime.
+                Make that lifetime small.</text>
+            </svg>
+            <figcaption>The expensive check happens on the rare request, not the common one. Everything else in
+              this design follows from putting them in that order.</figcaption>
+          </figure>
+
+          <h2 id="refresh">Rotation, and why it has to rotate</h2>
+
+          <p>A refresh token that stays the same for thirty days is the long-lived credential you were trying to
+            avoid, moved one endpoint to the left. So every use of it issues a new one and invalidates the old.</p>
+
+          <p>One detail decides whether this is secure or theatre: <strong>the replacement must inherit the
+              original's expiry, not get a fresh thirty days.</strong> Otherwise an attacker who has the token
+            refreshes it every twenty-nine days and holds the session forever. The chain must have an end, fixed
+            at the moment of login.</p>
+
+          <pre><code><span class="k">public async</span> Task&lt;Session&gt; <span class="f">RotateAsync</span>(<span class="k">string</span> presented)
+{
+    <span class="k">var</span> hash   = Sha256(presented);
+    <span class="k">var</span> stored = <span class="k">await</span> _db.RefreshTokens
+        .FirstOrDefaultAsync(t =&gt; t.Hash == hash);
+
+    <span class="k">if</span> (stored <span class="k">is null</span>)            <span class="k">return</span> Session.Denied;
+    <span class="k">if</span> (stored.ExpiresOn &lt; _clock.UtcNow) <span class="k">return</span> Session.Denied;
+
+    <span class="k">if</span> (stored.RotatedOn <span class="k">is not null</span>)
+    {
+        <span class="c">// Already used once. Somebody has a copy.</span>
+        <span class="k">await</span> RevokeFamilyAsync(stored.FamilyId);
+        <span class="k">return</span> Session.Denied;
+    }
+
+    stored.RotatedOn = _clock.UtcNow;
+
+    <span class="k">var</span> next = <span class="k">new</span> RefreshToken {
+        FamilyId     = stored.FamilyId,     <span class="c">// same chain</span>
+        ExpiresOn    = stored.ExpiresOn,    <span class="c">// inherited, never extended</span>
+        IsPersistent = stored.IsPersistent,
+        Hash         = Sha256(plaintext = NewSecret())
+    };
+
+    _db.RefreshTokens.Add(next);
+    <span class="k">await</span> _db.SaveChangesAsync();
+
+    <span class="k">return</span> Session.Issue(plaintext, NewAccessToken(stored.UserId));
+}</code></pre>
+
+          <h2 id="reuse">Detecting a stolen token</h2>
+
+          <p>Rotation gives you something better than protection: it gives you <em>detection</em>.</p>
+
+          <p>Every token issued from one login shares a <code>FamilyId</code>. In normal use the chain is strictly
+            linear — each token is used exactly once and replaced. So if a token that has <strong>already been
+              rotated</strong> is presented again, there are two copies of it in the world, and only one of them
+            can be the legitimate client.</p>
+
+          <p>You cannot tell which. So you end the whole family: every token in the chain is revoked, both parties
+            are logged out, and the real user signs in again and gets a new chain. Mildly annoying for them.
+            Fatal for the attacker.</p>
+
+          <figure class="diagram">
+            <svg viewBox="0 0 760 206" role="img"
+              aria-label="A linear chain of rotated tokens. When an already-rotated token is presented a second time, every token in the family is revoked.">
+              <text x="8" y="24" class="d-sub">ONE LOGIN, ONE FAMILY</text>
+
+              <rect x="8" y="44" width="104" height="44" rx="8" class="d-box-good" />
+              <text x="26" y="64" class="d-label">t1</text>
+              <text x="26" y="80" class="d-sub">rotated</text>
+              <path d="M112 66 H146" class="d-arrow" marker-end="url(#a)" />
+
+              <rect x="150" y="44" width="104" height="44" rx="8" class="d-box-good" />
+              <text x="168" y="64" class="d-label">t2</text>
+              <text x="168" y="80" class="d-sub">rotated</text>
+              <path d="M254 66 H288" class="d-arrow" marker-end="url(#a)" />
+
+              <rect x="292" y="44" width="104" height="44" rx="8" class="d-box-accent" />
+              <text x="310" y="64" class="d-label">t3</text>
+              <text x="310" y="80" class="d-sub">current</text>
+
+              <rect x="292" y="130" width="230" height="52" rx="9" class="d-box-warn" />
+              <text x="310" y="152" class="d-label">t2 presented again</text>
+              <text x="310" y="169" class="d-sub">two copies exist</text>
+              <path d="M202 88 V156 H288" class="d-arrow-warn" marker-end="url(#aw)" />
+
+              <rect x="566" y="130" width="186" height="52" rx="9" class="d-box-warn" />
+              <text x="584" y="152" class="d-label">revoke the family</text>
+              <text x="584" y="169" class="d-sub">t1, t2, t3 — all of it</text>
+              <path d="M522 156 H560" class="d-arrow-warn" marker-end="url(#aw)" />
+
+              <text x="440" y="66" class="d-note">the legitimate chain</text>
+              <text x="440" y="84" class="d-note">is strictly linear</text>
+            </svg>
+            <figcaption>You cannot tell the thief from the victim, so you end the session for both. The user signs
+              in again; the attacker has nothing to sign in with.</figcaption>
+          </figure>
+
+          <h2 id="storage">Where the tokens live</h2>
+
+          <p>Three decisions, and the third one is the one that breaks in production.</p>
+
+          <h3>Store the hash, never the token</h3>
+
+          <p>The refresh token is a bearer credential: whoever holds it is you. Storing it in plaintext means a
+            read-only SQL injection or a leaked backup hands over every live session. Store
+            <code>SHA-256(token)</code> and compare hashes. It is one line, and it turns a catastrophe into a
+            non-event.</p>
+
+          <p>Unlike a password, this does not need a slow hash. The token is 256 random bits, so there is no
+            dictionary to attack and nothing to brute force.</p>
+
+          <h3>Cookies, not local storage</h3>
+
+          <p>If JavaScript can read the token, then so can any script that gets onto your page — a compromised
+            dependency, an injected analytics tag, a stored XSS. <code>httpOnly</code> cookies are not readable
+            by JavaScript at all, which removes the entire class.</p>
+
+          <pre><code>Response.Cookies.Append(<span class="s">"refresh_token"</span>, token, <span class="k">new</span> CookieOptions
+{
+    HttpOnly = <span class="k">true</span>,
+    Secure   = <span class="k">true</span>,
+    SameSite = SameSiteMode.Lax,
+    Path     = $<span class="s">"{pathBase}/user"</span>,   <span class="c">// see below</span>
+    Expires  = rememberMe ? expiresOn : <span class="k">null</span>
+});</code></pre>
+
+          <p>The cost is that you now have to think about CSRF, because cookies are sent automatically.
+            <code>SameSite</code> handles the common cases; a token header or a double-submit cookie handles the
+            rest. That is a real cost, and it is still a better trade than making the credential readable by every
+            script on the page.</p>
+
+          <h3>The path has to include the path base</h3>
+
+          <p>Scoping the refresh cookie to the refresh endpoint is good practice: it means the long-lived
+            credential is not attached to every image request. It is also where I have watched this design fail.</p>
+
+          <p>If the application is hosted behind a path base — <code>UsePathBase("/api")</code> — then the server
+            sees <code>/user/refresh</code> but <strong>the browser sees <code>/api/user/refresh</code></strong>.
+            A cookie scoped to <code>Path=/user</code> is never sent, the refresh endpoint receives nothing, and
+            every user is silently logged out fifteen minutes after signing in.</p>
+
+          <div class="callout warn">
+            <b>The symptom</b>
+            Everything works locally, and in production every session dies after exactly one access-token
+            lifetime. The access token is fine; the refresh cookie is simply never being sent. Open the network
+            tab, look at the refresh request, and count the cookies on it.
+          </div>
+
+          <h2 id="revoke">Taking permissions away, instantly</h2>
+
+          <p>Here is the problem the two-token design leaves open. An administrator removes someone's permission
+            to approve payments. The claim is in a signed token that is valid for another fourteen minutes. The
+            server has no idea anything changed.</p>
+
+          <p>Fourteen minutes is a long time to still be able to approve a payment.</p>
+
+          <p>The answer is one integer. Give every user a <code>SessionVersion</code>, stamp it into every token
+            as a claim, and bump it whenever anything that affects authorisation changes — permissions, roles,
+            disabled status, business membership.</p>
+
+          <pre><code><span class="c">// On validation: is this token's view of the world current?</span>
+OnTokenValidated = <span class="k">async</span> ctx =&gt;
+{
+    <span class="k">var</span> userId  = ctx.Principal.GetUserId();
+    <span class="k">var</span> claimed = ctx.Principal.GetInt(<span class="s">"sver"</span>);
+    <span class="k">var</span> current = <span class="k">await</span> _versions.GetAsync(userId);  <span class="c">// cached 30s</span>
+
+    <span class="k">if</span> (claimed &lt; current)
+        ctx.Fail(<span class="s">"stale session"</span>);   <span class="c">// -&gt; 401 -&gt; silent refresh</span>
+};</code></pre>
+
+          <p>A stale token now fails validation, the client's interceptor sees a 401 and performs the silent
+            refresh it was already built to do, and the new access token carries the new claims. <strong>The user
+              is not logged out.</strong> Their permissions simply change, within one request, and they notice
+            nothing except a button that is no longer there.</p>
+
+          <p>The lookup is a single integer by primary key, cached for thirty seconds and evicted on write, so the
+            cost is negligible — and critically, a cache miss is a cheap read rather than a session-ending
+            failure.</p>
+
+          <div class="callout good">
+            <b>Why this is the piece worth stealing</b>
+            It gets you the revocation semantics of server-side sessions while keeping stateless verification on
+            the hot path. Most designs pick one and live with the other's weakness.
+          </div>
+
+          <h2 id="client">The client side nobody writes about</h2>
+
+          <p>Three things reliably go wrong in the browser, and all three look like server bugs.</p>
+
+          <h3>Store the session expiry, not the token expiry</h3>
+
+          <p>The client needs to know when the <em>session</em> ends so it can show a login screen. If you store
+            the access token's expiry instead, the app decides the user is logged out every fifteen minutes and
+            the refresh never gets a chance to run. Store the refresh expiry. The access token's lifetime is an
+            implementation detail the client should never see.</p>
+
+          <h3>One refresh, not twelve</h3>
+
+          <p>A page load fires six requests. The token has expired. All six get a 401, all six trigger a refresh,
+            five of them present a token that has just been rotated — and your reuse detection, working exactly as
+            designed, revokes the family and logs the user out.</p>
+
+          <p>The refresh must be single-flight: the first 401 starts it, every other request waits on the same
+            promise, and all of them replay once it resolves.</p>
+
+          <pre><code><span class="c">// One in-flight refresh, shared by every waiting request.</span>
+<span class="k">private</span> refreshing: Observable&lt;<span class="k">void</span>&gt; | <span class="k">null</span> = <span class="k">null</span>;
+
+<span class="f">refresh</span>(): Observable&lt;<span class="k">void</span>&gt; {
+  <span class="k">this</span>.refreshing ??= <span class="k">this</span>.http
+    .post&lt;<span class="k">void</span>&gt;(<span class="s">'/user/refresh'</span>, {}, { withCredentials: <span class="k">true</span> })
+    .pipe(
+      shareReplay(<span class="s">1</span>),
+      finalize(() =&gt; <span class="k">this</span>.refreshing = <span class="k">null</span>)
+    );
+  <span class="k">return</span> <span class="k">this</span>.refreshing;
+}</code></pre>
+
+          <h3>Not everything goes through the interceptor</h3>
+
+          <p>Your HTTP client refreshes on a 401. Three things in a typical app do not use it, and each one fails
+            in its own way:</p>
+
+          <ul>
+            <li><strong>Streaming responses</strong> over <code>fetch</code>, because the framework client cannot
+              stream. A 401 there shows a generic error rather than refreshing. Refresh and retry once,
+              explicitly.</li>
+            <li><strong>WebSocket negotiation.</strong> A reconnect handler only covers drops after a successful
+              start, so a 401 on the initial negotiate fails permanently and the connection stays dead until the
+              page reloads. Refresh once on a failed start, then start again.</li>
+            <li><strong>Anything built before the interceptor existed</strong>, which in every codebase is at
+              least one thing.</li>
+          </ul>
+
+          <h2 id="checklist">The checklist</h2>
+
+          <ul>
+            <li>Access token measured in minutes, refresh token in days.</li>
+            <li>Refresh tokens stored as hashes, rotated on every use, inheriting the original expiry.</li>
+            <li>One <code>FamilyId</code> per login; a reused token revokes the family.</li>
+            <li><code>httpOnly</code> and <code>Secure</code> cookies, with the refresh cookie's path including
+              the path base.</li>
+            <li>A session version claim, bumped on every authorisation change.</li>
+            <li>Client stores the session expiry, refreshes single-flight, and clears state only when the refresh
+              itself fails.</li>
+            <li>Rate limits on login, refresh, register and password reset — per IP, not global, or one caller
+              exhausts everybody's budget.</li>
+            <li>Logout works with an expired access token. An expired token must still be able to end its own
+              session.</li>
+          </ul>
+
+          <div class="callout">
+            <b>One thing to delete today</b>
+            Any endpoint that issues a session from something a caller can simply assert — an email in the URL, a
+            user id, a base64 of either. It is an account takeover with a convenient interface, and it is usually
+            there because someone needed it once for testing.
+          </div>
+
+          <p style="margin-top:34px"><a class="back-link" href="index.html">← All articles</a></p>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a class="foot-logo" href="../index.html">
+        <img src="../assets/logo-mark.svg" width="46" height="33" alt="">
+        <span>code<i>rabhi</i></span>
+      </a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Articles</a>
+        <a href="../index.html#opensource">Open source</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../page.js"></script>
+  <script src="post.js"></script>
+  <script src="../enhance.js"></script>
+</body>
+
+</html>

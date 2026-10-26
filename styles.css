@@ -2103,10 +2103,7 @@ nav.menu a.ghost {
   border-bottom: 1px solid var(--line);
   border-radius: 0;
   background: none;
-  padding: 22px 0;
   margin: 34px 0 10px;
-  columns: 2;
-  column-gap: 34px;
 }
 
 .toc h2 {
@@ -3541,6 +3538,14 @@ button.span-row:hover .span-fill,
   --accent: #e0af68;
 }
 
+[data-topic="security"] {
+  --accent: #7ee0c0;
+}
+
+[data-topic="data"] {
+  --accent: #e8a04f;
+}
+
 .pc-topic {
   color: var(--accent);
   font-weight: 600;
@@ -4315,22 +4320,24 @@ button.span-row:hover .span-fill,
 }
 
 .post-hero h1 {
-  font-size: clamp(32px, 5.2vw, 50px);
-  line-height: 1.04;
-  letter-spacing: -.04em;
+  font-size: clamp(29px, 4.4vw, 42px);
+  line-height: 1.08;
+  letter-spacing: -.036em;
 }
 
 .post-body h2 {
-  font-size: clamp(26px, 3.5vw, 34px);
-  letter-spacing: -.034em;
-  line-height: 1.14;
+  /* big enough to separate a section, small enough that it does not shout
+     over four thousand words of prose */
+  font-size: clamp(20px, 2.1vw, 24px);
+  letter-spacing: -.026em;
+  line-height: 1.2;
 }
 
 .post-body h3 {
-  font-size: 19.5px;
-  letter-spacing: -.022em;
+  font-size: 17.5px;
+  letter-spacing: -.016em;
   color: var(--text);
-  margin-top: 2.2em;
+  margin-top: 2.1em;
 }
 
 .lead-post h2 {
@@ -4387,6 +4394,14 @@ article[data-topic="csharp"] {
 
 article[data-topic="frontend"] {
   --accent: #e0af68;
+}
+
+article[data-topic="security"] {
+  --accent: #7ee0c0;
+}
+
+article[data-topic="data"] {
+  --accent: #e8a04f;
 }
 
 article[data-topic] .post-hero .post-meta>span:first-child,
@@ -4632,6 +4647,309 @@ article[data-topic] .post-body>ul>li::before {
   flex: 1;
   height: 1px;
   background: var(--line);
+}
+
+/* ---------- elevation ----------
+   Three planes: the page, raised panels, and a recessed well for code.
+   The inset highlight is what makes an edge readable on a dark background;
+   the drop shadow is what separates the plane from the one behind it. */
+:root {
+  --raise: 0 1px 0 rgba(255, 255, 255, .045) inset,
+    0 14px 30px -18px rgba(0, 0, 0, .85),
+    0 2px 6px -3px rgba(0, 0, 0, .5);
+  --sink: 0 1px 0 rgba(255, 255, 255, .02) inset,
+    0 2px 10px -6px rgba(0, 0, 0, .7) inset;
+}
+
+/* a glow behind the article head, so the page has a horizon */
+.post-hero::before {
+  content: "";
+  position: absolute;
+  /* kept inside the viewport: a percentage bleed here adds horizontal
+     scroll on every article */
+  inset: -80px 0 auto 0;
+  height: 420px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 70% at 30% 0%,
+      color-mix(in srgb, var(--accent, #6c9bff) 13%, transparent), transparent 70%),
+    radial-gradient(45% 60% at 85% 10%, rgba(87, 207, 154, .07), transparent 70%);
+}
+
+.post-hero {
+  position: relative;
+}
+
+/* ---- tables become a panel, with a header band ---- */
+.post-body table {
+  display: table;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--panel);
+  box-shadow: var(--raise);
+  overflow: hidden;
+}
+
+.post-body thead th {
+  padding: 13px 18px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line-2);
+  color: var(--dim);
+}
+
+.post-body tbody td {
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.post-body tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.post-body tbody tr:hover td {
+  background: rgba(255, 255, 255, .018);
+}
+
+/* ---- callouts are objects again, not margin notes ---- */
+.callout {
+  position: relative;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent, var(--blue));
+  border-radius: 10px;
+  background: linear-gradient(180deg,
+      color-mix(in srgb, var(--accent, #6c9bff) 7%, var(--panel)),
+      var(--panel));
+  box-shadow: var(--raise);
+  padding: 18px 22px;
+  margin: 1.9em 0;
+}
+
+.callout.warn {
+  border-left-color: #e0af68;
+  background: linear-gradient(180deg, rgba(224, 175, 104, .08), var(--panel));
+}
+
+.callout.good {
+  border-left-color: var(--green);
+  background: linear-gradient(180deg, rgba(87, 207, 154, .08), var(--panel));
+}
+
+.callout b {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  margin-bottom: .5em;
+}
+
+.callout.warn b {
+  color: #e0af68;
+}
+
+.callout.good b {
+  color: var(--green);
+}
+
+/* ---- figures sit on their own plane ---- */
+.diagram {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background:
+    radial-gradient(90% 120% at 50% 0%, rgba(255, 255, 255, .022), transparent 65%),
+    var(--panel);
+  box-shadow: var(--raise);
+  padding: 24px 22px 18px;
+  overflow-x: auto;
+}
+
+.diagram figcaption,
+.d-cap {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+/* ---- code is recessed, which is the opposite direction and the point ---- */
+.post-body pre {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, .22), transparent 60px),
+    #0b0f16;
+  border-color: #1a2130;
+  box-shadow: var(--sink);
+}
+
+.post-body pre::before {
+  background: linear-gradient(180deg,
+      var(--accent, var(--blue)), color-mix(in srgb, var(--accent, var(--blue)) 25%, transparent));
+  opacity: .55;
+}
+
+/* ---- the quote keeps its lightness, but stops floating ---- */
+.post-body blockquote {
+  padding: 18px 24px;
+  border-radius: 10px;
+  border-left-width: 3px;
+  background: linear-gradient(180deg,
+      color-mix(in srgb, var(--accent, #6c9bff) 8%, transparent), transparent);
+}
+
+/* ---- the section number gets a little weight behind it ---- */
+.post-body h2::before {
+  text-shadow: 0 0 18px color-mix(in srgb, var(--accent, #6c9bff) 55%, transparent);
+}
+
+/* ---- the contents list is a panel again on narrow screens ---- */
+.toc {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: var(--raise);
+  padding: 20px 24px;
+}
+
+.toc h2 {
+  margin-bottom: 12px;
+}
+
+/* ---- and so are the next/previous cards ---- */
+.pn-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .025), transparent 40%), var(--panel);
+  box-shadow: var(--raise);
+}
+
+.pn-card:hover {
+  border-color: color-mix(in srgb, var(--accent, var(--blue)) 45%, var(--line));
+}
+
+/* ---- the index rows get a surface on hover rather than only a line ---- */
+.idx-row:hover,
+.idx-row:focus-visible {
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--accent) 7%, transparent), transparent 60%);
+  border-radius: 10px;
+}
+
+.lead-post {
+  position: relative;
+}
+
+/* ---------- headings carry the post's colour ----------
+   A white heading on grey prose separates by weight alone. The accent does
+   the separating instead, which means the heading can be smaller and still
+   be the first thing you see. */
+article[data-topic] .post-body h2 {
+  color: var(--accent);
+}
+
+article[data-topic] .post-body h3 {
+  color: color-mix(in srgb, var(--accent) 55%, var(--text));
+}
+
+article[data-topic] .post-hero h1 {
+  color: var(--text);
+}
+
+/* the number in the margin is now the quiet one */
+article[data-topic] .post-body h2::before {
+  color: color-mix(in srgb, var(--accent) 60%, var(--dim));
+  text-shadow: none;
+}
+
+/* ---------- the contents block ----------
+   It was a bulleted list in a box. It is the first thing a reader meets on
+   a twenty-minute article, so it gets the same treatment as a figure: a
+   panel, a header band, numbered rows that respond to the pointer. */
+.toc {
+  padding: 0;
+  overflow: hidden;
+}
+
+.toc h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.toc h2::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--accent, var(--blue));
+}
+
+.toc h2::after {
+  content: attr(data-count);
+  margin-left: auto;
+  letter-spacing: .06em;
+  opacity: .7;
+}
+
+.toc ol {
+  counter-reset: toc;
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px 10px;
+  columns: auto;
+}
+
+.toc li {
+  counter-increment: toc;
+  margin: 0;
+}
+
+.toc a {
+  display: flex;
+  align-items: baseline;
+  gap: 11px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 14.5px;
+  line-height: 1.35;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color .16s, background .16s;
+}
+
+.toc a::before {
+  content: counter(toc, decimal-leading-zero);
+  flex: none;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--line-2);
+  transition: color .16s;
+}
+
+.toc a:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent, var(--blue)) 9%, transparent);
+}
+
+.toc a:hover::before {
+  color: var(--accent, var(--blue));
+}
+
+@media (max-width: 680px) {
+  .toc ol {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ---------- article diagrams ---------- */

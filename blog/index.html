@@ -67,9 +67,11 @@
     <section>
       <div class="container">
         <div class="post-filters reveal" id="postFilters">
-          <button type="button" class="on" data-filter="all">All<b>7</b></button>
+          <button type="button" class="on" data-filter="all">All<b>10</b></button>
+          <button type="button" data-filter="ai">AI<b>2</b></button>
+          <button type="button" data-filter="security">Security<b>1</b></button>
+          <button type="button" data-filter="data">Data<b>1</b></button>
           <button type="button" data-filter="backend">Backend<b>2</b></button>
-          <button type="button" data-filter="ai">AI<b>1</b></button>
           <button type="button" data-filter="reliability">Reliability<b>1</b></button>
           <button type="button" data-filter="cloud">Cloud<b>1</b></button>
           <button type="button" data-filter="csharp">C#<b>1</b></button>
@@ -77,27 +79,60 @@
         </div>
 
         <div class="post-list" id="postList">
-        <a class="lead-post reveal" href="distributed-systems.html" data-topic="backend">
+        <a class="lead-post reveal" href="ai-token-budget.html" data-topic="ai">
           <div class="post-meta">
-            <span class="pc-topic">Backend</span>
+            <span class="pc-topic">AI</span>
             <span class="dot"></span>
             <time datetime="2026-10-25">25 Oct 2026</time>
             <span class="dot"></span>
-            <span>16 min read</span>
+            <span>14 min read</span>
           </div>
-          <h2>Distributed systems: the parts that bite after the diagram</h2>
-          <p>Partial failure, clocks that lie, why exactly-once delivery does not exist, idempotency keys, retry storms you can cause yourself in the page, and why your distributed lock is probably wrong.</p>
-          <div class="c-foot"><span>Idempotency</span><span>Retries</span><span>Consistency</span><span>Interactive</span></div>
+          <h2>Spending less on AI tokens without getting worse answers</h2>
+          <p>Where the tokens actually go, how prompt caching silently breaks, why a precomputed code graph beats a bigger context window, and routing cheap work to cheap models.</p>
+          <div class="c-foot"><span>Caching</span><span>Retrieval</span><span>Cost</span></div>
           <span class="pc-go">Read the piece<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
         </a>
 
           <div class="idx-head reveal"><span>More articles</span></div>
 
-          <a class="idx-row reveal" href="microservices.html" data-topic="backend">
+          <a class="idx-row reveal" href="auth-sessions.html" data-topic="security">
             <span class="ir-n">02</span>
             <span class="ir-main">
+              <b>Sessions done properly</b>
+              <em>Short access tokens, refresh tokens stored as hashes and rotated on every use, theft detection that revokes a whole family, and taking permissions away without logging anyone out.</em>
+            </span>
+            <span class="ir-meta">
+              <span class="pc-topic">Security</span>
+              <span class="ir-read">15 min</span>
+            </span>
+          </a>
+          <a class="idx-row reveal" href="ef-core-sql-server.html" data-topic="data">
+            <span class="ir-n">03</span>
+            <span class="ir-main">
+              <b>EF Core and SQL Server: the queries that kill you in production</b>
+              <em>The save that affects zero rows, Count versus Count(), Include chains that multiply instead of add, paging that gets slower as you page, and reading a plan without becoming a DBA.</em>
+            </span>
+            <span class="ir-meta">
+              <span class="pc-topic">Data</span>
+              <span class="ir-read">17 min</span>
+            </span>
+          </a>
+          <a class="idx-row reveal" href="distributed-systems.html" data-topic="backend">
+            <span class="ir-n">04</span>
+            <span class="ir-main">
+              <b>Distributed systems: the parts that bite after the diagram</b>
+              <em>Partial failure, clocks that lie, why exactly-once delivery does not exist, idempotency keys, retry storms you can cause yourself in the page, and why your distributed lock is probably wrong.</em>
+            </span>
+            <span class="ir-meta">
+              <span class="pc-topic">Backend</span>
+              <span class="ir-read">16 min</span>
+            </span>
+          </a>
+          <a class="idx-row reveal" href="microservices.html" data-topic="backend">
+            <span class="ir-n">05</span>
+            <span class="ir-main">
               <b>Microservices that don't fall over</b>
-              <em>Splitting a system into services is the easy part. The hard part is the gaps between them — service boundaries, the outbox and inbox patterns, the saga pattern in detail, cache stampedes, circuit breakers, and the failure modes that only show up under real traffic.</em>
+              <em>Service boundaries, the outbox and inbox patterns, the saga pattern in detail, cache stampedes, circuit breakers, and the failure modes that only show up under real traffic.</em>
             </span>
             <span class="ir-meta">
               <span class="pc-topic">Backend</span>
@@ -105,7 +140,7 @@
             </span>
           </a>
           <a class="idx-row reveal" href="agentic-ai-development.html" data-topic="ai">
-            <span class="ir-n">03</span>
+            <span class="ir-n">06</span>
             <span class="ir-main">
               <b>Agentic AI for development, from someone who built one</b>
               <em>The tool-use loop, why context is the real constraint, how prompt caching silently breaks, and where agents genuinely help.</em>
@@ -116,7 +151,7 @@
             </span>
           </a>
           <a class="idx-row reveal" href="observability-reliability.html" data-topic="reliability">
-            <span class="ir-n">04</span>
+            <span class="ir-n">07</span>
             <span class="ir-main">
               <b>Knowing before your users do</b>
               <em>Why averages hide your worst users, correlation ids across the broker, SLOs and error budgets, and alerts a team will not learn to ignore.</em>
@@ -127,7 +162,7 @@
             </span>
           </a>
           <a class="idx-row reveal" href="cloud-azure-kubernetes-docker.html" data-topic="cloud">
-            <span class="ir-n">05</span>
+            <span class="ir-n">08</span>
             <span class="ir-main">
               <b>Docker, Kubernetes and Azure without the cargo cult</b>
               <em>The five Kubernetes objects you really need, the probe misconfiguration that turns a blip into a crash loop, and picking the smallest service that does the job.</em>
@@ -138,7 +173,7 @@
             </span>
           </a>
           <a class="idx-row reveal" href="csharp-design-patterns.html" data-topic="csharp">
-            <span class="ir-n">06</span>
+            <span class="ir-n">09</span>
             <span class="ir-main">
               <b>C# design patterns that still earn their place</b>
               <em>Half the Gang of Four catalogue is now a language feature. Which ones survived, and which ones records and pattern matching quietly replaced.</em>
@@ -149,7 +184,7 @@
             </span>
           </a>
           <a class="idx-row reveal" href="microfrontends.html" data-topic="frontend">
-            <span class="ir-n">07</span>
+            <span class="ir-n">10</span>
             <span class="ir-main">
               <b>Microfrontends: when splitting the UI is worth it</b>
               <em>Build-time versus run-time composition, shared dependencies and version skew, who owns the URL, and the costs nobody puts in the pitch.</em>
@@ -161,7 +196,7 @@
           </a>
         </div>
 
-        <p class="demo-note reveal" id="postEmpty" style="max-width:760px;margin-top:26px">Six so far, and more when something is worth writing down. If you want to argue with any of it, <a style="color:var(--blue)" href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a> is the place.</p>
+        <p class="demo-note reveal" id="postEmpty" style="max-width:760px;margin-top:26px">Ten so far, and more when something is worth writing down. If you want to argue with any of it, <a style="color:var(--blue)" href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a> is the place.</p>
       </div>
     </section>
   </main>
