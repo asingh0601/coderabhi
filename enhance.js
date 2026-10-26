@@ -264,13 +264,124 @@
     }
   })();
 
+  /* ---------- keyboard: g chords, and ? for the list ----------
+     Ctrl+K was already here but nothing said what else the keyboard does.
+     The chords follow the convention every developer already knows from
+     GitHub and Gmail: press g, then a letter. */
+  (function keys() {
+    var CHORDS = {
+      h: { label: 'Home', href: 'index.html' },
+      b: { label: 'Blog', href: 'blog/index.html' },
+      a: { label: 'About', hash: 'about' },
+      s: { label: 'Skills', hash: 'skills' },
+      e: { label: 'Experience', hash: 'experience' },
+      o: { label: 'Open source', hash: 'opensource' },
+      c: { label: 'Contact', hash: 'contact' },
+      g: { label: 'GitHub', url: 'https://github.com/asingh0601' }
+    };
+
+    var armed = false;
+    var disarm;
+
+    function typing(el) {
+      if (!el) return false;
+      var tag = el.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+    }
+
+    /* the sheet */
+    var overlay = document.createElement('div');
+    overlay.className = 'keys-overlay';
+    overlay.hidden = true;
+    overlay.innerHTML =
+      '<div class="keys" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">'
+      + '<h2>Keyboard</h2><dl>'
+      + '<dt><kbd>Ctrl</kbd><kbd>K</kbd></dt><dd>Quick navigation</dd>'
+      + '<dt><kbd>g</kbd><kbd>h</kbd></dt><dd>Home</dd>'
+      + '<dt><kbd>g</kbd><kbd>a</kbd></dt><dd>About</dd>'
+      + '<dt><kbd>g</kbd><kbd>s</kbd></dt><dd>Skills</dd>'
+      + '<dt><kbd>g</kbd><kbd>e</kbd></dt><dd>Experience</dd>'
+      + '<dt><kbd>g</kbd><kbd>o</kbd></dt><dd>Open source</dd>'
+      + '<dt><kbd>g</kbd><kbd>b</kbd></dt><dd>Blog</dd>'
+      + '<dt><kbd>g</kbd><kbd>c</kbd></dt><dd>Contact</dd>'
+      + '<dt><kbd>g</kbd><kbd>g</kbd></dt><dd>GitHub</dd>'
+      + '<dt><kbd>?</kbd></dt><dd>This list</dd>'
+      + '<dt><kbd>Esc</kbd></dt><dd>Close anything</dd>'
+      + '</dl>'
+      + '<p class="keys-foot">The box on the home page is a real shell \u2014 type '
+      + '<code>help</code> in it.</p>'
+      + '</div>';
+    document.body.appendChild(overlay);
+
+    function closeSheet() { overlay.hidden = true; }
+    overlay.addEventListener('mousedown', function (e) {
+      if (e.target === overlay) closeSheet();
+    });
+
+    function jump(target) {
+      if (target.url) { window.open(target.url, '_blank', 'noopener'); return; }
+      if (target.hash) {
+        var el = document.getElementById(target.hash);
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+        // not on this page, so go to the home page and land there
+        location.href = pathToRoot() + 'index.html#' + target.hash;
+        return;
+      }
+      location.href = pathToRoot() + target.href;
+    }
+
+    // blog posts live one directory down
+    function pathToRoot() {
+      return /\/blog\//.test(location.pathname) ? '../' : '';
+    }
+
+    addEventListener('keydown', function (e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      if (e.key === 'Escape' && !overlay.hidden) {
+        e.preventDefault();
+        closeSheet();
+        return;
+      }
+
+      if (typing(document.activeElement)) return;
+
+      if (e.key === '?') {
+        e.preventDefault();
+        overlay.hidden = !overlay.hidden;
+        return;
+      }
+
+      if (!armed && e.key === 'g') {
+        armed = true;
+        clearTimeout(disarm);
+        disarm = setTimeout(function () { armed = false; }, 1200);
+        return;
+      }
+
+      if (armed) {
+        armed = false;
+        clearTimeout(disarm);
+        var target = CHORDS[String(e.key).toLowerCase()];
+        if (target) {
+          e.preventDefault();
+          closeSheet();
+          jump(target);
+        }
+      }
+    });
+  })();
+
   /* ---------- a note for whoever opens the console ---------- */
   try {
     console.log('%cHello there.',
       'font:600 16px/1.4 ui-sans-serif,system-ui;color:#6c9bff');
-    console.log('%cYou opened the console, so you are my kind of visitor.\n'
-      + 'Press Ctrl+K (or Cmd+K) for the quick nav.\n'
-      + 'Source: https://github.com/asingh0601/coderabhi',
+    console.log('%cYou opened the console, so you are my kind of visitor.\n\n'
+      + '  Ctrl+K   quick navigation\n'
+      + '  ?        the rest of the keyboard\n'
+      + '  g then h / a / s / e / o / b / c\n\n'
+      + 'The card at the top of the home page is a real shell. Type help in it,\n'
+      + 'then try neofetch.  Source: https://github.com/asingh0601/coderabhi',
       'color:#97a1bb;font:13px/1.6 ui-monospace,monospace');
   } catch (e) { /* a console note is never worth an exception */ }
 })();

@@ -3231,6 +3231,144 @@ button.span-row:hover .span-fill,
   }
 }
 
+/* ---------- neofetch ---------- */
+.nf {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.nf-art {
+  flex: none;
+  white-space: pre;
+  color: var(--blue);
+  line-height: 1.25;
+  font-size: 11px;
+  padding-top: 2px;
+}
+
+.nf-info {
+  min-width: 0;
+  flex: 1 1 210px;
+}
+
+.nf-k {
+  display: inline-block;
+  min-width: 78px;
+  color: var(--dim);
+}
+
+.nf-sw {
+  display: inline-flex;
+  gap: 3px;
+  margin-top: 7px;
+}
+
+.nf-sw i {
+  width: 15px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+/* ---------- the rain ---------- */
+.matrix {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  cursor: pointer;
+  background: #080b11;
+  animation: mx-in .35s ease-out;
+}
+
+@keyframes mx-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- keyboard shortcuts sheet ---------- */
+.keys-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 7, 12, .72);
+  backdrop-filter: blur(3px);
+}
+
+.keys-overlay[hidden] {
+  display: none;
+}
+
+.keys {
+  width: min(460px, 100%);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 20px 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+}
+
+.keys h2 {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.keys dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 9px 16px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.keys dt {
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
+.keys dd {
+  margin: 0;
+  color: var(--muted);
+}
+
+.keys kbd {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 2px 7px;
+  border: 1px solid var(--line-2);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--bg-2);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.keys-foot {
+  margin: 16px 0 0;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+@media (max-width: 760px) {
+  .nf-art {
+    font-size: 9.5px;
+  }
+
+  .keys-overlay {
+    display: none;
+  }
+}
+
 /* ---------- article diagrams ---------- */
 .diagram {
   margin: 0 0 24px;

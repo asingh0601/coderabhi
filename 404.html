@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>404 — no route matched · Abhishek Singh</title>
+  <meta name="description" content="That page is not here. Here is where everything else lives.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0b0e14">
+
+  <link rel="icon" href="/assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    document.documentElement.className += ' js';
+  </script>
+
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+  <header class="site" id="siteHeader">
+    <div class="container head-inner">
+      <a href="/index.html" class="brand"><img class="logo" src="/assets/logo-mark.png" width="30" height="30"
+          alt="coderabhi logo"> Abhishek Singh</a>
+      <div class="head-right">
+        <nav class="menu" id="menu">
+          <a href="/index.html#about">About</a>
+          <a href="/index.html#skills">Skills</a>
+          <a href="/index.html#experience">Experience</a>
+          <a href="/index.html#opensource">Open source</a>
+          <a href="/blog/index.html">Blog</a>
+          <a class="ghost" href="/index.html#contact">Get in touch</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container pkg-hero" id="top">
+      <span class="kicker reveal">404</span>
+      <h1 class="reveal">No route matched.</h1>
+      <p class="pkg-sub reveal">Which, given that I wrote a whole library about exactly this, is a little
+        embarrassing. The page you asked for is not here — it was moved, it was never here, or the link that sent
+        you has gone stale.</p>
+
+      <div class="code-block reveal" style="max-width:640px;margin-bottom:26px">
+        <div class="cb-bar">console</div>
+        <pre><span class="c">// the router, doing its job</span>
+<span class="y">ERROR</span> <span class="b">NG04002</span>: Cannot match any routes.
+  URL Segment: <span class="g" id="badPath">'/'</span></pre>
+      </div>
+
+      <div class="btn-row reveal">
+        <a class="btn primary" href="/index.html">Back to the start</a>
+        <a class="btn" href="/blog/index.html">Read something instead</a>
+        <a class="btn" href="/index.html#opensource">Open source</a>
+      </div>
+
+      <p class="demo-note reveal" style="margin-top:26px">Press <kbd
+          style="font-family:var(--mono);font-size:11px;padding:2px 7px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;background:var(--bg-2)">Ctrl</kbd>
+        + <kbd
+          style="font-family:var(--mono);font-size:11px;padding:2px 7px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;background:var(--bg-2)">K</kbd>
+        to search the site, or <kbd
+          style="font-family:var(--mono);font-size:11px;padding:2px 7px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;background:var(--bg-2)">?</kbd>
+        for the rest of the keyboard.</p>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <a href="/index.html"><img class="foot-logo" src="/assets/logo-full.png" width="520" height="314"
+          alt="coderabhi"></a>
+    </div>
+    <div class="container foot-inner">
+      <span>© <span id="year">2026</span> Abhishek Singh · coderabhi.in</span>
+      <div class="foot-links">
+        <a href="/index.html">Home</a>
+        <a href="/index.html#opensource">Open source</a>
+        <a href="/blog/index.html">Blog</a>
+        <a href="https://github.com/asingh0601" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Show the path that actually missed. textContent, because this string
+    // comes from the URL bar and is not to be trusted with innerHTML.
+    (function () {
+      var el = document.getElementById('badPath');
+      if (el) el.textContent = "'" + (location.pathname + location.search).slice(0, 120) + "'";
+    })();
+  </script>
+  <script src="/page.js"></script>
+  <script src="/enhance.js"></script>
+</body>
+
+</html>
