@@ -4565,6 +4565,75 @@ article[data-topic] .post-body>ul>li::before {
   color: var(--dim);
 }
 
+/* ---------- the articles index header ----------
+   The index was set in the shell's mono like the rest of the site's
+   furniture, which made it a louder version of the body underneath it.
+   It belongs with the articles instead: same sans, same weight, with the
+   phrase that carries the idea picked out in the accent. */
+.idx-hero {
+  max-width: calc(760px + 44px);
+  padding-top: 70px;
+  padding-bottom: 36px;
+}
+
+.idx-hero h1 {
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: clamp(34px, 6.2vw, 58px);
+  line-height: 1.02;
+  letter-spacing: -.042em;
+  margin: 16px 0 20px;
+  max-width: 15ch;
+}
+
+/* the accent is a wash behind the phrase, not just coloured letters */
+.idx-hero h1 .hl {
+  position: relative;
+  color: var(--blue);
+  white-space: nowrap;
+}
+
+.idx-hero h1 .hl::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: .1em;
+  height: .09em;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--blue) 45%, transparent);
+}
+
+.idx-hero .kicker {
+  font-size: 12px;
+  letter-spacing: .18em;
+}
+
+.idx-hero .pkg-sub {
+  font-family: var(--serif);
+  font-size: clamp(18px, 2.3vw, 21px);
+  line-height: 1.55;
+  color: #b7c1d4;
+  max-width: 54ch;
+  margin: 0;
+}
+
+/* the divider above the list reads as a section break, not a stray label */
+.idx-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 42px 0 4px;
+  color: var(--dim);
+}
+
+.idx-head::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
 /* ---------- article diagrams ---------- */
 .diagram {
   margin: 0 0 24px;

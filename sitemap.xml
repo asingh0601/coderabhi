@@ -36,6 +36,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://coderabhi.in/blog/distributed-systems.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://coderabhi.in/blog/microservices.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

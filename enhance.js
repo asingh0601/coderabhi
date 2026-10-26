@@ -119,7 +119,8 @@
     var here = location.pathname.split('/').pop() || 'index.html';
     [
       { label: 'Home', href: 'index.html', kind: 'Page' },
-      { label: 'Blog', href: 'blog/index.html', kind: 'Page' },
+      { label: 'Articles', href: 'blog/index.html', kind: 'Page' },
+      { label: 'Distributed systems: the parts that bite after the diagram', href: 'blog/distributed-systems.html', kind: 'Post' },
       { label: 'Microservices that dont fall over', href: 'blog/microservices.html', kind: 'Post' },
       { label: 'C# design patterns that still earn their place', href: 'blog/csharp-design-patterns.html', kind: 'Post' },
       { label: 'Agentic AI for development, from someone who built one', href: 'blog/agentic-ai-development.html', kind: 'Post' },
@@ -271,7 +272,7 @@
   (function keys() {
     var CHORDS = {
       h: { label: 'Home', href: 'index.html' },
-      b: { label: 'Blog', href: 'blog/index.html' },
+      b: { label: 'Articles', href: 'blog/index.html' },
       a: { label: 'About', hash: 'about' },
       s: { label: 'Skills', hash: 'skills' },
       e: { label: 'Experience', hash: 'experience' },
@@ -302,7 +303,7 @@
       + '<dt><kbd>g</kbd><kbd>s</kbd></dt><dd>Skills</dd>'
       + '<dt><kbd>g</kbd><kbd>e</kbd></dt><dd>Experience</dd>'
       + '<dt><kbd>g</kbd><kbd>o</kbd></dt><dd>Open source</dd>'
-      + '<dt><kbd>g</kbd><kbd>b</kbd></dt><dd>Blog</dd>'
+      + '<dt><kbd>g</kbd><kbd>b</kbd></dt><dd>Articles</dd>'
       + '<dt><kbd>g</kbd><kbd>c</kbd></dt><dd>Contact</dd>'
       + '<dt><kbd>g</kbd><kbd>g</kbd></dt><dd>GitHub</dd>'
       + '<dt><kbd>?</kbd></dt><dd>This list</dd>'

@@ -94,6 +94,7 @@
   /* ---------- 3. what to read next ---------- */
   (function next() {
     var POSTS = [
+      ['distributed-systems.html', 'Distributed systems: the parts that bite', 'Backend'],
       ['microservices.html', "Microservices that don't fall over", 'Backend'],
       ['agentic-ai-development.html', 'Agentic AI for development, from someone who built one', 'AI'],
       ['observability-reliability.html', 'Observability and reliability', 'Reliability'],

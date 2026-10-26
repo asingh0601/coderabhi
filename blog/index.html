@@ -4,15 +4,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Blog — Abhishek Singh</title>
+  <title>Articles — Abhishek Singh</title>
   <meta name="description"
-    content="Notes on backend engineering: microservices, caching, event-driven systems and the failure modes that only show up in production.">
+    content="Long pieces on the systems behind an app: distributed failure, data access, caching, auth, and the failure modes that only show up in production.">
   <meta name="author" content="Abhishek Singh">
   <meta name="theme-color" content="#0b0e14">
 
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Blog — Abhishek Singh">
-  <meta property="og:description" content="Notes on backend engineering, written from production rather than theory.">
+  <meta property="og:title" content="Articles — Abhishek Singh">
+  <meta property="og:description" content="Long pieces on backend systems, written from production rather than theory.">
   <meta property="og:url" content="https://coderabhi.in/blog/">
   <meta property="og:image" content="https://coderabhi.in/assets/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -47,7 +47,7 @@
           <a href="../index.html#skills">Skills</a>
           <a href="../index.html#experience">Experience</a>
           <a href="../index.html#opensource">Open source</a>
-          <a href="index.html">Blog</a>
+          <a href="index.html">Articles</a>
           <a class="ghost" href="../index.html#contact">Get in touch</a>
         </nav>
         <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
@@ -56,18 +56,19 @@
   </header>
 
   <main>
-    <div class="container pkg-hero" id="top">
-      <span class="kicker reveal">Blog</span>
-      <h1 class="reveal">Notes from the server side</h1>
-      <p class="pkg-sub reveal">Things I have learned keeping systems up — written from production, not from a
-        conference talk. No growth-hacking, no listicles.</p>
+    <div class="container pkg-hero idx-hero" id="top">
+      <span class="kicker reveal">Articles</span>
+      <h1 class="reveal">Dispatches from the <span class="hl">invisible half</span></h1>
+      <p class="pkg-sub reveal">The half of every product nobody sees until it stops — distributed
+        failure, data access, caching, auth. Each piece started as something that broke in production,
+        or something I had to explain twice before it stuck.</p>
     </div>
 
     <section>
       <div class="container">
         <div class="post-filters reveal" id="postFilters">
-          <button type="button" class="on" data-filter="all">All<b>6</b></button>
-          <button type="button" data-filter="backend">Backend<b>1</b></button>
+          <button type="button" class="on" data-filter="all">All<b>7</b></button>
+          <button type="button" data-filter="backend">Backend<b>2</b></button>
           <button type="button" data-filter="ai">AI<b>1</b></button>
           <button type="button" data-filter="reliability">Reliability<b>1</b></button>
           <button type="button" data-filter="cloud">Cloud<b>1</b></button>
@@ -76,24 +77,35 @@
         </div>
 
         <div class="post-list" id="postList">
-        <a class="lead-post reveal" href="microservices.html" data-topic="backend">
+        <a class="lead-post reveal" href="distributed-systems.html" data-topic="backend">
           <div class="post-meta">
             <span class="pc-topic">Backend</span>
             <span class="dot"></span>
             <time datetime="2026-10-25">25 Oct 2026</time>
             <span class="dot"></span>
-            <span>18 min read</span>
+            <span>16 min read</span>
           </div>
-          <h2>Microservices that don't fall over</h2>
-          <p>Splitting a system into services is the easy part. The hard part is the gaps between them — service boundaries, the outbox and inbox patterns, the saga pattern in detail, cache stampedes, circuit breakers, and the failure modes that only show up under real traffic.</p>
-          <div class="c-foot"><span>Microservices</span><span>Saga</span><span>Caching</span><span>Event-driven</span></div>
+          <h2>Distributed systems: the parts that bite after the diagram</h2>
+          <p>Partial failure, clocks that lie, why exactly-once delivery does not exist, idempotency keys, retry storms you can cause yourself in the page, and why your distributed lock is probably wrong.</p>
+          <div class="c-foot"><span>Idempotency</span><span>Retries</span><span>Consistency</span><span>Interactive</span></div>
           <span class="pc-go">Read the piece<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
         </a>
 
-          <div class="idx-head reveal"><span>More posts</span></div>
+          <div class="idx-head reveal"><span>More articles</span></div>
 
-          <a class="idx-row reveal" href="agentic-ai-development.html" data-topic="ai">
+          <a class="idx-row reveal" href="microservices.html" data-topic="backend">
             <span class="ir-n">02</span>
+            <span class="ir-main">
+              <b>Microservices that don't fall over</b>
+              <em>Splitting a system into services is the easy part. The hard part is the gaps between them — service boundaries, the outbox and inbox patterns, the saga pattern in detail, cache stampedes, circuit breakers, and the failure modes that only show up under real traffic.</em>
+            </span>
+            <span class="ir-meta">
+              <span class="pc-topic">Backend</span>
+              <span class="ir-read">18 min</span>
+            </span>
+          </a>
+          <a class="idx-row reveal" href="agentic-ai-development.html" data-topic="ai">
+            <span class="ir-n">03</span>
             <span class="ir-main">
               <b>Agentic AI for development, from someone who built one</b>
               <em>The tool-use loop, why context is the real constraint, how prompt caching silently breaks, and where agents genuinely help.</em>
@@ -104,7 +116,7 @@
             </span>
           </a>
           <a class="idx-row reveal" href="observability-reliability.html" data-topic="reliability">
-            <span class="ir-n">03</span>
+            <span class="ir-n">04</span>
             <span class="ir-main">
               <b>Knowing before your users do</b>
               <em>Why averages hide your worst users, correlation ids across the broker, SLOs and error budgets, and alerts a team will not learn to ignore.</em>
@@ -115,7 +127,7 @@
             </span>
           </a>
           <a class="idx-row reveal" href="cloud-azure-kubernetes-docker.html" data-topic="cloud">
-            <span class="ir-n">04</span>
+            <span class="ir-n">05</span>
             <span class="ir-main">
               <b>Docker, Kubernetes and Azure without the cargo cult</b>
               <em>The five Kubernetes objects you really need, the probe misconfiguration that turns a blip into a crash loop, and picking the smallest service that does the job.</em>
@@ -126,7 +138,7 @@
             </span>
           </a>
           <a class="idx-row reveal" href="csharp-design-patterns.html" data-topic="csharp">
-            <span class="ir-n">05</span>
+            <span class="ir-n">06</span>
             <span class="ir-main">
               <b>C# design patterns that still earn their place</b>
               <em>Half the Gang of Four catalogue is now a language feature. Which ones survived, and which ones records and pattern matching quietly replaced.</em>
@@ -137,7 +149,7 @@
             </span>
           </a>
           <a class="idx-row reveal" href="microfrontends.html" data-topic="frontend">
-            <span class="ir-n">06</span>
+            <span class="ir-n">07</span>
             <span class="ir-main">
               <b>Microfrontends: when splitting the UI is worth it</b>
               <em>Build-time versus run-time composition, shared dependencies and version skew, who owns the URL, and the costs nobody puts in the pitch.</em>
